@@ -5,20 +5,15 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Footer } from "@/components/Footer";
 import { SearchBar } from "@/components/SearchBar";
 import { ListingCard } from "@/components/ListingCard";
+import { FilterBar } from "@/components/FilterBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 
 const CategoryDetail = () => {
   const { category } = useParams<{ category: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState<any[]>([]);
+  const [filteredItems, setFilteredItems] = useState<any[]>([]);
   const [savedItems, setSavedItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
@@ -63,6 +58,10 @@ const CategoryDetail = () => {
     fetchData();
     fetchSavedItems();
   }, [category]);
+
+  useEffect(() => {
+    setFilteredItems(items);
+  }, [items]);
 
   const fetchData = async () => {
     if (!config) return;
@@ -147,11 +146,37 @@ const CategoryDetail = () => {
     }
   };
 
-  const carouselImages = [
-    { url: "https://images.unsplash.com/photo-1488646953014-85cb44e25828", title: "Explore Destinations" },
-    { url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e", title: "Adventure Awaits" },
-    { url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1", title: "Discover Paradise" },
-  ];
+  const handleApplyFilters = (filters: any) => {
+    let filtered = [...items];
+
+    if (filters.location) {
+      const locationQuery = filters.location.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.location?.toLowerCase().includes(locationQuery) ||
+          item.country?.toLowerCase().includes(locationQuery) ||
+          item.place?.toLowerCase().includes(locationQuery)
+      );
+    }
+
+    if (filters.dateFrom && filters.dateTo) {
+      filtered = filtered.filter((item) => {
+        if (!item.date) return false;
+        const itemDate = new Date(item.date);
+        return itemDate >= filters.dateFrom && itemDate <= filters.dateTo;
+      });
+    }
+
+    if (filters.minPrice !== undefined) {
+      filtered = filtered.filter((item) => item.price >= filters.minPrice);
+    }
+
+    if (filters.maxPrice !== undefined) {
+      filtered = filtered.filter((item) => item.price <= filters.maxPrice);
+    }
+
+    setFilteredItems(filtered);
+  };
 
   if (!config) {
     return <div>Category not found</div>;
@@ -170,29 +195,8 @@ const CategoryDetail = () => {
           onSubmit={handleSearch}
         />
 
-        <Carousel className="w-full">
-          <CarouselContent>
-            {carouselImages.map((image, index) => (
-              <CarouselItem key={index}>
-                <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden">
-                  <img
-                    src={image.url}
-                    alt={image.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                    <h2 className="text-white text-3xl font-bold p-8">{image.title}</h2>
-                  </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
-        </Carousel>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item) => (
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {filteredItems.map((item) => (
             <ListingCard
               key={item.id}
               id={item.id}
@@ -209,11 +213,28 @@ const CategoryDetail = () => {
           ))}
         </div>
 
+        {filteredItems.length === 0 && items.length > 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No items match your filters. Try adjusting the criteria.</p>
+          </div>
+        )}
+
         {items.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No items found. Try a different search.</p>
           </div>
         )}
+
+        <FilterBar
+          type={
+            category === "trips" || category === "events"
+              ? "trips-events"
+              : category === "hotels"
+              ? "hotels"
+              : "adventure"
+          }
+          onApplyFilters={handleApplyFilters}
+        />
       </main>
 
       <Footer />

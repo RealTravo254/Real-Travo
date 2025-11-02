@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,23 +11,40 @@ interface Vlog {
   video_url?: string;
 }
 
+// Hardcoded vlogs - update manually in code
+const vlogs: Vlog[] = [
+  {
+    id: "1",
+    title: "Exploring the Alps",
+    description: "Join us on an incredible journey through the Swiss Alps, discovering hidden trails and breathtaking views.",
+    image_url: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7",
+    video_url: "https://example.com/video1"
+  },
+  {
+    id: "2",
+    title: "Tokyo Street Food Tour",
+    description: "Experience the vibrant food culture of Tokyo as we explore the best street food locations.",
+    image_url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf",
+    video_url: "https://example.com/video2"
+  },
+  {
+    id: "3",
+    title: "Safari Adventure in Kenya",
+    description: "Witness the incredible wildlife of Kenya in this unforgettable safari experience.",
+    image_url: "https://images.unsplash.com/photo-1516426122078-c23e76319801",
+    video_url: "https://example.com/video3"
+  },
+  {
+    id: "4",
+    title: "Diving the Great Barrier Reef",
+    description: "Explore the underwater wonders of Australia's Great Barrier Reef with us.",
+    image_url: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7",
+    video_url: "https://example.com/video4"
+  }
+];
+
 export const VlogSection = () => {
-  const [vlogs, setVlogs] = useState<Vlog[]>([]);
   const [scrollPosition, setScrollPosition] = useState(0);
-
-  useEffect(() => {
-    fetchVlogs();
-  }, []);
-
-  const fetchVlogs = async () => {
-    const { data } = await supabase
-      .from("vlogs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(10);
-    
-    if (data) setVlogs(data);
-  };
 
   const scroll = (direction: "left" | "right") => {
     const container = document.getElementById("vlog-scroll-container");

@@ -4,7 +4,6 @@ import { Header } from "@/components/Header";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { CategoryCard } from "@/components/CategoryCard";
 import { SearchBar } from "@/components/SearchBar";
-import { HeroCarousel } from "@/components/HeroCarousel";
 import { ListingCard } from "@/components/ListingCard";
 import { VlogSection } from "@/components/VlogSection";
 import { Footer } from "@/components/Footer";
@@ -161,16 +160,11 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Hero Carousel */}
-        <section>
-          <HeroCarousel />
-        </section>
-
         {/* Trips */}
         {trips.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6">Featured Trips</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {trips.map((trip) => (
                 <ListingCard
                   key={trip.id}
@@ -194,7 +188,7 @@ const Index = () => {
         {events.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6">Upcoming Events</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {events.map((event) => (
                 <ListingCard
                   key={event.id}
@@ -218,7 +212,7 @@ const Index = () => {
         {hotels.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6">Amazing Hotels</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {hotels.map((hotel) => (
                 <ListingCard
                   key={hotel.id}
@@ -240,7 +234,7 @@ const Index = () => {
         {adventurePlaces.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6">Adventure Awaits</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {adventurePlaces.map((place) => (
                 <ListingCard
                   key={place.id}
