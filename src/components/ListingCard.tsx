@@ -16,6 +16,7 @@ interface ListingCardProps {
   date?: string;
   onSave?: (id: string, type: string) => void;
   isSaved?: boolean;
+  amenities?: string[];
 }
 
 export const ListingCard = ({
@@ -29,6 +30,7 @@ export const ListingCard = ({
   date,
   onSave,
   isSaved = false,
+  amenities,
 }: ListingCardProps) => {
   const [saved, setSaved] = useState(isSaved);
 
@@ -38,8 +40,8 @@ export const ListingCard = ({
   };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <div className="relative aspect-[4/3] overflow-hidden">
+    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-none">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-none">
         <img
           src={imageUrl}
           alt={name}
@@ -84,6 +86,19 @@ export const ListingCard = ({
             <p className="text-sm text-muted-foreground">{new Date(date).toLocaleDateString()}</p>
           )}
         </div>
+        
+        {amenities && amenities.length > 0 && (
+          <div className="hidden md:flex flex-wrap gap-1 mt-2">
+            {amenities.slice(0, 4).map((amenity, index) => (
+              <span key={index} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                {amenity}
+              </span>
+            ))}
+            {amenities.length > 4 && (
+              <span className="text-xs text-muted-foreground px-2 py-1">+{amenities.length - 4} more</span>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   );

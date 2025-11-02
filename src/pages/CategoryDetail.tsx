@@ -186,13 +186,24 @@ const CategoryDetail = () => {
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
       
-      <main className="container px-4 py-8 space-y-8">
+      <main className="container px-4 py-8 space-y-4">
         <h1 className="text-3xl font-bold">{config.title}</h1>
 
         <SearchBar
           value={searchQuery}
           onChange={setSearchQuery}
           onSubmit={handleSearch}
+        />
+
+        <FilterBar
+          type={
+            category === "trips" || category === "events"
+              ? "trips-events"
+              : category === "hotels"
+              ? "hotels"
+              : "adventure"
+          }
+          onApplyFilters={handleApplyFilters}
         />
 
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -209,6 +220,7 @@ const CategoryDetail = () => {
               date={item.date}
               onSave={handleSave}
               isSaved={savedItems.has(item.id)}
+              amenities={item.amenities}
             />
           ))}
         </div>
@@ -224,17 +236,6 @@ const CategoryDetail = () => {
             <p className="text-muted-foreground">No items found. Try a different search.</p>
           </div>
         )}
-
-        <FilterBar
-          type={
-            category === "trips" || category === "events"
-              ? "trips-events"
-              : category === "hotels"
-              ? "hotels"
-              : "adventure"
-          }
-          onApplyFilters={handleApplyFilters}
-        />
       </main>
 
       <Footer />

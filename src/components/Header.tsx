@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Menu, User, Heart, Ticket, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sheet,
   SheetContent,
@@ -18,12 +19,11 @@ import { Link } from "react-router-dom";
 
 export const Header = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const userName = "Guest";
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
-        {/* Left Section */}
         <div className="flex items-center gap-3">
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <SheetTrigger asChild>
@@ -46,7 +46,6 @@ export const Header = () => {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/bookings" className="flex items-center gap-2 font-bold hover:text-primary transition-colors">
             <Ticket className="h-4 w-4" />
@@ -62,24 +61,37 @@ export const Header = () => {
           </Link>
         </nav>
 
-        {/* Account Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 h-auto px-2">
-              <span className="hidden md:inline text-sm font-medium">{userName}</span>
+              <span className="hidden md:inline text-sm font-medium">
+                {user?.user_metadata?.name || user?.email || "Guest"}
+              </span>
               <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.user_metadata?.profile_picture_url} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {userName.charAt(0)}
+                  {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || "G"}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-popover">
-            <DropdownMenuItem>
-              <Button variant="default" className="w-full">
-                Login
-              </Button>
-            </DropdownMenuItem>
+            {user ? (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
+                  Sign Out
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <DropdownMenuItem asChild>
+                <Link to="/auth" className="w-full">
+                  <Button variant="default" className="w-full">Login</Button>
+                </Link>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

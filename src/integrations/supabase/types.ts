@@ -47,6 +47,36 @@ export type Database = {
         }
         Relationships: []
       }
+      business_accounts: {
+        Row: {
+          business_name: string
+          business_phone_number: string
+          business_registration_number: string
+          business_type: Database["public"]["Enums"]["business_account_type"]
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          business_phone_number: string
+          business_registration_number: string
+          business_type: Database["public"]["Enums"]["business_account_type"]
+          created_at?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          business_phone_number?: string
+          business_registration_number?: string
+          business_type?: Database["public"]["Enums"]["business_account_type"]
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           country: string
@@ -88,6 +118,7 @@ export type Database = {
       }
       hotels: {
         Row: {
+          amenities: string[] | null
           country: string
           created_at: string
           description: string | null
@@ -98,6 +129,7 @@ export type Database = {
           place: string
         }
         Insert: {
+          amenities?: string[] | null
           country: string
           created_at?: string
           description?: string | null
@@ -108,6 +140,7 @@ export type Database = {
           place: string
         }
         Update: {
+          amenities?: string[] | null
           country?: string
           created_at?: string
           description?: string | null
@@ -116,6 +149,36 @@ export type Database = {
           location?: string
           name?: string
           place?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          name: string
+          phone_number: string | null
+          profile_picture_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          name: string
+          phone_number?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          id?: string
+          name?: string
+          phone_number?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -217,7 +280,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      business_account_type:
+        | "hotel_accommodation"
+        | "trip_event"
+        | "place_destination"
+      gender_type: "male" | "female" | "other" | "prefer_not_to_say"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -344,6 +411,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      business_account_type: [
+        "hotel_accommodation",
+        "trip_event",
+        "place_destination",
+      ],
+      gender_type: ["male", "female", "other", "prefer_not_to_say"],
+    },
   },
 } as const
