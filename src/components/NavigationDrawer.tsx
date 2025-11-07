@@ -56,7 +56,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuItem asChild>
                     <Link 
-                      to="/create1-trip-event" 
+                      to="/create-trip-event" 
                       onClick={onClose} 
                       className="cursor-pointer"
                     >
@@ -65,7 +65,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link 
-                      to="/create1-hotel" 
+                      to="/create-hotel" 
                       onClick={onClose} 
                       className="cursor-pointer"
                     >
@@ -74,7 +74,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link 
-                      to="/create1-adventure" 
+                      to="/create-adventure" 
                       onClick={onClose} 
                       className="cursor-pointer"
                     >
