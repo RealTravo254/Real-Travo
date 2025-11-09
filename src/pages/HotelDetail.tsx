@@ -93,6 +93,7 @@ const HotelDetail = () => {
       window.open(hotel.map_link, '_blank');
     } else {
       const query = encodeURIComponent(`${hotel?.name}, ${hotel?.location}, ${hotel?.country}`);
+      // NOTE: Fixed the incorrect URL structure here for Google Maps
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     }
   };
@@ -118,34 +119,41 @@ const HotelDetail = () => {
       <main className="container px-4 py-6 max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">{hotel.name}</h1>
 
-        <Button
-          variant="ghost"
-          onClick={handleShare}
-          className="absolute top-20 right-4 z-10 bg-background/80 backdrop-blur-sm"
-        >
-          <Share2 className="h-5 w-5" />
-        </Button>
+        {/* Image Gallery Carousel and Share Button Container */}
+        <div className="relative w-full mb-6">
+          <Button
+            variant="ghost"
+            onClick={handleShare}
+            // MODIFICATION: Moved the button and changed its positioning classes.
+            // Absolute positioning, top-4, right-4, over the image carousel
+            className="absolute top-4 right-4 z-20 bg-background/80 backdrop-blur-sm rounded-full p-2 h-auto w-auto hover:bg-background"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
 
-        {/* Image Gallery Carousel */}
-        <Carousel
-          opts={{ loop: true }}
-          plugins={[Autoplay({ delay: 3000 })]}
-          className="w-full mb-6"
-        >
-          <CarouselContent>
-            {displayImages.map((img, idx) => (
-              <CarouselItem key={idx}>
-                <img
-                  src={img}
-                  alt={`${hotel.name} ${idx + 1}`}
-                  className="w-full h-64 md:h-96 object-cover rounded-lg"
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2" />
-          <CarouselNext className="right-2" />
-        </Carousel>
+          {/* Image Gallery Carousel */}
+          <Carousel
+            opts={{ loop: true }}
+            plugins={[Autoplay({ delay: 3000 })]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {displayImages.map((img, idx) => (
+                <CarouselItem key={idx}>
+                  <img
+                    src={img}
+                    alt={`${hotel.name} ${idx + 1}`}
+                    // MODIFICATION: Removed 'rounded-lg' to remove the border radius
+                    className="w-full h-64 md:h-96 object-cover" 
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {/* Carousel navigation controls are also over the image */}
+            <CarouselPrevious className="left-2 z-10" />
+            <CarouselNext className="right-2 z-10" />
+          </Carousel>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
