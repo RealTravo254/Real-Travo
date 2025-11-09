@@ -166,95 +166,119 @@ return (
         </section>
 
         {/* COMBINED LISTINGS: Trips, Events, Hotels, and Adventure Places */}
-        <section>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {loading ? (
-              // Display shimmer loading effect if loading
-              <>
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="border rounded-lg overflow-hidden">
-                    <div className="aspect-[4/3] bg-muted animate-pulse" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-5 bg-muted animate-pulse rounded w-3/4" />
-                      <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-                      <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
-                      {/* Price/Date placeholder for Trips/Events */}
-                      <div className="h-6 bg-muted animate-pulse rounded w-1/3 mt-2" /> 
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : (
-              // Display all listings: Trips, then Events, then Hotels, then Adventure Places
-              <>
-                {/* Trips */}
-                {trips.map((trip) => (
-                  <ListingCard
-                    key={trip.id}
-                    id={trip.id}
-                    type="TRIP"
-                    name={trip.name}
-                    imageUrl={trip.image_url}
-                    location={trip.location}
-                    country={trip.country}
-                    price={trip.price}
-                    date={trip.date}
-                    onSave={handleSave}
-                    isSaved={savedItems.has(trip.id)}
-                  />
-                ))}
-
-                {/* Events */}
-                {events.map((event) => (
-                  <ListingCard
-                    key={event.id}
-                    id={event.id}
-                    type="EVENT"
-                    name={event.name}
-                    imageUrl={event.image_url}
-                    location={event.location}
-                    country={event.country}
-                    price={event.price}
-                    date={event.date}
-                    onSave={handleSave}
-                    isSaved={savedItems.has(event.id)}
-                  />
-                ))}
-
-                {/* Hotels */}
-                {hotels.map((hotel) => (
-                  <ListingCard
-                    key={hotel.id}
-                    id={hotel.id}
-                    type="HOTEL"
-                    name={hotel.name}
-                    imageUrl={hotel.image_url}
-                    location={hotel.location}
-                    country={hotel.country}
-                    onSave={handleSave}
-                    isSaved={savedItems.has(hotel.id)}
-                  />
-                ))}
-
-                {/* Adventure Places */}
-                {adventurePlaces.map((place) => (
-                  <ListingCard
-                    key={place.id}
-                    id={place.id}
-                    type="ADVENTURE PLACE"
-                    name={place.name}
-                    imageUrl={place.image_url}
-                    location={place.location}
-                    country={place.country}
-                    onSave={handleSave}
-                    isSaved={savedItems.has(place.id)}
-                  />
-                ))}
-              </>
-            )}
+<section>
+  {/* The outer grid container remains the same for layout */}
+  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+    {loading ? (
+      // Display enhanced shimmer loading effect
+      <>
+        {[...Array(8)].map((_, i) => (
+          // ENHANCEMENT: Applied new VIBRANT card style to the loading skeleton
+          <div
+            key={i}
+            className="border rounded-xl overflow-hidden shadow-md bg-white transition-all duration-300"
+          >
+            {/* Aspect ratio for image placeholder */}
+            <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
+            <div className="p-4 space-y-3">
+              {/* Title placeholder */}
+              <div className="h-5 bg-gray-300 animate-pulse rounded-lg w-3/4" />
+              {/* Location placeholder */}
+              <div className="h-4 bg-gray-200 animate-pulse rounded-lg w-1/2" />
+              {/* Description/Tags placeholder */}
+              <div className="h-4 bg-gray-200 animate-pulse rounded-lg w-2/3" />
+              {/* Price/Date placeholder for Trips/Events - Bolder/more prominent */}
+              <div className="h-6 bg-primary/20 animate-pulse rounded-lg w-1/3 mt-3" />
+            </div>
           </div>
-        </section>
+        ))}
+      </>
+    ) : (
+      // Display all listings with enhanced VIBRANT wrapper
+      <>
+        {/* Trips */}
+        {trips.map((trip) => (
+          <div
+            key={trip.id}
+            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+          >
+            <ListingCard
+              id={trip.id}
+              type="TRIP"
+              name={trip.name}
+              imageUrl={trip.image_url}
+              location={trip.location}
+              country={trip.country}
+              price={trip.price}
+              date={trip.date}
+              onSave={handleSave}
+              isSaved={savedItems.has(trip.id)}
+            />
+          </div>
+        ))}
 
+        {/* Events */}
+        {events.map((event) => (
+          <div
+            key={event.id}
+            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+          >
+            <ListingCard
+              id={event.id}
+              type="EVENT"
+              name={event.name}
+              imageUrl={event.image_url}
+              location={event.location}
+              country={event.country}
+              price={event.price}
+              date={event.date}
+              onSave={handleSave}
+              isSaved={savedItems.has(event.id)}
+            />
+          </div>
+        ))}
+
+        {/* Hotels */}
+        {hotels.map((hotel) => (
+          <div
+            key={hotel.id}
+            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+          >
+            <ListingCard
+              id={hotel.id}
+              type="HOTEL"
+              name={hotel.name}
+              imageUrl={hotel.image_url}
+              location={hotel.location}
+              country={hotel.country}
+              onSave={handleSave}
+              isSaved={savedItems.has(hotel.id)}
+            />
+          </div>
+        ))}
+
+        {/* Adventure Places */}
+        {adventurePlaces.map((place) => (
+          <div
+            key={place.id}
+            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+          >
+            <ListingCard
+              id={place.id}
+              type="ADVENTURE PLACE"
+              name={place.name}
+              imageUrl={place.image_url}
+              location={place.location}
+              country={place.country}
+              onSave={handleSave}
+              isSaved={savedItems.has(place.id)}
+            />
+          </div>
+        ))}
+      </>
+    )}
+  </div>
+</section>
       </main>
 
       <Footer />
