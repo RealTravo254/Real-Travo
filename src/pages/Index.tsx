@@ -167,53 +167,88 @@ return (
 
         {/* COMBINED LISTINGS: Trips, Events, Hotels, and Adventure Places */}
 <section>
-  {/* The outer grid container remains the same for layout */}
-  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
     {loading ? (
-      // Display enhanced shimmer loading effect
+      // Display shimmer loading effect if loading
       <>
-        {[...Array(8)].map((_, i) => (
-          // ENHANCEMENT: Applied new VIBRANT card style to the loading skeleton
+        {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="border rounded-xl overflow-hidden shadow-md bg-white transition-all duration-300"
+            className="group relative rounded-xl overflow-hidden shadow-lg border-2 border-transparent transition-all duration-300 hover:shadow-xl"
           >
-            {/* Aspect ratio for image placeholder */}
-            <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
+            <div className="aspect-[4/3] bg-muted animate-pulse" />
             <div className="p-4 space-y-3">
-              {/* Title placeholder */}
-              <div className="h-5 bg-gray-300 animate-pulse rounded-lg w-3/4" />
-              {/* Location placeholder */}
-              <div className="h-4 bg-gray-200 animate-pulse rounded-lg w-1/2" />
-              {/* Description/Tags placeholder */}
-              <div className="h-4 bg-gray-200 animate-pulse rounded-lg w-2/3" />
-              {/* Price/Date placeholder for Trips/Events - Bolder/more prominent */}
-              <div className="h-6 bg-primary/20 animate-pulse rounded-lg w-1/3 mt-3" />
+              <div className="h-5 bg-muted animate-pulse rounded w-3/4" />
+              <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+              <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+              {/* Price/Date placeholder for Trips/Events */}
+              <div className="h-6 bg-muted animate-pulse rounded w-1/3 mt-2" />
             </div>
           </div>
         ))}
       </>
     ) : (
-      // Display all listings with enhanced VIBRANT wrapper
+      // Display all listings: Trips, then Events, then Hotels, then Adventure Places
       <>
         {/* Trips */}
         {trips.map((trip) => (
           <div
             key={trip.id}
-            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+            className="group relative rounded-xl overflow-hidden shadow-md cursor-pointer border border-gray-100 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+            // Assuming ListingCard accepts onClick to navigate/view details
           >
-            <ListingCard
-              id={trip.id}
-              type="TRIP"
-              name={trip.name}
-              imageUrl={trip.image_url}
-              location={trip.location}
-              country={trip.country}
-              price={trip.price}
-              date={trip.date}
-              onSave={handleSave}
-              isSaved={savedItems.has(trip.id)}
-            />
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <ListingCard
+                id={trip.id}
+                type="TRIP"
+                name={trip.name}
+                imageUrl={trip.image_url}
+                location={trip.location}
+                country={trip.country}
+                // Price and Date are intentionally excluded here to be handled manually in the wrapper
+                onSave={handleSave}
+                isSaved={savedItems.has(trip.id)}
+              />
+              {/* Vibrant Overlay for Price and Date */}
+              {(trip.price || trip.date) && (
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white flex justify-between items-center transition-opacity duration-300">
+                  {trip.price && (
+                    <span className="font-extrabold text-lg bg-primary px-2 py-0.5 rounded-full shadow-lg">
+                      {/* Format Price as currency, e.g., $150 */}
+                      {`$${trip.price}`} 
+                    </span>
+                  )}
+                  {trip.date && (
+                    <span className="text-sm font-semibold opacity-90">
+                      {/* Format Date, e.g., Oct 25 */}
+                      {trip.date} 
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Separate section for location/name to make them stand out */}
+            <div className="p-4 bg-white">
+              <h3 className="text-lg font-bold text-gray-800 line-clamp-1 group-hover:text-primary transition-colors duration-200">
+                {trip.name}
+              </h3>
+              <p className="text-sm text-muted-foreground flex items-center mt-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1 opacity-70"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {`${trip.location}, ${trip.country}`}
+              </p>
+            </div>
           </div>
         ))}
 
@@ -221,20 +256,56 @@ return (
         {events.map((event) => (
           <div
             key={event.id}
-            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+            className="group relative rounded-xl overflow-hidden shadow-md cursor-pointer border border-gray-100 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
           >
-            <ListingCard
-              id={event.id}
-              type="EVENT"
-              name={event.name}
-              imageUrl={event.image_url}
-              location={event.location}
-              country={event.country}
-              price={event.price}
-              date={event.date}
-              onSave={handleSave}
-              isSaved={savedItems.has(event.id)}
-            />
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <ListingCard
+                id={event.id}
+                type="EVENT"
+                name={event.name}
+                imageUrl={event.image_url}
+                location={event.location}
+                country={event.country}
+                onSave={handleSave}
+                isSaved={savedItems.has(event.id)}
+              />
+              {/* Vibrant Overlay for Price and Date */}
+              {(event.price || event.date) && (
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white flex justify-between items-center transition-opacity duration-300">
+                  {event.price && (
+                    <span className="font-extrabold text-lg bg-primary px-2 py-0.5 rounded-full shadow-lg">
+                      {`$${event.price}`}
+                    </span>
+                  )}
+                  {event.date && (
+                    <span className="text-sm font-semibold opacity-90">
+                      {event.date}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="p-4 bg-white">
+              <h3 className="text-lg font-bold text-gray-800 line-clamp-1 group-hover:text-primary transition-colors duration-200">
+                {event.name}
+              </h3>
+              <p className="text-sm text-muted-foreground flex items-center mt-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1 opacity-70"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {`${event.location}, ${event.country}`}
+              </p>
+            </div>
           </div>
         ))}
 
@@ -242,18 +313,41 @@ return (
         {hotels.map((hotel) => (
           <div
             key={hotel.id}
-            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+            className="group relative rounded-xl overflow-hidden shadow-md cursor-pointer border border-gray-100 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
           >
-            <ListingCard
-              id={hotel.id}
-              type="HOTEL"
-              name={hotel.name}
-              imageUrl={hotel.image_url}
-              location={hotel.location}
-              country={hotel.country}
-              onSave={handleSave}
-              isSaved={savedItems.has(hotel.id)}
-            />
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <ListingCard
+                id={hotel.id}
+                type="HOTEL"
+                name={hotel.name}
+                imageUrl={hotel.image_url}
+                location={hotel.location}
+                country={hotel.country}
+                onSave={handleSave}
+                isSaved={savedItems.has(hotel.id)}
+              />
+            </div>
+            <div className="p-4 bg-white">
+              <h3 className="text-lg font-bold text-gray-800 line-clamp-1 group-hover:text-primary transition-colors duration-200">
+                {hotel.name}
+              </h3>
+              <p className="text-sm text-muted-foreground flex items-center mt-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1 opacity-70"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {`${hotel.location}, ${hotel.country}`}
+              </p>
+            </div>
           </div>
         ))}
 
@@ -261,25 +355,48 @@ return (
         {adventurePlaces.map((place) => (
           <div
             key={place.id}
-            className="group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-primary/50"
+            className="group relative rounded-xl overflow-hidden shadow-md cursor-pointer border border-gray-100 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
           >
-            <ListingCard
-              id={place.id}
-              type="ADVENTURE PLACE"
-              name={place.name}
-              imageUrl={place.image_url}
-              location={place.location}
-              country={place.country}
-              onSave={handleSave}
-              isSaved={savedItems.has(place.id)}
-            />
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <ListingCard
+                key={place.id}
+                id={place.id}
+                type="ADVENTURE PLACE"
+                name={place.name}
+                imageUrl={place.image_url}
+                location={place.location}
+                country={place.country}
+                onSave={handleSave}
+                isSaved={savedItems.has(place.id)}
+              />
+            </div>
+            <div className="p-4 bg-white">
+              <h3 className="text-lg font-bold text-gray-800 line-clamp-1 group-hover:text-primary transition-colors duration-200">
+                {place.name}
+              </h3>
+              <p className="text-sm text-muted-foreground flex items-center mt-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1 opacity-70"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {`${place.location}, ${place.country}`}
+              </p>
+            </div>
           </div>
         ))}
       </>
     )}
   </div>
 </section>
-
       </main>
 
       <Footer />
