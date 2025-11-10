@@ -351,5 +351,5 @@ const Index = () => {
       <MobileBottomBar />
     </div>
   );
-}; 
+};
 export default Index;
