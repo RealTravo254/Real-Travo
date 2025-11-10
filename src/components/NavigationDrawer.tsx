@@ -141,7 +141,6 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           )}
         </ul>
       </nav>
-
 <div className="p-6 border-t border-orange-400 bg-orange-500"> {/* Changed background to orange-500 and added a lighter orange border */}
         <p className="text-xs text-orange-100 text-center"> {/* Changed text color for contrast */}
           © 2025 TripTrac. All rights reserved.
