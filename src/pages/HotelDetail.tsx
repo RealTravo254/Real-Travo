@@ -17,11 +17,6 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
-// MODIFICATION: Import the necessary hook/component for the dots (if not already there, 
-// a custom one might be needed, but for simplicity, we'll try to use a standard
-// pattern or add a simple implementation here). For this specific request, 
-// I'll add the dots implementation directly into the return block.
-
 interface Facility {
   name: string;
   price: number;
@@ -130,15 +125,13 @@ const HotelDetail = () => {
       <Header />
       
       <main className="container px-4 py-6 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">{hotel.name}</h1>
 
         {/* Image Gallery Carousel and Share Button Container */}
         <div className="relative w-full mb-6">
           <Button
             variant="ghost"
             onClick={handleShare}
-            // MODIFICATION: Share button style changes
-            // Set background to a solid red, no hover effect, circular shape.
+            // MODIFICATION: Share button style changes: solid red, no hover, white text
             className="absolute top-4 right-4 z-20 bg-red-600 rounded-full p-2 h-auto w-auto text-white shadow-lg 
                        hover:bg-red-600 focus:bg-red-700 active:bg-red-700" 
           >
@@ -150,14 +143,6 @@ const HotelDetail = () => {
             opts={{ loop: true }}
             plugins={[Autoplay({ delay: 3000 })]}
             className="w-full"
-            // Add on an index change handler for the dots
-            // Note: The `onSelect` prop might be specific to some carousel libraries. 
-            // Assuming this is a shadcn/ui carousel wrapper around Embla, 
-            // you typically use `api` to get the current index, 
-            // but for simplicity and directness, I'll use a direct event handler 
-            // if available or a similar common approach.
-            // For now, I'll use a placeholder for the `onSelect` and use the 
-            // `default` implementation of the carousel controls and add the dots logic.
             setApi={(api) => {
                 if (api) {
                     api.on("select", () => {
@@ -186,7 +171,7 @@ const HotelDetail = () => {
               className="right-4 z-10 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border-none" 
             />
             
-            {/* White live dots - MODIFICATION: Added this section */}
+            {/* White live dots */}
             {displayImages.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
                     {displayImages.map((_, index) => (
@@ -194,10 +179,9 @@ const HotelDetail = () => {
                             key={index}
                             className={`w-2 h-2 rounded-full transition-all duration-300 ${
                                 index === current
-                                    ? 'bg-white' // Active dot
-                                    : 'bg-white/40' // Inactive dot with RGBA
+                                    ? 'bg-white' 
+                                    : 'bg-white/40' 
                             }`}
-                            // Optionally add onClick to navigate, but keeping it simple for now
                         />
                     ))}
                 </div>
@@ -206,20 +190,43 @@ const HotelDetail = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <p className="text-muted-foreground">{hotel.location}, {hotel.country}</p>
-
+          {/* MODIFICATION: Consolidated Name, Location, Map Button, and About section into 
+            a single card-like container (md:col-span-2) on large screens. 
+            Amenities and Facilities are included here.
+          */}
+          <div className="md:col-span-2 space-y-6 p-4 md:p-6 border rounded-lg bg-card shadow-sm">
+            
+            {/* Title, Location & Map Button Group */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-2 md:space-y-0 pb-4 border-b">
+              <div>
+                <h1 className="text-3xl font-bold">{hotel.name}</h1>
+                <p className="text-muted-foreground">{hotel.location}, {hotel.country}</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={openInMaps}
+                // Only show View on Map next to title on large screens, or take up full width on small screens
+                className="w-full md:w-auto flex-shrink-0" 
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                View on Map
+              </Button>
+            </div>
+            
+            {/* About Section (Description) */}
             <div>
-              <h2 className="text-xl font-semibold mb-2">About</h2>
+              <h2 className="text-xl font-semibold mb-2">About {hotel.name}</h2>
               <p className="text-muted-foreground">{hotel.description}</p>
             </div>
 
+            {/* Amenities Section */}
             {hotel.amenities && hotel.amenities.length > 0 && (
-              <div>
+              <div className="pt-4 border-t">
                 <h2 className="text-xl font-semibold mb-2">Amenities</h2>
                 <div className="flex flex-wrap gap-2">
                   {hotel.amenities.map((amenity, idx) => (
                     <span key={idx} className="bg-secondary px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                      {/* Using a placeholder icon for now, though Wifi is used, it's better to reflect diverse amenities */}
                       <Wifi className="h-3 w-3" />
                       {amenity}
                     </span>
@@ -228,12 +235,13 @@ const HotelDetail = () => {
               </div>
             )}
 
+            {/* Facilities Section */}
             {hotel.facilities && hotel.facilities.length > 0 && (
-              <div>
+              <div className="pt-4 border-t">
                 <h2 className="text-xl font-semibold mb-3">Available Facilities</h2>
                 <div className="grid gap-3">
                   {hotel.facilities.map((facility, idx) => (
-                    <div key={idx} className="border rounded-lg p-4">
+                    <div key={idx} className="border rounded-lg p-4 bg-background">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold">{facility.name}</h3>
                         <span className="text-lg font-bold">${facility.price}/day</span>
@@ -249,30 +257,28 @@ const HotelDetail = () => {
             )}
           </div>
 
+          {/* Contact and Booking (Sidebar) */}
           <div className="space-y-4">
-            <Button
-              variant="outline"
-              onClick={openInMaps}
-              className="w-full"
-            >
-              <MapPin className="mr-2 h-4 w-4" />
-              View on Map
-            </Button>
+            {/* The standalone Map Button is removed as it's now next to the title */}
 
-            <div className="bg-card p-6 rounded-lg border space-y-3">
-              <h3 className="font-semibold">Contact Information</h3>
-              {hotel.phone_numbers && hotel.phone_numbers.map((phone, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-primary" />
-                  <a href={`tel:${phone}`} className="text-sm">{phone}</a>
-                </div>
-              ))}
-              {hotel.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <a href={`mailto:${hotel.email}`} className="text-sm">{hotel.email}</a>
-                </div>
-              )}
+            <div className="bg-card p-6 rounded-lg border space-y-3 shadow-sm">
+              <h3 className="font-semibold">Contact & Booking</h3>
+              {/* Contact Information */}
+              <div className="pt-2 border-t space-y-3">
+                {hotel.phone_numbers && hotel.phone_numbers.map((phone, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <a href={`tel:${phone}`} className="text-sm">{phone}</a>
+                  </div>
+                ))}
+                {hotel.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <a href={`mailto:${hotel.email}`} className="text-sm">{hotel.email}</a>
+                  </div>
+                )}
+              </div>
+              
               <Button 
                 className="w-full mt-4" 
                 onClick={() => setBookingOpen(true)}
@@ -280,6 +286,13 @@ const HotelDetail = () => {
                 Book Now
               </Button>
             </div>
+
+            {/* Optional: Registration Number or other minor detail can go here */}
+            {hotel.registration_number && (
+                <div className="text-sm text-muted-foreground p-4 bg-card rounded-lg border">
+                    <p>Registration No: {hotel.registration_number}</p>
+                </div>
+            )}
           </div>
         </div>
       </main>
@@ -295,4 +308,5 @@ const HotelDetail = () => {
     </div>
   );
 };
+
 export default HotelDetail;
