@@ -28,18 +28,31 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20">
-      <div className="p-6 border-b">
+<div className="p-6 border-b bg-orange-500"> {/* Added bg-orange-500 */}
+
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold text-xl">
+
+          {/* Changed logo background to white, text to orange */}
+          <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-orange-500 font-bold text-xl">
+
             T
+
           </div>
+
           <div>
-            <h2 className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            {/* Changed site name to white, removed gradient text */}
+            <h2 className="font-bold text-lg text-white">
+
               TripTrac
+
             </h2>
-            <p className="text-xs text-muted-foreground">Explore the world</p>
+            {/* Changed tagline text to a lighter orange/white */}
+            <p className="text-xs text-orange-100">Explore the world</p>
+
           </div>
+
         </div>
+
       </div>
 
       <nav className="flex-1 p-4">
