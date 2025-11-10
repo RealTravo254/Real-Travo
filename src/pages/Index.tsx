@@ -247,7 +247,7 @@ const Index = () => {
 
         </section>
 
-        <hr className="border-t border-gray-200 mt-12 mb-8" />
+        <hr className="border-t border-gray-200 mt-8 mb-0" />
 
         {/* COMBINED LISTINGS: Trips, Events, Hotels, and Adventure Places */}
         <section>
