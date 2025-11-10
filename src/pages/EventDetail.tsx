@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Share2, Calendar } from "lucide-react";
 import { BookEventDialog } from "@/components/booking/BookEventDialog";
 import { useToast } from "@/hooks/use-toast";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselPrevious, 
+  CarouselNext 
+} from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
 interface Event {
@@ -39,6 +45,8 @@ const EventDetail = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingOpen, setBookingOpen] = useState(false);
+  // State for current slide index to implement custom dots
+  const [current, setCurrent] = useState(0); 
 
   useEffect(() => {
     fetchEvent();
@@ -91,8 +99,8 @@ const EventDetail = () => {
       window.open(event.map_link, '_blank');
     } else {
       const query = encodeURIComponent(`${event?.name}, ${event?.location}, ${event?.country}`);
-      // NOTE: Corrected the Google Maps URL structure for the fallback
-      window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+      // Corrected the Google Maps URL structure for the fallback
+      window.open(`https://maps.google.com/?q=${query}`, '_blank');
     }
   };
 
@@ -120,8 +128,10 @@ const EventDetail = () => {
           <Button
             variant="ghost"
             onClick={handleShare}
-            // MODIFICATION: Set to absolute position over the carousel (top-4, right-4, high z-index)
-            className="absolute top-4 right-4 z-20 bg-background/80 backdrop-blur-sm rounded-full p-2 h-auto w-auto hover:bg-background"
+            // MODIFICATION: Share button style changes
+            // Set background to a solid red, no hover effect, circular shape.
+            className="absolute top-4 right-4 z-20 bg-red-600 rounded-full p-2 h-auto w-auto text-white shadow-lg 
+                       hover:bg-red-600 focus:bg-red-700 active:bg-red-700" 
           >
             <Share2 className="h-5 w-5" />
           </Button>
@@ -131,6 +141,14 @@ const EventDetail = () => {
             opts={{ loop: true }}
             plugins={[Autoplay({ delay: 3000 })]}
             className="w-full"
+            // Add on an index change handler for the dots
+            setApi={(api) => {
+                if (api) {
+                    api.on("select", () => {
+                        setCurrent(api.selectedScrollSnap());
+                    });
+                }
+            }}
           >
             <CarouselContent>
               {displayImages.map((img, idx) => (
@@ -138,14 +156,36 @@ const EventDetail = () => {
                   <img
                     src={img}
                     alt={`${event.name} ${idx + 1}`}
-                    // MODIFICATION: Removed 'rounded-lg' to remove the border radius
                     className="w-full h-64 md:h-96 object-cover" 
                   />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-2 z-10" />
-            <CarouselNext className="right-2 z-10" />
+
+            {/* Carousel navigation controls - MODIFICATION: Added RGBA background */}
+            <CarouselPrevious 
+              className="left-4 z-10 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border-none" 
+            />
+            <CarouselNext 
+              className="right-4 z-10 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border-none" 
+            />
+            
+            {/* White live dots - MODIFICATION: Added this section */}
+            {displayImages.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                    {displayImages.map((_, index) => (
+                        <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                index === current
+                                    ? 'bg-white' // Active dot
+                                    : 'bg-white/40' // Inactive dot with RGBA
+                            }`}
+                            // Optionally add onClick to navigate, but keeping it simple for now
+                        />
+                    ))}
+                </div>
+            )}
           </Carousel>
         </div>
         {/* End of Image Gallery Carousel and Share Button Container */}
