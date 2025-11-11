@@ -96,7 +96,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
               </DropdownMenu>
             </li>
           )}
-
+  
           {user && (
             <li>
               <Link
