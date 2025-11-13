@@ -158,16 +158,6 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           ) : (
             // LOGIN BUTTON (Guest Only)
             <li className="mt-4">
-              <Link
-                to="/auth" // Links to Auth.tsx
-                onClick={onClose}
-                // PRIMARY CHANGE: Made login button contrast with white text and a brighter blue (bg-blue-600)
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
-              >
-                {/* Icon is white (inherited from link text-white) */}
-                <LogIn className="h-5 w-5" />
-                <span className="font-medium">Login</span>
-              </Link>
             </li>
           )}
         </ul>
