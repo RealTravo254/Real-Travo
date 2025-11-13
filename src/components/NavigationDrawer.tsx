@@ -49,13 +49,14 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20">
-      {/* Changed background to bg-blue-900 (Deep Navy) */}
-      <div className="p-6 border-b bg-blue-900"> 
+    // PRIMARY CHANGE: Entire body background is dark navyblue (bg-blue-950)
+    <div className="flex flex-col h-full bg-blue-950">
+      {/* Header section - kept blue-900 for a slight color difference, but white text is maintained */}
+      <div className="p-6 border-b border-blue-800 bg-blue-900"> 
 
         <div className="flex items-center gap-3">
 
-          {/* Changed logo background to white, text to blue-900 (Navy) */}
+          {/* Logo background remains white, text is blue-900 (Navy) */}
           <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-blue-900 font-bold text-xl">
             T
           </div>
@@ -65,7 +66,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
             <h2 className="font-bold text-lg text-white">
               TripTrac
             </h2>
-            {/* Changed tagline text to text-blue-200 (Lighter blue for contrast) */}
+            {/* Tagline text remains lighter blue for contrast */}
             <p className="text-xs text-blue-200">Explore the world</p>
 
           </div>
@@ -74,24 +75,25 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
       </div>
 
+      {/* Navigation links section */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {/* VERTICAL ARRANGEMENT FOR PARTNER LINKS (User Only) */}
           {user && (
-            <li className="mb-4 pt-2 border-t border-muted-foreground/30">
+            <li className="mb-4 pt-2 border-t border-blue-800"> {/* Changed border color for contrast */}
               <ul className="space-y-1">
                 {partnerItems.map((item) => (
                   <li key={item.path}>
                     <Link
                       to={item.path}
                       onClick={onClose}
-                      // Increased padding/size for better tap target
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-primary/10 transition-all duration-200 group"
+                      // Hover background is white with low opacity (white/10), text/icons are white
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-all duration-200 group"
                     >
-                      {/* UPDATED: Icon is now black (text-foreground) by default */}
-                      <item.icon className="h-5 w-5 text-foreground group-hover:text-primary transition-colors" />
-                      {/* UPDATED: Font is font-medium and black (text-foreground) */}
-                      <span className="font-medium text-foreground group-hover:text-primary transition-colors"> 
+                      {/* PRIMARY CHANGE: Icon is now white (text-white) by default */}
+                      <item.icon className="h-5 w-5 text-white group-hover:text-white transition-colors" />
+                      {/* PRIMARY CHANGE: Font is font-medium and white (text-white) */}
+                      <span className="font-medium text-white group-hover:text-white transition-colors"> 
                         {item.label}
                       </span>
                     </Link>
@@ -107,10 +109,13 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
               <Link
                 to="/profile/edit" // Links to ProfileEdit.tsx
                 onClick={onClose}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-all duration-200 group"
+                // Hover background is white with low opacity (white/10), text/icons are white
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
               >
-                <Edit className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="font-medium group-hover:text-primary transition-colors">
+                {/* PRIMARY CHANGE: Icon is now white (text-white) */}
+                <Edit className="h-5 w-5 text-white group-hover:text-white transition-colors" />
+                {/* PRIMARY CHANGE: Font is now white (text-white) */}
+                <span className="font-medium text-white group-hover:text-white transition-colors">
                   Edit Profile
                 </span>
               </Link>
@@ -123,10 +128,13 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
               <Link
                 to={item.path}
                 onClick={onClose}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-all duration-200 group"
+                // Hover background is white with low opacity (white/10), text/icons are white
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
               >
-                <item.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="font-medium group-hover:text-primary transition-colors">
+                {/* PRIMARY CHANGE: Icon is now white (text-white) */}
+                <item.icon className="h-5 w-5 text-white group-hover:text-white transition-colors" />
+                {/* PRIMARY CHANGE: Font is now white (text-white) */}
+                <span className="font-medium text-white group-hover:text-white transition-colors">
                   {item.label}
                 </span>
               </Link>
@@ -139,8 +147,10 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
             <li className="mt-4">
               <Button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 text-primary-foreground hover:bg-red-700 transition-all duration-200"
+                // Kept red for logout, ensuring text is white (text-white)
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
               >
+                {/* Icon is white (inherited from button text-white) */}
                 <LogOut className="h-5 w-5" />
                 <span className="font-medium">Logout</span>
               </Button>
@@ -151,8 +161,10 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
               <Link
                 to="/auth" // Links to Auth.tsx
                 onClick={onClose}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+                // PRIMARY CHANGE: Made login button contrast with white text and a brighter blue (bg-blue-600)
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
               >
+                {/* Icon is white (inherited from link text-white) */}
                 <LogIn className="h-5 w-5" />
                 <span className="font-medium">Login</span>
               </Link>
@@ -160,13 +172,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           )}
         </ul>
       </nav>
-      {/* Changed background to bg-blue-900 and border to border-blue-600 */}
-      <div className="p-6 border-t border-blue-600 bg-blue-900"> 
-        {/* Changed text color to text-blue-200 */}
-        <p className="text-xs text-blue-200 text-center"> 
-          © 2025 TripTrac. All rights reserved.
-        </p>
-      </div>
+      {/* Removed the extra background/border classes at the bottom as bg-blue-950 covers the full height */}
     </div>
    );
 };
