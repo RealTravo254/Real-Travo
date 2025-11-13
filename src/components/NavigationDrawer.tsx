@@ -164,6 +164,5 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
       </nav>
       {/* Removed the extra background/border classes at the bottom as bg-blue-950 covers the full height */}
     </div>
-   );
-   
+   ); 
 };
