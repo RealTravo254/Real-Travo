@@ -2,10 +2,7 @@ import { Home, Ticket, Heart, Phone, Info, Video, Plus, Edit, Package, LogIn, Lo
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  // DropdownMenu, // REMOVED
-  // DropdownMenuContent, // REMOVED
-  // DropdownMenuItem, // REMOVED
-  // DropdownMenuTrigger, // REMOVED
+
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
