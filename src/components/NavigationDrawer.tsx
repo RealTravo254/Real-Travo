@@ -84,7 +84,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
       {/* Header section with logo, name, and paragraph */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center gap-3 mb-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-blue font-bold text-lg">
             T
           </div>
           <div>
