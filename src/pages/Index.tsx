@@ -140,19 +140,19 @@ const Index = () => {
         </div>
       </div>
       <main className="container px-0 md:px-4 py-0 md:py-8">
-        <section className="flex flex-col lg:flex-row gap-0">
+        <section className="flex flex-col lg:flex-row gap-4 md:gap-6">
           <div className="w-full lg:w-1/3 order-2 lg:order-1">
-            <div className="grid grid-cols-2 gap-0">
+            <div className="grid grid-cols-2 gap-2 md:gap-0 px-2 md:px-0">
               {categories.map((cat) => (
                 <div
                   key={cat.title}
                   onClick={() => navigate(cat.path)}
-                  className="relative aspect-square cursor-pointer overflow-hidden group"
+                  className="relative h-24 lg:aspect-square cursor-pointer overflow-hidden group"
                   style={{ backgroundImage: `url(${cat.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
                 >
                   <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all flex flex-col items-center justify-center p-4">
-                    <cat.icon className="h-8 w-8 md:h-12 md:w-12 text-white mb-2" />
-                    <h3 className="font-bold text-white text-sm md:text-lg">{cat.title}</h3>
+                    <cat.icon className="h-6 w-6 md:h-12 md:w-12 text-white mb-1 md:mb-2" />
+                    <h3 className="font-bold text-white text-xs md:text-lg">{cat.title}</h3>
                   </div>
                 </div>
               ))}
