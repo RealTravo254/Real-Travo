@@ -196,6 +196,12 @@ const AdminDashboard = () => {
                 <p className="text-sm text-muted-foreground">{item.location}, {item.country}</p>
                 {item.date && <p className="text-sm">Date: {new Date(item.date).toLocaleDateString()}</p>}
                 {item.price && <p className="text-sm font-semibold">${item.price}</p>}
+                {item.registration_number && <p className="text-sm">Registration: {item.registration_number}</p>}
+                {item.email && <p className="text-sm">Email: {item.email}</p>}
+                {item.phone_number && <p className="text-sm">Phone: {item.phone_number}</p>}
+                {item.phone_numbers && item.phone_numbers.length > 0 && (
+                  <p className="text-sm">Phone: {item.phone_numbers.join(", ")}</p>
+                )}
                 
                 {status === 'pending' && (
                   <>

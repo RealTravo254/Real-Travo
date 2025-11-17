@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Heart, Ticket, Video, Shield, Home, FolderOpen, User } from "lucide-react";
+import { Menu, Heart, Ticket, Shield, Home, FolderOpen, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -95,89 +95,77 @@ export const Header = () => {
           </Link>
         </div>
 
-        {/* 5. Updated navigation links for white text and blue-200 hover */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden lg:flex items-center gap-6 ml-auto">
           <Link to="/" className="flex items-center gap-2 font-bold hover:text-blue-200 transition-colors">
             <Home className="h-4 w-4" />
-            Home
+            <span className="hidden xl:inline">Home</span>
           </Link>
           <Link to="/my-listing" className="flex items-center gap-2 font-bold hover:text-blue-200 transition-colors">
             <FolderOpen className="h-4 w-4" />
-            My Listing
+            <span className="hidden xl:inline">My Listing</span>
           </Link>
           <Link to="/bookings" className="flex items-center gap-2 font-bold hover:text-blue-200 transition-colors">
             <Ticket className="h-4 w-4" />
-            My Bookings
+            <span className="hidden xl:inline">My Bookings</span>
           </Link>
           <Link to="/saved" className="flex items-center gap-2 font-bold hover:text-blue-200 transition-colors">
             <Heart className="h-4 w-4" />
-            Saved
-          </Link>
-          <Link to="/vlog" className="flex items-center gap-2 font-bold hover:text-blue-200 transition-colors">
-            <Video className="h-4 w-4" />
-            Vlog
+            <span className="hidden xl:inline">Saved</span>
           </Link>
         </nav>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 h-auto px-2 text-white hover:bg-blue-800 md:hidden">
-              <User className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[50vw] rounded-none bg-popover md:hidden">
-            {user ? (
-              <DropdownMenuItem asChild>
-                <Link to="/profile/edit" className="cursor-pointer">Account</Link>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem asChild>
-                <Link to="/auth" className="w-full">Login</Link>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="hidden md:flex items-center gap-2 h-auto px-2 text-white hover:bg-blue-800">
-              <span className="hidden md:inline text-sm font-medium">
-                {userName || user?.user_metadata?.name || user?.email || "Guest"}
-              </span>
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-white text-blue-900 text-xs"> 
-                  {userName?.[0]?.toUpperCase() || user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || "G"}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[20vw] rounded-none bg-popover">
-            {user ? (
-              <>
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="cursor-pointer">Profile</Link>
-                </DropdownMenuItem>
-                {userRole === "admin" && (
+        {/* Desktop Dropdown */}
+        <div className="hidden lg:block">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {user ? (
+                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-blue-800">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profilePicture || undefined} />
+                    <AvatarFallback className="bg-blue-700 text-white text-sm">
+                      {userName ? userName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-bold">
+                    {userName || user.email?.split("@")[0] || "User"}
+                  </span>
+                </Button>
+              ) : (
+                <Button variant="ghost" className="text-white hover:bg-blue-800">
+                  Login
+                </Button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {user ? (
+                <>
                   <DropdownMenuItem asChild>
-                    <Link to="/admin" className="cursor-pointer flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      Admin Dashboard
+                    <Link to="/profile/edit" className="cursor-pointer">
+                      Profile
                     </Link>
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
-                  Sign Out
+                  {userRole === "admin" && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard" className="cursor-pointer">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                    Sign Out
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" className="cursor-pointer">
+                    Login / Sign Up
+                  </Link>
                 </DropdownMenuItem>
-              </>
-            ) : (
-              <DropdownMenuItem asChild>
-                <Link to="/auth" className="w-full">
-                  <Button variant="default" className="w-full">Login</Button>
-                </Link>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );
