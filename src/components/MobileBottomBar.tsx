@@ -10,7 +10,7 @@ export const MobileBottomBar = () => {
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Ticket, label: "Bookings", path: "/bookings" },
-    { icon: Heart, label: "Saved", path: "/saved" },
+    { icon: Heart, label: "Wishlist", path: "/saved" },
     { icon: User, label: "Account", path: user ? "/profile/edit" : "/auth" },
   ];
 

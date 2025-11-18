@@ -36,6 +36,8 @@ interface Trip {
   map_link: string;
 }
 
+import { SimilarItems } from "@/components/SimilarItems";
+
 const TripDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -266,6 +268,8 @@ const TripDetail = () => {
             </div>
           </div>
         </div>
+
+        {trip && <SimilarItems currentItemId={trip.id} itemType="trip" country={trip.country} />}
       </main>
 
       <BookTripDialog

@@ -34,8 +34,7 @@ const CreateHotel = () => {
     accessPin: "",
     confirmAccessPin: "",
     establishmentType: "hotel",
-    amenities: "",
-    allowedAdminEmails: ""
+    amenities: ""
   });
   
   const [facilities, setFacilities] = useState<Array<{name: string, price: string, capacity: string}>>([
@@ -138,19 +137,6 @@ const CreateHotel = () => {
       return;
     }
 
-    // Validate admin emails if provided
-    if (formData.allowedAdminEmails.trim()) {
-      const emailsValidation = adminEmailsSchema.safeParse(formData.allowedAdminEmails);
-      if (!emailsValidation.success) {
-        toast({
-          title: "Invalid Administrator Emails",
-          description: emailsValidation.error.issues[0].message,
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-
     // Validate at least one facility
     const validFacilities = facilities.filter(f => f.name && f.price && f.capacity);
     if (validFacilities.length === 0) {
@@ -201,11 +187,6 @@ const CreateHotel = () => {
         capacity: parseInt(f.capacity)
       }));
 
-      const allowedAdminsArray = formData.allowedAdminEmails
-        .split(',')
-        .map(e => e.trim())
-        .filter(e => e && e.includes('@'));
-
       // Hash the PIN using database function
       let hashedPin = null;
       if (formData.accessPin) {
@@ -232,7 +213,6 @@ const CreateHotel = () => {
           registration_number: formData.registrationNumber,
           hashed_access_pin: hashedPin,
           establishment_type: formData.establishmentType,
-          allowed_admin_emails: allowedAdminsArray.length > 0 ? allowedAdminsArray : null,
           email: formData.email || null,
           phone_numbers: phoneArray.length > 0 ? phoneArray : null,
           facilities: facilitiesArray,
@@ -366,18 +346,6 @@ const CreateHotel = () => {
                   <option value="hotel">Hotel</option>
                   <option value="accommodation">Accommodation</option>
                 </select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="allowedAdminEmails">Allowed Administrator Emails</Label>
-                <Input
-                  id="allowedAdminEmails"
-                  type="text"
-                  value={formData.allowedAdminEmails}
-                  onChange={(e) => setFormData({...formData, allowedAdminEmails: e.target.value})}
-                  placeholder="admin1@example.com, admin2@example.com"
-                />
-                <p className="text-sm text-muted-foreground">Comma-separated email addresses of users who can manage this listing</p>
               </div>
 
               <div className="space-y-2">
