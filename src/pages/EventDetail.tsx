@@ -7,6 +7,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Share2, Calendar } from "lucide-react";
 import { BookEventDialog } from "@/components/booking/BookEventDialog";
+import { SimilarItems } from "@/components/SimilarItems";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Carousel, 
@@ -284,6 +285,8 @@ const EventDetail = () => {
             {/* Note: The old standalone Map Button is removed since it's now in the main info box */}
           </div>
         </div>
+
+        {event && <SimilarItems currentItemId={event.id} itemType="event" country={event.country} />}
       </main>
 
       <BookEventDialog

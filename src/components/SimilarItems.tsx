@@ -1,0 +1,119 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { MapPin } from "lucide-react";
+
+interface SimilarItemsProps {
+  currentItemId: string;
+  itemType: "trip" | "event" | "hotel" | "adventure";
+  location?: string;
+  country?: string;
+}
+
+export const SimilarItems = ({ currentItemId, itemType, location, country }: SimilarItemsProps) => {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchSimilarItems();
+  }, [currentItemId, itemType]);
+
+  const fetchSimilarItems = async () => {
+    try {
+      let route = "";
+      
+      if (itemType === "trip") {
+        route = "/trip";
+        const { data, error } = await supabase
+          .from("trips")
+          .select("id, name, location, place, country, image_url, description, price")
+          .eq("approval_status", "approved")
+          .eq("is_hidden", false)
+          .neq("id", currentItemId)
+          .eq("country", country || "")
+          .limit(6);
+        if (error) throw error;
+        setItems((data || []).map(item => ({ ...item, route })));
+      } else if (itemType === "event") {
+        route = "/event";
+        const { data, error } = await supabase
+          .from("events")
+          .select("id, name, location, place, country, image_url, description, price")
+          .eq("approval_status", "approved")
+          .eq("is_hidden", false)
+          .neq("id", currentItemId)
+          .eq("country", country || "")
+          .limit(6);
+        if (error) throw error;
+        setItems((data || []).map(item => ({ ...item, route })));
+      } else if (itemType === "hotel") {
+        route = "/hotel";
+        const { data, error } = await supabase
+          .from("hotels")
+          .select("id, name, location, place, country, image_url, description")
+          .eq("approval_status", "approved")
+          .eq("is_hidden", false)
+          .neq("id", currentItemId)
+          .eq("country", country || "")
+          .limit(6);
+        if (error) throw error;
+        setItems((data || []).map(item => ({ ...item, route, price: null })));
+      } else if (itemType === "adventure") {
+        route = "/adventure";
+        const { data, error } = await supabase
+          .from("adventure_places")
+          .select("id, name, location, place, country, image_url, description, entry_fee")
+          .eq("approval_status", "approved")
+          .eq("is_hidden", false)
+          .neq("id", currentItemId)
+          .eq("country", country || "")
+          .limit(6);
+        if (error) throw error;
+        setItems((data || []).map(item => ({ ...item, route, price: item.entry_fee })));
+      }
+    } catch (error) {
+      console.error("Error fetching similar items:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || items.length === 0) return null;
+
+  return (
+    <div className="mt-12">
+      <h2 className="text-2xl font-bold mb-6">Similar {itemType === "adventure" ? "Places" : itemType === "hotel" ? "Accommodations" : itemType.charAt(0).toUpperCase() + itemType.slice(1) + "s"}</h2>
+      <div className="overflow-x-auto pb-4">
+        <div className="flex gap-4" style={{ width: `${items.length * 280}px` }}>
+          {items.map((item) => (
+            <Card
+              key={item.id}
+              className="flex-shrink-0 w-64 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => navigate(`${item.route}/${item.id}`)}
+            >
+              <div className="aspect-video relative">
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-lg mb-2 line-clamp-1">{item.name}</h3>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                  <MapPin className="h-3 w-3" />
+                  <span className="line-clamp-1">{item.location}, {item.country}</span>
+                </div>
+                {item.price && (
+                  <p className="text-sm font-semibold">${item.price}</p>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

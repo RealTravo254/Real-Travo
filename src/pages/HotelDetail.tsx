@@ -7,6 +7,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Share2, Mail, Wifi, Users } from "lucide-react";
 import { BookHotelDialog } from "@/components/booking/BookHotelDialog";
+import { SimilarItems } from "@/components/SimilarItems";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Carousel, 
@@ -290,6 +291,8 @@ const HotelDetail = () => {
             {/* Registration number hidden from public for security */}
           </div>
         </div>
+
+        {hotel && <SimilarItems currentItemId={hotel.id} itemType="hotel" country={hotel.country} />}
       </main>
 
       <BookHotelDialog

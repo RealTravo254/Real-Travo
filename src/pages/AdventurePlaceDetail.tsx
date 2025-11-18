@@ -7,6 +7,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Share2, Mail, DollarSign, Wifi } from "lucide-react"; // Added Wifi for amenity icon
 import { BookAdventureDialog } from "@/components/booking/BookAdventureDialog";
+import { SimilarItems } from "@/components/SimilarItems";
 import { useToast } from "@/hooks/use-toast";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -301,6 +302,8 @@ const AdventurePlaceDetail = () => {
             {/* Registration number hidden from public for security */}
           </div>
         </div>
+
+        {place && <SimilarItems currentItemId={place.id} itemType="adventure" country={place.country} />}
       </main>
 
       <BookAdventureDialog

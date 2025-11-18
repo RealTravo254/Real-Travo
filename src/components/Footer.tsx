@@ -21,9 +21,9 @@ export const Footer = () => {
             <h3 className="font-bold mb-3">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li><Link to="/" className="text-blue-200 hover:text-white transition-colors">Home</Link></li>
-              <li><Link to="/CreateHotel" className="text-blue-200 hover:text-white transition-colors">List Hotel or Accommodation</Link></li>
-              <li><Link to="/CreateAdventure" className="text-blue-200 hover:text-white transition-colors">List Your Campsite or Experience</Link></li>
-              <li><Link to="/CreateTripEvent" className="text-blue-200 hover:text-white transition-colors">Organise Trip or an Evnet</Link></li>
+              <li><Link to="/become-host" className="text-blue-200 hover:text-white transition-colors">Become a Host</Link></li>
+              <li><Link to="/about" className="text-blue-200 hover:text-white transition-colors">About</Link></li>
+              <li><Link to="/contact" className="text-blue-200 hover:text-white transition-colors">Contact</Link></li>
             </ul>
           </div>
           
@@ -42,10 +42,10 @@ export const Footer = () => {
             <h3 className="font-bold mb-3">My Account</h3>
             <ul className="space-y-2 text-sm">
               {/* Links use text-blue-200 with hover:text-white */}
-              <li><Link to="/my-content" className="text-blue-200 hover:text-white transition-colors">My Content</Link></li>
+              <li><Link to="/become-host" className="text-blue-200 hover:text-white transition-colors">Become a Host</Link></li>
               <li><Link to="/bookings" className="text-blue-200 hover:text-white transition-colors">My Bookings</Link></li>
-              <li><Link to="/saved" className="text-blue-200 hover:text-white transition-colors">Saved</Link></li>
-              <li><Link to="/vlog" className="text-blue-200 hover:text-white transition-colors">Vlog</Link></li>
+              <li><Link to="/saved" className="text-blue-200 hover:text-white transition-colors">Wishlist</Link></li>
+              <li><Link to="/profile" className="text-blue-200 hover:text-white transition-colors">Profile</Link></li>
             </ul>
           </div>
         </div>

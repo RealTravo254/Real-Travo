@@ -25,7 +25,8 @@ import CreateTripEvent from "./pages/CreateTripEvent";
 import CreateHotel from "./pages/CreateHotel";
 import CreateAdventure from "./pages/CreateAdventure";
 import ProfileEdit from "./pages/ProfileEdit";
-import MyListing from "./pages/MyListing";
+import BecomeHost from "./pages/BecomeHost";
+import HostItemDetail from "./pages/HostItemDetail";
 import EditListing from "./pages/EditListing";
 
 const queryClient = new QueryClient();
@@ -57,7 +58,8 @@ const App = () => (
               <Route path="/CreateHotel" element={<CreateHotel />} />
               <Route path="/CreateAdventure" element={<CreateAdventure />} />
               <Route path="/profile/edit" element={<ProfileEdit />} />
-              <Route path="/my-listing" element={<MyListing />} />
+              <Route path="/become-host" element={<BecomeHost />} />
+              <Route path="/host-item/:type/:id" element={<HostItemDetail />} />
               <Route path="/edit-listing/:type/:id" element={<EditListing />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
