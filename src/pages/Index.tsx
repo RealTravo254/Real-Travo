@@ -260,6 +260,7 @@ style={{ backgroundImage: `url(${cat.bgImage})`, backgroundSize: 'cover', backgr
 <ImageSlideshow />
 </div>
 </section>
+<h2 className="text-2xl font-bold mb-4">Featured trips and Events</h2>
 <div className="px-4">
 {/* Main Listings - First - MODIFIED: Removed h2 and replaced with spacing */}
 <section className="mb-8">
