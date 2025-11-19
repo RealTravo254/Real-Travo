@@ -113,8 +113,8 @@ export const ListingCard = ({
         <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-end items-end">
           {/* Price - Right Side of Image Overlay */}
           {price !== undefined && (
-            <p className="font-bold text-lg text-white"> 
-              ${price}
+            <p className="font-bold text-sm md:text-lg text-white"> 
+              KSh {price}
             </p>
           )}
         </div>
@@ -122,7 +122,7 @@ export const ListingCard = ({
       
       {/* Name, Location, and Date Details - Below the image */}
       <div className="p-4 pt-3 flex flex-col space-y-1">
-        <h3 className="font-bold text-lg line-clamp-1">{name}</h3> 
+        <h3 className="font-bold text-sm md:text-lg line-clamp-1">{name}</h3> 
 
         {/* LOCATION - Left below title name with icon */}
         <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
