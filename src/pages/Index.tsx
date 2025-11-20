@@ -5,7 +5,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { SearchBarWithSuggestions } from "@/components/SearchBarWithSuggestions";
 import { ListingCard } from "@/components/ListingCard";
 import { Footer } from "@/components/Footer";
-import { Calendar, Hotel, Mountain, PartyPopper } from "lucide-react";
+import { Calendar, Hotel, Mountain, Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getUserId } from "@/lib/sessionManager";
@@ -73,20 +73,22 @@ const Index = () => {
     const [isSearchVisible, setIsSearchVisible] = useState(true);
     const [showSearchIcon, setShowSearchIcon] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
-    const [scrollableRows, setScrollableRows] = useState<{ trips: any[], hotels: any[] }>({ trips: [], hotels: [] });
+    const [scrollableRows, setScrollableRows] = useState<{ trips: any[], hotels: any[], attractions: any[] }>({ trips: [], hotels: [], attractions: [] });
     const [nearbyPlacesHotels, setNearbyPlacesHotels] = useState<any[]>([]);
     const [loadingScrollable, setLoadingScrollable] = useState(true);
     const [loadingNearby, setLoadingNearby] = useState(true);
 
     const fetchScrollableRows = async () => {
         setLoadingScrollable(true);
-        const [hotelsData] = await Promise.all([
-            supabase.from("hotels").select("*").eq("approval_status", "approved").eq("is_hidden", false).limit(10)
+        const [hotelsData, attractionsData] = await Promise.all([
+            supabase.from("hotels").select("*").eq("approval_status", "approved").eq("is_hidden", false).limit(10),
+            supabase.from("adventure_places").select("*").eq("approval_status", "approved").eq("is_hidden", false).limit(10)
         ]);
 
         setScrollableRows({
             trips: [],
-            hotels: hotelsData.data || []
+            hotels: hotelsData.data || [],
+            attractions: attractionsData.data || []
         });
         
         setLoadingScrollable(false);
@@ -216,7 +218,7 @@ const Index = () => {
 
     const categories = [
         { icon: Calendar, title: "Trips", path: "/category/trips", bgImage: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800" },
-        { icon: PartyPopper, title: "Events", path: "/category/events", bgImage: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800" },
+        { icon: Compass, title: "Attractions", path: "/category/adventure", bgImage: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800" },
         { icon: Hotel, title: "Hotels", path: "/category/hotels", bgImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
         { icon: Mountain, title: "Adventure", path: "/category/adventure", bgImage: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800" },
     ];
@@ -268,10 +270,12 @@ const Index = () => {
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                             {loading ? (
                                 [...Array(10)].map((_, i) => (
-                                    <div key={i} className="flex-shrink-0 w-64 rounded-lg overflow-hidden shadow-lg">
+                                    <div key={i} className="flex-shrink-0 w-64 rounded-lg overflow-hidden shadow-md">
                                         <div className="aspect-[4/3] bg-muted animate-pulse" />
-                                        <div className="p-4 space-y-2">
-                                            <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+                                        <div className="p-4 space-y-3">
+                                            <div className="h-5 bg-muted animate-pulse rounded w-4/5" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
                                         </div>
                                     </div>
                                 ))
@@ -307,11 +311,14 @@ const Index = () => {
                         </h2>
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                             {loadingScrollable ? (
-                                [...Array(5)].map((_, i) => (
-                                    <div key={i} className="flex-shrink-0 w-64">
-                                        <div className="aspect-[4/3] bg-muted animate-pulse rounded-lg" />
-                                        <div className="h-4 bg-muted animate-pulse rounded mt-2 w-3/4" />
-                                        <div className="h-3 bg-muted animate-pulse rounded mt-1 w-1/2" />
+                                [...Array(10)].map((_, i) => (
+                                    <div key={i} className="flex-shrink-0 w-64 rounded-lg overflow-hidden shadow-md">
+                                        <div className="aspect-[4/3] bg-muted animate-pulse" />
+                                        <div className="p-4 space-y-3">
+                                            <div className="h-5 bg-muted animate-pulse rounded w-4/5" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -343,11 +350,14 @@ const Index = () => {
                         </h2>
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                             {loadingScrollable ? (
-                                [...Array(5)].map((_, i) => (
-                                    <div key={i} className="flex-shrink-0 w-64">
-                                        <div className="aspect-[4/3] bg-muted animate-pulse rounded-lg" />
-                                        <div className="h-4 bg-muted animate-pulse rounded mt-2 w-3/4" />
-                                        <div className="h-3 bg-muted animate-pulse rounded mt-1 w-1/2" />
+                                [...Array(10)].map((_, i) => (
+                                    <div key={i} className="flex-shrink-0 w-64 rounded-lg overflow-hidden shadow-md">
+                                        <div className="aspect-[4/3] bg-muted animate-pulse" />
+                                        <div className="p-4 space-y-3">
+                                            <div className="h-5 bg-muted animate-pulse rounded w-4/5" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -364,6 +374,44 @@ const Index = () => {
                                             date=""
                                             onSave={handleSave}
                                             isSaved={savedItems.has(hotel.id)}
+                                        />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Featured Attractions */}
+                    <section className="mb-4 md:mb-8">
+                        <h2 className="text-sm md:text-2xl font-bold mb-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                            Featured Attractions
+                        </h2>
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                            {loadingScrollable ? (
+                                [...Array(10)].map((_, i) => (
+                                    <div key={i} className="flex-shrink-0 w-64 rounded-lg overflow-hidden shadow-md">
+                                        <div className="aspect-[4/3] bg-muted animate-pulse" />
+                                        <div className="p-4 space-y-3">
+                                            <div className="h-5 bg-muted animate-pulse rounded w-4/5" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                                            <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                scrollableRows.attractions.map((attraction) => (
+                                    <div key={attraction.id} className="flex-shrink-0 w-64">
+                                        <ListingCard
+                                            id={attraction.id}
+                                            type="ADVENTURE PLACE"
+                                            name={attraction.name}
+                                            imageUrl={attraction.image_url}
+                                            location={attraction.location}
+                                            country={attraction.country}
+                                            price={attraction.entry_fee || 0}
+                                            date=""
+                                            onSave={handleSave}
+                                            isSaved={savedItems.has(attraction.id)}
                                         />
                                     </div>
                                 ))
