@@ -67,7 +67,7 @@ export const ListingCard = ({
       "TRIP": "trip",
       "EVENT": "event",
       "HOTEL": "hotel",
-      "Experience": "adventure",
+      "ADVENTURE PLACE": "adventure",
       "ACCOMMODATION": "accommodation",
       "ATTRACTION": "attraction"
     };
@@ -88,7 +88,10 @@ export const ListingCard = ({
   return (
     <Card 
       onClick={handleCardClick}
-      className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-0 rounded-none" 
+      // Adjusted width for small screens (e.g., max-w-[180px] or w-full on larger)
+      // and smaller overall padding/font sizes
+      className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-0 rounded-none
+                 max-w-[160px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg" 
     >
       <div 
         className="relative aspect-[4/3] overflow-hidden" 
@@ -101,7 +104,7 @@ export const ListingCard = ({
         
         {/* Category Badge - Top-Left - Only show when showBadge is true */}
         {showBadge && (
-          <Badge className="absolute top-3 left-3 bg-red-600 text-white backdrop-blur text-2xs z-10">
+          <Badge className="absolute top-2 left-2 bg-red-600 text-white backdrop-blur text-[0.6rem] z-10 p-1">
             {type}
           </Badge>
         )}
@@ -112,12 +115,12 @@ export const ListingCard = ({
           size="icon"
           onClick={handleSave}
           className={cn(
-            "absolute top-3 right-3 h-8 w-8 rounded-full transition-all z-10 text-red-500 hover:bg-blue-500 hover:text-white"
+            "absolute top-2 right-2 h-7 w-7 rounded-full transition-all z-10 text-red-500 hover:bg-blue-500 hover:text-white"
           )}
         >
           <Heart
             className={cn(
-              "h-4 w-4 transition-all",
+              "h-3 w-3 transition-all", // Smaller icon
               saved ? "fill-red-500 text-red-500" : "text-red-500"
             )}
           />
@@ -125,9 +128,9 @@ export const ListingCard = ({
 
         {/* Price Overlay - Bottom-Right of Image - Only for TRIP */}
         {!hidePrice && type === "TRIP" && (
-          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-end items-end">
+          <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent flex justify-end items-end">
             {price !== undefined && (
-              <p className="font-bold text-sm md:text-lg text-white"> 
+              <p className="font-bold text-xs text-white"> 
                 KSh {price}
               </p>
             )}
@@ -136,12 +139,12 @@ export const ListingCard = ({
       </div>
       
       {/* Name, Location, and Date Details - Below the image */}
-      <div className="p-2 md:p-3 flex flex-col space-y-1">
-        <h3 className="font-bold text-xs md:text-sm line-clamp-1">{name}</h3> 
+      <div className="p-1.5 flex flex-col space-y-0.5"> {/* Smaller padding and spacing */}
+        <h3 className="font-bold text-xs line-clamp-1">{name}</h3> {/* Smaller font */}
 
         {/* LOCATION - Left below title name with icon */}
-        <div className="flex items-center space-x-1 text-2xs md:text-xs text-gray-600 dark:text-gray-400">
-          <MapPin className="h-3 w-3 md:h-4 md:w-4 shrink-0" />
+        <div className="flex items-center space-x-0.5 text-[0.6rem] text-gray-600 dark:text-gray-400"> {/* Smaller font and spacing */}
+          <MapPin className="h-3 w-3 shrink-0" /> {/* Smaller icon */}
           <p className="line-clamp-1">
             {location}, {country}
           </p>
@@ -149,8 +152,8 @@ export const ListingCard = ({
         
         {/* DATE row */}
         {(date || isCustomDate) && (
-          <div className="flex justify-between items-center pt-1">
-            <p className="text-2xs md:text-sm font-semibold text-red-600 dark:text-red-400"> 
+          <div className="flex justify-between items-center pt-0.5">
+            <p className="text-[0.6rem] font-semibold text-red-600 dark:text-red-400"> {/* Smaller font */}
               {isCustomDate ? "Custom" : formatDate(date)}
             </p>
           </div>
@@ -158,12 +161,12 @@ export const ListingCard = ({
         
         {/* EVENT CAPACITY - Only for events */}
         {type === "EVENT" && availableTickets !== undefined && (
-          <div className="flex items-center justify-between pt-1 border-t border-border/50 mt-1">
-            <p className="text-2xs md:text-xs font-medium text-muted-foreground">
+          <div className="flex items-center justify-between pt-0.5 border-t border-border/50 mt-0.5">
+            <p className="text-[0.6rem] font-medium text-muted-foreground"> {/* Smaller font */}
               Tickets Remaining:
             </p>
             <p className={cn(
-              "text-2xs md:text-sm font-bold",
+              "text-[0.6rem] font-bold", // Smaller font
               (availableTickets - (bookedTickets || 0)) <= 5 ? "text-destructive" : "text-green-600 dark:text-green-400"
             )}>
               {Math.max(0, availableTickets - (bookedTickets || 0))} / {availableTickets}
