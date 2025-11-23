@@ -147,7 +147,7 @@ const HostBookings = () => {
 
         {hostedItems.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground">You don't have any hosted items yet.</p>
+            <p className="text-muted-foreground">You are not hosting any items yet.</p>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

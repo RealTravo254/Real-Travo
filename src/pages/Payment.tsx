@@ -364,10 +364,14 @@ export default function Payment() {
           {/* Bank Details Card */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Bank Details</span>
+              <CardTitle className="flex items-center justify-between flex-wrap gap-2">
+                <span>Bank Details (Withdrawal/Payout Only)</span>
                 {getStatusBadge()}
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                <AlertCircle className="h-4 w-4 inline mr-1" />
+                These details are exclusively for withdrawal and payout purposes
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               {rejectionReason && verificationStatus === "rejected" && (
