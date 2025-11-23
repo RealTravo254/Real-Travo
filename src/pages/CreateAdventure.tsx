@@ -36,8 +36,8 @@ const CreateAdventure = () => {
     openingHours: "",
     closingHours: "",
     entranceFeeType: "free",
-    childPrice: "",
-    adultPrice: ""
+    childPrice: "0",
+    adultPrice: "0"
   });
   
   const [workingDays, setWorkingDays] = useState({
@@ -50,12 +50,12 @@ const CreateAdventure = () => {
     Sun: false
   });
   
-  const [facilities, setFacilities] = useState<Array<{name: string, pricePerDay: string, capacity: string}>>([
-    {name: "", pricePerDay: "", capacity: ""}
+  const [facilities, setFacilities] = useState<Array<{name: string, priceType: string, price: string, capacity: string}>>([
+    {name: "", priceType: "free", price: "0", capacity: "0"}
   ]);
   
-  const [activities, setActivities] = useState<Array<{name: string, price: string}>>([
-    {name: "", price: ""}
+  const [activities, setActivities] = useState<Array<{name: string, priceType: string, price: string}>>([
+    {name: "", priceType: "free", price: "0"}
   ]);
   
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
@@ -121,7 +121,7 @@ const CreateAdventure = () => {
   };
 
   const addFacility = () => {
-    setFacilities([...facilities, {name: "", pricePerDay: "", capacity: ""}]);
+    setFacilities([...facilities, {name: "", priceType: "free", price: "0", capacity: "0"}]);
   };
 
   const removeFacility = (index: number) => {
@@ -131,7 +131,7 @@ const CreateAdventure = () => {
   };
 
   const addActivity = () => {
-    setActivities([...activities, {name: "", price: ""}]);
+    setActivities([...activities, {name: "", priceType: "free", price: "0"}]);
   };
 
   const removeActivity = (index: number) => {
@@ -220,14 +220,17 @@ const CreateAdventure = () => {
         .filter(f => f.name.trim())
         .map(f => ({ 
           name: f.name.trim(), 
-          price_per_day: parseFloat(f.pricePerDay) || 0,
+          price_per_day: f.priceType === "free" ? 0 : parseFloat(f.price) || 0,
           capacity: parseInt(f.capacity) || 0
         }));
 
       // Prepare activities array
       const activitiesArray = activities
         .filter(a => a.name.trim())
-        .map(a => ({ name: a.name.trim(), price: parseFloat(a.price) || 0 }));
+        .map(a => ({ 
+          name: a.name.trim(), 
+          price: a.priceType === "free" ? 0 : parseFloat(a.price) || 0 
+        }));
 
       const { error } = await supabase
         .from("adventure_places")
@@ -497,48 +500,68 @@ const CreateAdventure = () => {
                 <Button type="button" size="sm" onClick={addFacility}>Add Facility</Button>
               </div>
               {facilities.map((facility, index) => (
-                <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Input
-                    placeholder="Facility name"
-                    value={facility.name}
-                    onChange={(e) => {
-                      const newFacilities = [...facilities];
-                      newFacilities[index].name = e.target.value;
-                      setFacilities(newFacilities);
-                    }}
-                  />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Price per day"
-                    value={facility.pricePerDay}
-                    onChange={(e) => {
-                      const newFacilities = [...facilities];
-                      newFacilities[index].pricePerDay = e.target.value;
-                      setFacilities(newFacilities);
-                    }}
-                  />
-                  <div className="flex gap-2">
+                <div key={index} className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                     <Input
-                      type="number"
-                      placeholder="Capacity"
-                      value={facility.capacity}
+                      placeholder="Facility name"
+                      value={facility.name}
                       onChange={(e) => {
                         const newFacilities = [...facilities];
-                        newFacilities[index].capacity = e.target.value;
+                        newFacilities[index].name = e.target.value;
                         setFacilities(newFacilities);
                       }}
                     />
-                    {facilities.length > 1 && (
-                      <Button 
-                        type="button" 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={() => removeFacility(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                    <Select
+                      value={facility.priceType}
+                      onValueChange={(value) => {
+                        const newFacilities = [...facilities];
+                        newFacilities[index].priceType = value;
+                        setFacilities(newFacilities);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {facility.priceType === "paid" && (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Price per day"
+                        value={facility.price}
+                        onChange={(e) => {
+                          const newFacilities = [...facilities];
+                          newFacilities[index].price = e.target.value;
+                          setFacilities(newFacilities);
+                        }}
+                      />
                     )}
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Capacity"
+                        value={facility.capacity}
+                        onChange={(e) => {
+                          const newFacilities = [...facilities];
+                          newFacilities[index].capacity = e.target.value;
+                          setFacilities(newFacilities);
+                        }}
+                      />
+                      {facilities.length > 1 && (
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={() => removeFacility(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -551,38 +574,58 @@ const CreateAdventure = () => {
                 <Button type="button" size="sm" onClick={addActivity}>Add Activity</Button>
               </div>
               {activities.map((activity, index) => (
-                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <Input
-                    placeholder="Activity name"
-                    value={activity.name}
-                    onChange={(e) => {
-                      const newActivities = [...activities];
-                      newActivities[index].name = e.target.value;
-                      setActivities(newActivities);
-                    }}
-                  />
-                  <div className="flex gap-2">
+                <div key={index} className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Price"
-                      value={activity.price}
+                      placeholder="Activity name"
+                      value={activity.name}
                       onChange={(e) => {
                         const newActivities = [...activities];
-                        newActivities[index].price = e.target.value;
+                        newActivities[index].name = e.target.value;
                         setActivities(newActivities);
                       }}
                     />
-                    {activities.length > 1 && (
-                      <Button 
-                        type="button" 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={() => removeActivity(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Select
+                      value={activity.priceType}
+                      onValueChange={(value) => {
+                        const newActivities = [...activities];
+                        newActivities[index].priceType = value;
+                        setActivities(newActivities);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="flex gap-2">
+                      {activity.priceType === "paid" && (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Price"
+                          value={activity.price}
+                          onChange={(e) => {
+                            const newActivities = [...activities];
+                            newActivities[index].price = e.target.value;
+                            setActivities(newActivities);
+                          }}
+                        />
+                      )}
+                      {activities.length > 1 && (
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={() => removeActivity(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
