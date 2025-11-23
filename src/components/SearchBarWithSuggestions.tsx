@@ -10,6 +10,8 @@ interface SearchBarProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   onSuggestionSearch?: (query: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 interface SearchResult {
@@ -21,7 +23,7 @@ interface SearchResult {
   activities?: any;
 }
 
-export const SearchBarWithSuggestions = ({ value, onChange, onSubmit, onSuggestionSearch }: SearchBarProps) => {
+export const SearchBarWithSuggestions = ({ value, onChange, onSubmit, onSuggestionSearch, onFocus, onBlur }: SearchBarProps) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const navigate = useNavigate();
@@ -138,7 +140,11 @@ export const SearchBarWithSuggestions = ({ value, onChange, onSubmit, onSuggesti
           setShowSuggestions(true);
         }}
         onKeyPress={handleKeyPress}
-        onFocus={() => setShowSuggestions(true)}
+        onFocus={() => {
+          setShowSuggestions(true);
+          onFocus?.();
+        }}
+        onBlur={onBlur}
         className="pl-10 md:pl-12 pr-20 md:pr-24 h-10 md:h-14 text-sm md:text-lg rounded-full border-2 focus-visible:border-primary shadow-md"
       />
       <Button
