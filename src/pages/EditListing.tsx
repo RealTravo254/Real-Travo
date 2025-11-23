@@ -215,10 +215,26 @@ const EditListing = () => {
   };
 
   const removeExistingImage = (index: number) => {
+    if (existingImages.length + newImages.length <= 1) {
+      toast({
+        title: "Cannot remove image",
+        description: "At least one image is required",
+        variant: "destructive",
+      });
+      return;
+    }
     setExistingImages(existingImages.filter((_, i) => i !== index));
   };
 
   const removeNewImage = (index: number) => {
+    if (existingImages.length + newImages.length <= 1) {
+      toast({
+        title: "Cannot remove image",
+        description: "At least one image is required",
+        variant: "destructive",
+      });
+      return;
+    }
     setNewImages(newImages.filter((_, i) => i !== index));
   };
 
@@ -407,6 +423,17 @@ const EditListing = () => {
       }
 
       const allImages = [...existingImages, ...uploadedImageUrls];
+      
+      // Validate minimum one image
+      if (allImages.length < 1) {
+        toast({
+          title: "Error",
+          description: "At least one image is required",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
 
       let table: "hotels" | "adventure_places" | "trips" | "attractions" = "hotels";
       if (type === "hotel") table = "hotels";
@@ -595,123 +622,64 @@ const EditListing = () => {
             {/* Location & Map */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Location
-                  </CardTitle>
-                  <EditButton field="location" onSave={() => handleSaveField("location")} />
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Location
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {editMode.location ? (
-                  <>
-                    <div>
-                      <Label>Location</Label>
-                      <Input
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-sm">{location}</p>
-                )}
+              <CardContent>
+                <Input value={location} disabled className="bg-muted cursor-not-allowed" />
+                <p className="text-xs text-muted-foreground mt-1">Location cannot be changed</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Map Link</CardTitle>
-                  <EditButton field="mapLink" onSave={() => handleSaveField("mapLink")} />
-                </div>
+                <CardTitle>Map Link</CardTitle>
               </CardHeader>
               <CardContent>
-                {editMode.mapLink ? (
-                  <Input
-                    value={mapLink}
-                    onChange={(e) => setMapLink(e.target.value)}
-                    placeholder="https://maps.google.com/..."
-                  />
-                ) : (
-                  <p className="text-sm">{mapLink || "No map link"}</p>
-                )}
+                <Input value={mapLink} disabled className="bg-muted cursor-not-allowed" />
+                <p className="text-xs text-muted-foreground mt-1">Map link cannot be changed</p>
               </CardContent>
             </Card>
 
             {/* Contact Information */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5" />
-                    Contact Information
-                  </CardTitle>
-                  <EditButton field="email" onSave={() => handleSaveField("email")} />
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Contact Email
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {editMode.email ? (
-                  <div>
-                    <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                ) : (
-                  <p className="text-sm">{email || "No email"}</p>
-                )}
+              <CardContent>
+                <Input value={email || "No email"} disabled className="bg-muted cursor-not-allowed" />
+                <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Phone className="h-5 w-5" />
-                    Phone Numbers
-                  </CardTitle>
-                  <EditButton field="phone" onSave={() => handleSaveField("phone")} />
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="h-5 w-5" />
+                  Phone Numbers
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {editMode.phone ? (
-                  <>
-                    {phoneNumbers.map((phone, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <Input
-                          value={phone}
-                          onChange={(e) => updatePhoneNumber(idx, e.target.value)}
-                          placeholder="Phone number"
-                        />
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          onClick={() => removePhoneNumber(idx)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button size="sm" onClick={addPhoneNumber}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Phone
-                    </Button>
-                  </>
-                ) : (
-                  <div className="space-y-1">
-                    {phoneNumbers.map((phone, idx) => (
-                      <p key={idx} className="text-sm">{phone}</p>
-                    ))}
-                  </div>
-                )}
+              <CardContent>
+                <div className="space-y-1">
+                  {phoneNumbers.length > 0 ? (
+                    phoneNumbers.map((phone, idx) => (
+                      <Input key={idx} value={phone} disabled className="bg-muted cursor-not-allowed mb-2" />
+                    ))
+                  ) : (
+                    <Input value="No phone number" disabled className="bg-muted cursor-not-allowed" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Phone numbers cannot be changed</p>
               </CardContent>
             </Card>
 
-            {/* Operating Hours */}
+            {/* Operating Hours - Only for hotels, adventures, and attractions */}
+            {type !== "trip" && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -771,34 +739,30 @@ const EditListing = () => {
                     <p className="text-sm text-muted-foreground">
                       {daysOpened.length > 0 ? daysOpened.join(", ") : "No days set"}
                     </p>
-                  </>
-                )}
+                </>
+                 )}
               </CardContent>
             </Card>
+            )}
 
             {/* Trip-specific fields */}
             {type === "trip" && (
               <>
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5" />
-                        Date
-                      </CardTitle>
-                      <EditButton field="date" onSave={() => handleSaveField("date")} />
-                    </div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Date
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {editMode.date ? (
-                      <Input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                      />
-                    ) : (
-                      <p className="text-sm">{date ? new Date(date).toLocaleDateString() : "No date"}</p>
-                    )}
+                    <Input 
+                      type="date" 
+                      value={date} 
+                      disabled 
+                      className="bg-muted cursor-not-allowed" 
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Date cannot be changed</p>
                   </CardContent>
                 </Card>
 
