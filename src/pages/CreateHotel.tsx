@@ -278,7 +278,10 @@ const CreateHotel = () => {
       <Header />
       
       <main className="container px-4 py-8 max-w-4xl mx-auto">
-        <PageHeader title="Create Hotel & Accommodation" />
+        <PageHeader 
+          title="Create Hotel & Accommodation" 
+          backgroundImage="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200"
+        />
         <h1 className="md:hidden text-3xl font-bold mb-8">Create Hotel & Accommodation</h1>
         <p className="text-muted-foreground mb-6">
           Submit your hotel or accommodation for admin verification. It will be visible after approval.

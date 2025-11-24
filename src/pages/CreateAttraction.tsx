@@ -231,7 +231,10 @@ export default function CreateAttraction() {
       <Header />
       
       <main className="container px-4 py-8 max-w-4xl mx-auto">
-        <PageHeader title="Create Attraction" />
+        <PageHeader 
+          title="Create Attraction" 
+          backgroundImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200"
+        />
         <h1 className="md:hidden text-3xl font-bold mb-6">Create New Attraction</h1>
         
         <Card className="p-6">

@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Plane, Building, Tent, ChevronRight, MapPin } from "lucide-react";
+import { Plane, Building, Tent, MapPin } from "lucide-react";
 
 const BecomeHost = () => {
   const { user } = useAuth();
@@ -193,73 +193,87 @@ const BecomeHost = () => {
       <main className="flex-1 container px-4 py-8 mb-20 md:mb-0">
         <h1 className="text-3xl font-bold mb-6">Become a Host</h1>
 
-        <Card>
-          <div className="divide-y divide-border">
-            <button
-              onClick={() => navigate("/host/category/trips")}
-              className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <Plane className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">Tours</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {myContent.filter(i => i.type === 'trip').length}
-                </Badge>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Tours Card */}
+          <button
+            onClick={() => navigate("/host/category/trips")}
+            className="relative h-40 rounded-lg overflow-hidden group shadow-lg hover:shadow-xl transition-all"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all" />
+            <div className="relative h-full flex flex-col items-center justify-center text-white p-6">
+              <Plane className="h-10 w-10 mb-3" />
+              <span className="text-xl font-bold mb-2">Tours</span>
+              <Badge variant="secondary" className="bg-white/90 text-foreground">
+                {myContent.filter(i => i.type === 'trip').length} Created
+              </Badge>
+            </div>
+          </button>
 
-            <button
-              onClick={() => navigate("/host/category/hotels")}
-              className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <Building className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">Hotels</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {myContent.filter(i => i.type === 'hotel').length}
-                </Badge>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </button>
+          {/* Hotels Card */}
+          <button
+            onClick={() => navigate("/host/category/hotels")}
+            className="relative h-40 rounded-lg overflow-hidden group shadow-lg hover:shadow-xl transition-all"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all" />
+            <div className="relative h-full flex flex-col items-center justify-center text-white p-6">
+              <Building className="h-10 w-10 mb-3" />
+              <span className="text-xl font-bold mb-2">Hotels</span>
+              <Badge variant="secondary" className="bg-white/90 text-foreground">
+                {myContent.filter(i => i.type === 'hotel').length} Created
+              </Badge>
+            </div>
+          </button>
 
-            <button
-              onClick={() => navigate("/host/category/attractions")}
-              className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <MapPin className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">Attractions</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {myContent.filter(i => i.type === 'attraction').length}
-                </Badge>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </button>
+          {/* Attractions Card */}
+          <button
+            onClick={() => navigate("/host/category/attractions")}
+            className="relative h-40 rounded-lg overflow-hidden group shadow-lg hover:shadow-xl transition-all"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all" />
+            <div className="relative h-full flex flex-col items-center justify-center text-white p-6">
+              <MapPin className="h-10 w-10 mb-3" />
+              <span className="text-xl font-bold mb-2">Attractions</span>
+              <Badge variant="secondary" className="bg-white/90 text-foreground">
+                {myContent.filter(i => i.type === 'attraction').length} Created
+              </Badge>
+            </div>
+          </button>
 
-            <button
-              onClick={() => navigate("/host/category/experiences")}
-              className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <Tent className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">Experiences</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {myContent.filter(i => i.type === 'adventure').length}
-                </Badge>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </button>
-          </div>
-        </Card>
+          {/* Experiences Card */}
+          <button
+            onClick={() => navigate("/host/category/experiences")}
+            className="relative h-40 rounded-lg overflow-hidden group shadow-lg hover:shadow-xl transition-all"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-all" />
+            <div className="relative h-full flex flex-col items-center justify-center text-white p-6">
+              <Tent className="h-10 w-10 mb-3" />
+              <span className="text-xl font-bold mb-2">Experiences</span>
+              <Badge variant="secondary" className="bg-white/90 text-foreground">
+                {myContent.filter(i => i.type === 'adventure').length} Created
+              </Badge>
+            </div>
+          </button>
+        </div>
       </main>
       <Footer />
       <MobileBottomBar />

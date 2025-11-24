@@ -211,7 +211,10 @@ const CreateTripEvent = () => {
       <Header />
       
       <main className="container px-4 py-8 max-w-4xl mx-auto">
-        <PageHeader title="Create Tour" />
+        <PageHeader 
+          title="Create Tour" 
+          backgroundImage="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200"
+        />
         <h1 className="md:hidden text-3xl font-bold mb-8">Create Tour</h1>
         
         <Card className="p-6">
