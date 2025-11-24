@@ -283,7 +283,10 @@ const CreateAdventure = () => {
       <Header />
       
       <main className="container px-4 py-8 max-w-4xl mx-auto">
-        <PageHeader title="Create Campsite or Experience" />
+        <PageHeader 
+          title="Create Campsite or Experience" 
+          backgroundImage="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1200"
+        />
         <h1 className="md:hidden text-3xl font-bold mb-8">Create Campsite or Experience</h1>
         <p className="text-muted-foreground mb-6">
           Submit your campsite or experience for admin verification. It will be visible after approval.
