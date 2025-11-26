@@ -73,7 +73,23 @@ const Saved = () => {
     const items: any[] = [];
     
     for (const saved of savedData) {
-      const tableName = saved.item_type === "adventure_place" ? "adventure_places" : `${saved.item_type}s`;
+      let tableName: string;
+      
+      // Map item types to correct table names
+      if (saved.item_type === "adventure_place") {
+        tableName = "adventure_places";
+      } else if (saved.item_type === "event" || saved.item_type === "trip") {
+        // Both events and trips are stored in the trips table
+        tableName = "trips";
+      } else if (saved.item_type === "hotel") {
+        tableName = "hotels";
+      } else if (saved.item_type === "attraction") {
+        tableName = "attractions";
+      } else {
+        // Fallback: try adding 's' to the type
+        tableName = `${saved.item_type}s`;
+      }
+      
       const { data } = await supabase
         .from(tableName as any)
         .select("*")
