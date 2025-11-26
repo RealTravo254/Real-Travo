@@ -22,7 +22,7 @@ const Index = () => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [listings, setListings] = useState<any[]>([]);
-    const { savedItems } = useSavedItems();
+    const { savedItems, handleSave } = useSavedItems();
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
     const { toast } = useToast();
@@ -264,28 +264,6 @@ const Index = () => {
     };
 
 
-    const handleSave = async (itemId: string, itemType: string) => {
-        if (!userId) {
-            toast({ title: "Login required", variant: "destructive" });
-            return;
-        }
-        const isSaved = savedItems.has(itemId);
-        if (isSaved) {
-            await supabase.from("saved_items").delete().eq("item_id", itemId).eq("user_id", userId);
-        } else {
-            // Check if item already exists in database
-            const { data: existing } = await supabase
-                .from("saved_items")
-                .select("id")
-                .eq("item_id", itemId)
-                .eq("user_id", userId)
-                .maybeSingle();
-            
-            if (!existing) {
-                await supabase.from("saved_items").insert([{ user_id: userId, item_id: itemId, item_type: itemType }]);
-            }
-        }
-    };
 
     const categories = [
         { icon: Calendar, title: "Trips", path: "/category/trips", bgImage: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop&auto=format&q=80", description: "Explore guided tours and day trips" },

@@ -18,7 +18,7 @@ const CategoryDetail = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState<any[]>([]);
   const [filteredItems, setFilteredItems] = useState<any[]>([]);
-  const { savedItems } = useSavedItems();
+  const { savedItems, handleSave } = useSavedItems();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [bookingStats, setBookingStats] = useState<Map<string, number>>(new Map());
@@ -195,50 +195,6 @@ const CategoryDetail = () => {
       item.country?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredItems(filtered);
-  };
-
-  const handleSave = async (itemId: string, itemType: string) => {
-    if (!userId) {
-      toast({
-        title: "Login required",
-        description: "Please login to save items",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const isSaved = savedItems.has(itemId);
-    
-    if (isSaved) {
-      await supabase
-        .from("saved_items")
-        .delete()
-        .eq("item_id", itemId)
-        .eq("user_id", userId);
-      
-      toast({ title: "Removed from saved" });
-    } else {
-      // Check if item already exists to prevent duplicates
-      const { data: existing } = await supabase
-        .from("saved_items")
-        .select("id")
-        .eq("item_id", itemId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      
-      if (!existing) {
-        await supabase
-          .from("saved_items")
-          .insert([{
-            user_id: userId,
-            item_id: itemId,
-            item_type: itemType,
-            session_id: null
-          }]);
-      }
-      
-      toast({ title: "Added to saved!" });
-    }
   };
 
   const handleApplyFilters = (filters: any) => {

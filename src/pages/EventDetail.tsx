@@ -16,6 +16,7 @@ import { SimilarItems } from "@/components/SimilarItems";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 import { ReviewSection } from "@/components/ReviewSection";
+import { useSavedItems } from "@/hooks/useSavedItems";
 
 interface Event {
   id: string;
@@ -48,13 +49,13 @@ const EventDetail = () => {
   const [showBooking, setShowBooking] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [referralLink, setReferralLink] = useState<string>("");
-  const [isSaved, setIsSaved] = useState(false);
+  const { savedItems, handleSave: handleSaveItem } = useSavedItems();
+  const isSaved = savedItems.has(id || "");
   const [bookedTickets, setBookedTickets] = useState(0);
 
   useEffect(() => {
     if (id) {
       fetchEvent();
-      checkIfSaved();
       fetchBookedTickets();
     }
   }, [id, user]);
@@ -95,64 +96,9 @@ const EventDetail = () => {
     }
   };
 
-  const checkIfSaved = async () => {
-    if (!user) return;
-    try {
-      const { data } = await supabase
-        .from("saved_items")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("item_id", id)
-        .maybeSingle();
-
-      setIsSaved(!!data);
-    } catch (error) {
-      console.error("Error checking saved status:", error);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user) {
-      toast({
-        title: "Login required",
-        description: "Please log in to save events",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    try {
-      if (isSaved) {
-        await supabase
-          .from("saved_items")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("item_id", id);
-        setIsSaved(false);
-        toast({ title: "Removed from saved" });
-      } else {
-        // Check if item already exists to prevent duplicates
-        const { data: existing } = await supabase
-          .from("saved_items")
-          .select("id")
-          .eq("item_id", id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-        
-        if (!existing) {
-          await supabase.from("saved_items").insert({
-            user_id: user.id,
-            item_id: id,
-            item_type: "EVENT",
-          });
-        }
-        setIsSaved(true);
-        toast({ title: "Saved successfully" });
-      }
-    } catch (error) {
-      console.error("Error toggling save:", error);
-      toast({ title: "Failed to save", variant: "destructive" });
+  const handleSave = () => {
+    if (id) {
+      handleSaveItem(id, "event");
     }
   };
 

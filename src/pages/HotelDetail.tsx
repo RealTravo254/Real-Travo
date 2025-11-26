@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/carousel";
 import { ReviewSection } from "@/components/ReviewSection";
 import Autoplay from "embla-carousel-autoplay";
+import { useSavedItems } from "@/hooks/useSavedItems";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Facility {
   name: string;
@@ -57,15 +59,17 @@ const HotelDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [isSaved, setIsSaved] = useState(false);
+  const { savedItems, handleSave: handleSaveItem } = useSavedItems();
+  
+  const isSaved = savedItems.has(id || "");
 
   useEffect(() => {
     fetchHotel();
-    checkIfSaved();
   }, [id]);
 
   const fetchHotel = async () => {
@@ -90,58 +94,9 @@ const HotelDetail = () => {
     }
   };
 
-  const checkIfSaved = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user || !id) return;
-    
-    const { data } = await supabase
-      .from("saved_items")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("item_id", id)
-      .maybeSingle();
-    
-    setIsSaved(!!data);
-  };
-
-  const handleSave = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to save this hotel",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    if (isSaved) {
-      await supabase
-        .from("saved_items")
-        .delete()
-        .eq("item_id", id)
-        .eq("user_id", user.id);
-      setIsSaved(false);
-      toast({ title: "Removed from wishlist" });
-    } else {
-      // Check if item already exists to prevent duplicates
-      const { data: existing } = await supabase
-        .from("saved_items")
-        .select("id")
-        .eq("item_id", id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (!existing) {
-        await supabase
-          .from("saved_items")
-          .insert([{ user_id: user.id, item_id: id, item_type: "hotel" }]);
-      }
-      setIsSaved(true);
-      toast({ title: "Added to wishlist" });
+  const handleSave = () => {
+    if (id) {
+      handleSaveItem(id, "hotel");
     }
   };
 

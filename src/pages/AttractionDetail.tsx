@@ -20,6 +20,7 @@ import { AvailabilityCalendar } from "@/components/booking/AvailabilityCalendar"
 import { Checkbox } from "@/components/ui/checkbox";
 import { ReviewSection } from "@/components/ReviewSection";
 import Autoplay from "embla-carousel-autoplay";
+import { useSavedItems } from "@/hooks/useSavedItems";
 
 interface Attraction {
   id: string;
@@ -51,7 +52,8 @@ export default function AttractionDetail() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [isSaved, setIsSaved] = useState(false);
+  const { savedItems, handleSave: handleSaveItem } = useSavedItems();
+  const isSaved = savedItems.has(id || "");
   const [selectedFacilities, setSelectedFacilities] = useState<Array<{name: string, price: number, capacity: number}>>([]);
   
   const [bookingData, setBookingData] = useState({
@@ -70,7 +72,6 @@ export default function AttractionDetail() {
 
   useEffect(() => {
     fetchAttraction();
-    checkIfSaved();
   }, [id]);
 
   const fetchAttraction = async () => {
@@ -121,54 +122,9 @@ export default function AttractionDetail() {
     }
   };
 
-  const checkIfSaved = async () => {
-    if (!user || !id) return;
-    
-    const { data } = await supabase
-      .from("saved_items")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("item_id", id)
-      .maybeSingle();
-    
-    setIsSaved(!!data);
-  };
-
-  const handleSave = async () => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to save this attraction",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    if (isSaved) {
-      await supabase
-        .from("saved_items")
-        .delete()
-        .eq("item_id", id)
-        .eq("user_id", user.id);
-      setIsSaved(false);
-      toast({ title: "Removed from wishlist" });
-    } else {
-      // Check if item already exists to prevent duplicates
-      const { data: existing } = await supabase
-        .from("saved_items")
-        .select("id")
-        .eq("item_id", id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (!existing) {
-        await supabase
-          .from("saved_items")
-          .insert([{ user_id: user.id, item_id: id, item_type: "attraction" }]);
-      }
-      setIsSaved(true);
-      toast({ title: "Added to wishlist" });
+  const handleSave = () => {
+    if (id) {
+      handleSaveItem(id, "attraction");
     }
   };
 
