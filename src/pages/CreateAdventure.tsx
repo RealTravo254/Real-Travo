@@ -17,6 +17,7 @@ import { registrationNumberSchema, descriptionSchema, approvalStatusSchema } fro
 import { CountrySelector } from "@/components/creation/CountrySelector";
 import { PageHeader } from "@/components/creation/PageHeader";
 import { PhoneInput } from "@/components/creation/PhoneInput";
+import { EmailVerification } from "@/components/creation/EmailVerification";
 
 const CreateAdventure = () => {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ const CreateAdventure = () => {
   
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   // Fetch user profile and set country
   useEffect(() => {
@@ -150,6 +152,16 @@ const CreateAdventure = () => {
         variant: "destructive"
       });
       navigate("/auth");
+      return;
+    }
+
+    // Verify email if provided
+    if (formData.email && !emailVerified) {
+      toast({
+        title: "Email Verification Required",
+        description: "Please verify your email address before submitting",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -354,20 +366,12 @@ const CreateAdventure = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="contact@example.com"
-                  />
-                </div>
-              </div>
+              <EmailVerification
+                email={formData.email}
+                onEmailChange={(email) => setFormData({...formData, email})}
+                isVerified={emailVerified}
+                onVerificationChange={setEmailVerified}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>

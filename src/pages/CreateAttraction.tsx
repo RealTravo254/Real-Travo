@@ -17,6 +17,7 @@ import { Footer } from "@/components/Footer";
 import { PageHeader } from "@/components/creation/PageHeader";
 import { PhoneInput } from "@/components/creation/PhoneInput";
 import { approvalStatusSchema } from "@/lib/validation";
+import { EmailVerification } from "@/components/creation/EmailVerification";
 const EAST_AFRICAN_COUNTRIES = [
   { name: "Kenya", code: "KE", flag: "🇰🇪" },
   { name: "Uganda", code: "UG", flag: "🇺🇬" },
@@ -63,6 +64,7 @@ export default function CreateAttraction() {
   const [facilities, setFacilities] = useState<Array<{name: string, price: string, capacity: string, priceType: string}>>([
     { name: "", price: "", capacity: "", priceType: "free" }
   ]);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   const addFacility = () => {
     setFacilities([...facilities, { name: "", price: "", capacity: "", priceType: "free" }]);
@@ -193,6 +195,16 @@ export default function CreateAttraction() {
         title: "Error",
         description: "You must be logged in to create an attraction",
         variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify email if provided
+    if (formData.email && !emailVerified) {
+      toast({
+        title: "Email Verification Required",
+        description: "Please verify your email address before submitting",
+        variant: "destructive"
       });
       return;
     }
@@ -346,16 +358,12 @@ export default function CreateAttraction() {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Contact Information</h2>
             
-            <div>
-              <Label htmlFor="email">Attraction Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                placeholder="contact@attraction.com"
-              />
-            </div>
+            <EmailVerification
+              email={formData.email}
+              onEmailChange={(email) => setFormData({...formData, email})}
+              isVerified={emailVerified}
+              onVerificationChange={setEmailVerified}
+            />
 
             <div>
               <Label htmlFor="phone_number">Phone Number</Label>
