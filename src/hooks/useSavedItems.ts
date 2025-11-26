@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export const useSavedItems = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [savedItems, setSavedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -69,5 +71,44 @@ export const useSavedItems = () => {
     };
   }, [user]);
 
-  return { savedItems, loading };
+  const handleSave = async (itemId: string, itemType: string) => {
+    if (!user) {
+      toast({ 
+        title: "Login required", 
+        description: "Please login to save items",
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    const isSaved = savedItems.has(itemId);
+    
+    if (isSaved) {
+      await supabase
+        .from("saved_items")
+        .delete()
+        .eq("item_id", itemId)
+        .eq("user_id", user.id);
+    } else {
+      // Check if item already exists in database
+      const { data: existing } = await supabase
+        .from("saved_items")
+        .select("id")
+        .eq("item_id", itemId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (!existing) {
+        await supabase
+          .from("saved_items")
+          .insert([{ 
+            user_id: user.id, 
+            item_id: itemId, 
+            item_type: itemType 
+          }]);
+      }
+    }
+  };
+
+  return { savedItems, loading, handleSave };
 };

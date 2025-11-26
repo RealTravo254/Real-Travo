@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { ReviewSection } from "@/components/ReviewSection";
+import { useSavedItems } from "@/hooks/useSavedItems";
 
 interface Facility {
   name: string;
@@ -59,11 +60,11 @@ const AdventurePlaceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [isSaved, setIsSaved] = useState(false);
+  const { savedItems, handleSave: handleSaveItem } = useSavedItems();
+  const isSaved = savedItems.has(id || "");
 
   useEffect(() => {
     fetchPlace();
-    checkIfSaved();
   }, [id]);
 
   const fetchPlace = async () => {
@@ -88,58 +89,9 @@ const AdventurePlaceDetail = () => {
     }
   };
 
-  const checkIfSaved = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user || !id) return;
-    
-    const { data } = await supabase
-      .from("saved_items")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("item_id", id)
-      .maybeSingle();
-    
-    setIsSaved(!!data);
-  };
-
-  const handleSave = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to save this place",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    if (isSaved) {
-      await supabase
-        .from("saved_items")
-        .delete()
-        .eq("item_id", id)
-        .eq("user_id", user.id);
-      setIsSaved(false);
-      toast({ title: "Removed from wishlist" });
-    } else {
-      // Check if item already exists to prevent duplicates
-      const { data: existing } = await supabase
-        .from("saved_items")
-        .select("id")
-        .eq("item_id", id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (!existing) {
-        await supabase
-          .from("saved_items")
-          .insert([{ user_id: user.id, item_id: id, item_type: "adventure_place" }]);
-      }
-      setIsSaved(true);
-      toast({ title: "Added to wishlist" });
+  const handleSave = () => {
+    if (id) {
+      handleSaveItem(id, "adventure_place");
     }
   };
 
