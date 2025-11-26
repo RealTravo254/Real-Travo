@@ -17,6 +17,7 @@ import { CountrySelector } from "@/components/creation/CountrySelector";
 import { PageHeader } from "@/components/creation/PageHeader";
 import { PhoneInput } from "@/components/creation/PhoneInput";
 import { approvalStatusSchema } from "@/lib/validation";
+import { EmailVerification } from "@/components/creation/EmailVerification";
 
 const CreateTripEvent = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const CreateTripEvent = () => {
   
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   // Fetch user profile and set country and email
   useEffect(() => {
@@ -133,6 +135,16 @@ const CreateTripEvent = () => {
         variant: "destructive"
       });
       navigate("/auth");
+      return;
+    }
+
+    // Verify email if provided
+    if (formData.email && !emailVerified) {
+      toast({
+        title: "Email Verification Required",
+        description: "Please verify your email address before submitting",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -379,16 +391,12 @@ const CreateTripEvent = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Contact Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  placeholder="contact@example.com"
-                />
-              </div>
+              <EmailVerification
+                email={formData.email}
+                onEmailChange={(email) => setFormData({...formData, email})}
+                isVerified={emailVerified}
+                onVerificationChange={setEmailVerified}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="phone_number">Contact Phone</Label>
