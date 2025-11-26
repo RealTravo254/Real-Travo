@@ -60,6 +60,9 @@ export const BookHotelDialog = ({ open, onOpenChange, hotel }: Props) => {
   const [selectedActivities, setSelectedActivities] = useState<SelectedActivity[]>([]);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentPhone, setPaymentPhone] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
   const [tripNote, setTripNote] = useState("");
   const [loading, setLoading] = useState(false);
   
@@ -411,7 +414,7 @@ export const BookHotelDialog = ({ open, onOpenChange, hotel }: Props) => {
 
             <div>
               <Label>Select Payment Method</Label>
-              <div className="grid grid-cols-4 gap-2 mt-2">
+              <div className="grid grid-cols-3 gap-2 mt-2">
                 <Button
                   variant={paymentMethod === "mpesa" ? "default" : "outline"}
                   onClick={() => setPaymentMethod("mpesa")}
@@ -423,12 +426,6 @@ export const BookHotelDialog = ({ open, onOpenChange, hotel }: Props) => {
                   onClick={() => setPaymentMethod("airtel")}
                 >
                   Airtel
-                </Button>
-                <Button
-                  variant={paymentMethod === "bank" ? "default" : "outline"}
-                  onClick={() => setPaymentMethod("bank")}
-                >
-                  Bank
                 </Button>
                 <Button
                   variant={paymentMethod === "card" ? "default" : "outline"}
@@ -451,25 +448,39 @@ export const BookHotelDialog = ({ open, onOpenChange, hotel }: Props) => {
               </div>
             )}
 
-            {paymentMethod === "bank" && (
-              <div className="space-y-3 border rounded-lg p-4 bg-muted/50">
-                <h3 className="font-semibold text-sm">Bank Transfer Details</h3>
-                <div className="space-y-2 text-sm">
+            {paymentMethod === "card" && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="cardNumber">Card Number</Label>
+                  <Input
+                    id="cardNumber"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-muted-foreground">Bank Name:</p>
-                    <p className="font-medium">Example Bank Ltd</p>
+                    <Label htmlFor="cardExpiry">Expiry Date</Label>
+                    <Input
+                      id="cardExpiry"
+                      value={cardExpiry}
+                      onChange={(e) => setCardExpiry(e.target.value)}
+                      placeholder="MM/YY"
+                      maxLength={5}
+                    />
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Account Name:</p>
-                    <p className="font-medium">Company Name</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Account Number:</p>
-                    <p className="font-medium">1234567890</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Reference:</p>
-                    <p className="font-medium">Use your booking ID after confirmation</p>
+                    <Label htmlFor="cardCvv">CVV</Label>
+                    <Input
+                      id="cardCvv"
+                      type="password"
+                      value={cardCvv}
+                      onChange={(e) => setCardCvv(e.target.value)}
+                      placeholder="123"
+                      maxLength={4}
+                    />
                   </div>
                 </div>
               </div>

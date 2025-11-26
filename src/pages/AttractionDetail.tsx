@@ -63,6 +63,9 @@ export default function AttractionDetail() {
     guest_phone: "",
     payment_method: "mpesa",
     payment_phone: "",
+    card_number: "",
+    card_expiry: "",
+    card_cvv: "",
   });
 
   useEffect(() => {
@@ -614,21 +617,63 @@ export default function AttractionDetail() {
                 onChange={(e) => setBookingData({...bookingData, payment_method: e.target.value})}
               >
                 <option value="mpesa">M-Pesa</option>
+                <option value="airtel">Airtel</option>
                 <option value="card">Card</option>
-                <option value="cash">Cash on Arrival</option>
               </select>
             </div>
 
-            {bookingData.payment_method === 'mpesa' && (
+            {(bookingData.payment_method === 'mpesa' || bookingData.payment_method === 'airtel') && (
               <div>
-                <Label htmlFor="payment_phone">M-Pesa Phone Number</Label>
+                <Label htmlFor="payment_phone">Phone Number</Label>
                 <Input
                   id="payment_phone"
                   type="tel"
                   value={bookingData.payment_phone}
                   onChange={(e) => setBookingData({...bookingData, payment_phone: e.target.value})}
+                  placeholder="+1234567890"
                   required
                 />
+              </div>
+            )}
+
+            {bookingData.payment_method === 'card' && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="card_number">Card Number</Label>
+                  <Input
+                    id="card_number"
+                    value={bookingData.card_number}
+                    onChange={(e) => setBookingData({...bookingData, card_number: e.target.value})}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="card_expiry">Expiry Date</Label>
+                    <Input
+                      id="card_expiry"
+                      value={bookingData.card_expiry}
+                      onChange={(e) => setBookingData({...bookingData, card_expiry: e.target.value})}
+                      placeholder="MM/YY"
+                      maxLength={5}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="card_cvv">CVV</Label>
+                    <Input
+                      id="card_cvv"
+                      type="password"
+                      value={bookingData.card_cvv}
+                      onChange={(e) => setBookingData({...bookingData, card_cvv: e.target.value})}
+                      placeholder="123"
+                      maxLength={4}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
