@@ -216,6 +216,7 @@ export const BookTripDialog = ({ open, onOpenChange, trip }: Props) => {
 
       // Send confirmation email
       const emailData = {
+        bookingId: bookingData.id,
         email: user ? user.email : guestEmail,
         guestName: user ? user.user_metadata?.name || guestName : guestName,
         bookingType: "trip",

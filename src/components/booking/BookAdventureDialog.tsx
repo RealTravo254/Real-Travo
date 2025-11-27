@@ -182,7 +182,7 @@ export const BookAdventureDialog = ({ open, onOpenChange, place }: Props) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("bookings").insert({
+      const { data: bookingData, error } = await supabase.from("bookings").insert({
         user_id: user?.id || null,
         booking_type: "adventure_place",
         item_id: place.id,
@@ -202,12 +202,13 @@ export const BookAdventureDialog = ({ open, onOpenChange, place }: Props) => {
           activities: selectedActivities,
           trip_note: tripNote,
         },
-      } as any);
+      } as any).select().single();
 
       if (error) throw error;
 
       // Send confirmation email
       const emailData = {
+        bookingId: bookingData.id,
         email: user ? user.email : guestEmail,
         guestName: user ? user.user_metadata?.name || guestName : guestName,
         bookingType: "adventure_place",

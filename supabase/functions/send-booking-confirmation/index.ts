@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 interface BookingConfirmationRequest {
+  bookingId: string;
   email: string;
   guestName: string;
   bookingType: string;
@@ -24,7 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, guestName, bookingType, itemName, totalAmount, bookingDetails, visitDate }: BookingConfirmationRequest = await req.json();
+    const { bookingId, email, guestName, bookingType, itemName, totalAmount, bookingDetails, visitDate }: BookingConfirmationRequest = await req.json();
 
     // Format booking type for display
     const typeDisplay = bookingType.charAt(0).toUpperCase() + bookingType.slice(1);
@@ -98,6 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div class="detail-box">
                 <h2>Booking Details</h2>
+                <p><strong>Booking ID:</strong> ${bookingId}</p>
                 <p><strong>Booking Type:</strong> ${typeDisplay}</p>
                 <p><strong>Item:</strong> ${itemName}</p>
                 <p><strong>Guest Name:</strong> ${guestName}</p>
