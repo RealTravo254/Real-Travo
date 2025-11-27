@@ -79,9 +79,21 @@ Deno.serve(async (req) => {
 
         // Send confirmation email
         try {
+          const emailData = bookingData.emailData || {
+            bookingId: booking.id,
+            email: bookingData.guest_email || bookingData.emailData?.email,
+            guestName: bookingData.guest_name || bookingData.emailData?.guestName,
+            bookingType: bookingData.booking_type,
+            itemName: bookingData.emailData?.itemName || 'Booking',
+            totalAmount: bookingData.total_amount,
+            bookingDetails: bookingData.booking_details || {},
+            visitDate: bookingData.visit_date,
+          };
+
           await supabaseClient.functions.invoke('send-booking-confirmation', {
-            body: bookingData.emailData,
+            body: emailData,
           });
+          console.log('Confirmation email sent successfully');
         } catch (emailError) {
           console.error('Error sending confirmation email:', emailError);
         }
