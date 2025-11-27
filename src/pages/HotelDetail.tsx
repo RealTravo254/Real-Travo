@@ -6,12 +6,13 @@ import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Share2, Mail, Wifi, Users, Clock, DollarSign, ArrowLeft, Heart } from "lucide-react";
-import { BookHotelDialog } from "@/components/booking/BookHotelDialog";
+import { MapPin, Phone, Share2, Mail, Wifi, Users, Clock, DollarSign, ArrowLeft, Heart, Loader2 } from "lucide-react";
 import { SimilarItems } from "@/components/SimilarItems";
-
-
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Carousel, 
   CarouselContent, 
@@ -33,6 +34,15 @@ interface Facility {
 interface Activity {
   name: string;
   price: number;
+}
+
+interface SelectedFacility extends Facility {
+  startDate: string;
+  endDate: string;
+}
+
+interface SelectedActivity extends Activity {
+  numberOfPeople: number;
 }
 
 interface Hotel {
@@ -65,6 +75,25 @@ const HotelDetail = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const { savedItems, handleSave: handleSaveItem } = useSavedItems();
+  
+  // Booking form state
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
+  const [completedBookingId, setCompletedBookingId] = useState<string | null>(null);
+  const [visitDate, setVisitDate] = useState("");
+  const [adults, setAdults] = useState(0);
+  const [children, setChildren] = useState(0);
+  const [selectedFacilities, setSelectedFacilities] = useState<SelectedFacility[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<SelectedActivity[]>([]);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("mpesa");
+  const [paymentPhone, setPaymentPhone] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
   
   const isSaved = savedItems.has(id || "");
 
@@ -126,6 +155,270 @@ const HotelDetail = () => {
     } else {
       const query = encodeURIComponent(`${hotel?.name}, ${hotel?.location}, ${hotel?.country}`);
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    }
+  };
+
+  const toggleFacility = (facility: Facility, checked: boolean) => {
+    if (checked) {
+      setSelectedFacilities([...selectedFacilities, { ...facility, startDate: "", endDate: "" }]);
+    } else {
+      setSelectedFacilities(selectedFacilities.filter(f => f.name !== facility.name));
+    }
+  };
+
+  const toggleActivity = (activity: Activity, checked: boolean) => {
+    if (checked) {
+      setSelectedActivities([...selectedActivities, { ...activity, numberOfPeople: 1 }]);
+    } else {
+      setSelectedActivities(selectedActivities.filter(a => a.name !== activity.name));
+    }
+  };
+
+  const updateFacilityDates = (name: string, field: 'startDate' | 'endDate', value: string) => {
+    setSelectedFacilities(selectedFacilities.map(f => 
+      f.name === name ? { ...f, [field]: value } : f
+    ));
+  };
+
+  const updateActivityPeople = (name: string, count: number) => {
+    setSelectedActivities(selectedActivities.map(a => 
+      a.name === name ? { ...a, numberOfPeople: Math.max(1, count) } : a
+    ));
+  };
+
+  const calculateTotal = () => {
+    let total = 0;
+    
+    // Facilities
+    total += selectedFacilities.reduce((sum, facility) => {
+      if (!facility.startDate || !facility.endDate) return sum;
+      const days = Math.ceil((new Date(facility.endDate).getTime() - new Date(facility.startDate).getTime()) / (1000 * 60 * 60 * 24));
+      return sum + (facility.price * Math.max(days, 1));
+    }, 0);
+    
+    // Activities
+    total += selectedActivities.reduce((sum, activity) => sum + (activity.price * activity.numberOfPeople), 0);
+    
+    return total;
+  };
+
+  const handleBooking = async () => {
+    if (!hotel) return;
+
+    // Validation
+    if (!visitDate) {
+      toast({
+        title: "Missing information",
+        description: "Please select a visit date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (adults === 0 && children === 0) {
+      toast({
+        title: "Missing information",
+        description: "Please add at least one guest",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const incompleteFacilities = selectedFacilities.some(f => !f.startDate || !f.endDate);
+    if (incompleteFacilities) {
+      toast({
+        title: "Missing dates",
+        description: "Please enter dates for all selected facilities",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user && (!guestName || !guestEmail || !guestPhone)) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all guest details",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!paymentMethod) {
+      toast({
+        title: "Payment required",
+        description: "Please select a payment method",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if ((paymentMethod === 'mpesa' || paymentMethod === 'airtel') && !paymentPhone) {
+      toast({
+        title: "Payment required",
+        description: "Please provide payment phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBookingLoading(true);
+
+    try {
+      const emailData = {
+        bookingId: '',
+        email: user ? user.email : guestEmail,
+        guestName: user ? user.user_metadata?.name || guestName : guestName,
+        bookingType: "hotel",
+        itemName: hotel.name,
+        totalAmount: calculateTotal(),
+        bookingDetails: {
+          adults,
+          children,
+          selectedFacilities,
+          selectedActivities,
+          phone: user ? "" : guestPhone,
+        },
+        visitDate,
+      };
+
+      // M-Pesa payment flow
+      if (paymentMethod === "mpesa") {
+        const bookingData = {
+          user_id: user?.id || null,
+          booking_type: "hotel",
+          item_id: id,
+          visit_date: visitDate,
+          total_amount: calculateTotal(),
+          payment_method: paymentMethod,
+          payment_phone: paymentPhone || null,
+          is_guest_booking: !user,
+          guest_name: !user ? guestName : null,
+          guest_email: !user ? guestEmail : null,
+          guest_phone: !user ? guestPhone : null,
+          booking_details: {
+            hotel_name: hotel.name,
+            adults,
+            children,
+            facilities: selectedFacilities,
+            activities: selectedActivities,
+          } as any,
+          emailData,
+        };
+
+        const { data: mpesaResponse, error: mpesaError } = await supabase.functions.invoke("mpesa-stk-push", {
+          body: {
+            phoneNumber: paymentPhone,
+            amount: calculateTotal(),
+            accountReference: `HOTEL-${hotel.id}`,
+            transactionDesc: `Booking for ${hotel.name}`,
+            bookingData,
+          },
+        });
+
+        if (mpesaError || !mpesaResponse?.success) {
+          throw new Error(mpesaResponse?.error || "M-Pesa payment failed");
+        }
+
+        const checkoutRequestId = mpesaResponse.checkoutRequestId;
+        setIsProcessingPayment(true);
+
+        // Poll for payment status
+        const startTime = Date.now();
+        const timeout = 40000;
+        let paymentConfirmed = false;
+
+        while (Date.now() - startTime < timeout) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          const { data: pendingPayment } = await supabase
+            .from('pending_payments')
+            .select('payment_status')
+            .eq('checkout_request_id', checkoutRequestId)
+            .single();
+
+          if (pendingPayment?.payment_status === 'completed') {
+            paymentConfirmed = true;
+
+            const { data: bookings } = await supabase
+              .from('bookings')
+              .select('id')
+              .eq('payment_phone', paymentPhone)
+              .eq('item_id', id)
+              .eq('payment_status', 'paid')
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (bookings && bookings.length > 0) {
+              setCompletedBookingId(bookings[0].id);
+            }
+
+            setIsProcessingPayment(false);
+            setIsPaymentCompleted(true);
+            break;
+          } else if (pendingPayment?.payment_status === 'failed') {
+            throw new Error('Payment failed');
+          }
+        }
+
+        if (!paymentConfirmed) {
+          throw new Error('Payment confirmation timeout');
+        }
+        return;
+      }
+
+      // Non-M-Pesa payment flow
+      const { data: bookingData, error } = await supabase.from('bookings').insert([{
+        user_id: user?.id || null,
+        item_id: id,
+        booking_type: 'hotel',
+        visit_date: visitDate,
+        total_amount: calculateTotal(),
+        booking_details: {
+          hotel_name: hotel.name,
+          adults,
+          children,
+          facilities: selectedFacilities,
+          activities: selectedActivities,
+        } as any,
+        is_guest_booking: !user,
+        guest_name: user ? null : guestName,
+        guest_email: user ? null : guestEmail,
+        guest_phone: user ? null : guestPhone,
+        payment_method: paymentMethod,
+        payment_phone: paymentPhone || null,
+        status: 'pending',
+        payment_status: 'paid',
+      }]).select();
+
+      if (error) throw error;
+
+      if (bookingData && bookingData[0]) {
+        emailData.bookingId = bookingData[0].id;
+      }
+
+      await supabase.functions.invoke("send-booking-confirmation", {
+        body: emailData,
+      });
+
+      toast({
+        title: "Booking successful!",
+        description: "Your booking has been submitted",
+      });
+      
+      setBookingOpen(false);
+      if (user) {
+        navigate('/bookings');
+      }
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking failed",
+        description: error.message || "Failed to create booking",
+        variant: "destructive",
+      });
+    } finally {
+      setBookingLoading(false);
+      setIsProcessingPayment(false);
     }
   };
 
@@ -359,8 +652,7 @@ const HotelDetail = () => {
                             <p className="text-xs text-muted-foreground mt-1">Capacity: {facility.capacity} guests</p>
                           </div>
                           <span className="text-base md:text-lg font-bold">
-                            <DollarSign className="inline h-4 w-4" />
-                            {facility.price}/day
+                            KSh {facility.price}/day
                           </span>
                         </div>
                       </div>
@@ -378,8 +670,7 @@ const HotelDetail = () => {
                       <div key={idx} className="border rounded-lg p-4 flex justify-between items-center bg-background">
                         <span className="font-medium text-xs md:text-base">{activity.name}</span>
                         <span className="font-bold text-xs md:text-base">
-                          <DollarSign className="inline h-4 w-4" />
-                          {activity.price}
+                          KSh {activity.price}
                         </span>
                       </div>
                     ))}
@@ -395,11 +686,292 @@ const HotelDetail = () => {
         {hotel && <SimilarItems currentItemId={hotel.id} itemType="hotel" country={hotel.country} />}
       </main>
 
-      <BookHotelDialog
-        open={bookingOpen}
-        onOpenChange={setBookingOpen}
-        hotel={hotel}
-      />
+      {/* Booking Dialog */}
+      <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          {isProcessingPayment ? (
+            <div className="py-8 text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+              <DialogTitle>Processing Payment...</DialogTitle>
+              <p className="text-sm text-muted-foreground">Please complete the payment on your phone</p>
+            </div>
+          ) : isPaymentCompleted ? (
+            <div className="py-8 text-center space-y-4">
+              <div className="h-12 w-12 rounded-full bg-green-100 mx-auto flex items-center justify-center">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <DialogTitle>Payment Completed!</DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Your booking has been confirmed
+                {completedBookingId && ` (ID: ${completedBookingId})`}
+              </p>
+              <Button onClick={() => {
+                setBookingOpen(false);
+                setIsPaymentCompleted(false);
+                if (user) navigate('/bookings');
+              }} className="w-full">
+                View Bookings
+              </Button>
+            </div>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Book Your Stay</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="visit_date">Check-in Date</Label>
+                  <Input
+                    id="visit_date"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    value={visitDate}
+                    onChange={(e) => setVisitDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="num_adults">Number of Adults</Label>
+                  <Input
+                    id="num_adults"
+                    type="number"
+                    min="0"
+                    value={adults}
+                    onChange={(e) => setAdults(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="num_children">Number of Children</Label>
+                  <Input
+                    id="num_children"
+                    type="number"
+                    min="0"
+                    value={children}
+                    onChange={(e) => setChildren(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+
+                {/* Facilities Selection */}
+                {hotel.facilities && Array.isArray(hotel.facilities) && hotel.facilities.length > 0 && (
+                  <div className="space-y-3">
+                    <Label>Select Rooms (Optional)</Label>
+                    {hotel.facilities.map((facility: any, idx: number) => {
+                      const selected = selectedFacilities.find(f => f.name === facility.name);
+                      return (
+                        <div key={idx} className="border rounded p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                checked={!!selected}
+                                onCheckedChange={(checked) => toggleFacility(facility, !!checked)}
+                              />
+                              <div>
+                                <p className="font-medium">{facility.name}</p>
+                                <p className="text-xs text-muted-foreground">Capacity: {facility.capacity} guests</p>
+                              </div>
+                            </div>
+                            <span className="font-bold">KSh {facility.price}/day</span>
+                          </div>
+                          {selected && (
+                            <div className="ml-8 grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor={`facility-start-${idx}`} className="text-xs">Start Date</Label>
+                                <Input
+                                  id={`facility-start-${idx}`}
+                                  type="date"
+                                  min={visitDate || new Date().toISOString().split('T')[0]}
+                                  value={selected.startDate}
+                                  onChange={(e) => updateFacilityDates(facility.name, 'startDate', e.target.value)}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`facility-end-${idx}`} className="text-xs">End Date</Label>
+                                <Input
+                                  id={`facility-end-${idx}`}
+                                  type="date"
+                                  min={selected.startDate || visitDate || new Date().toISOString().split('T')[0]}
+                                  value={selected.endDate}
+                                  onChange={(e) => updateFacilityDates(facility.name, 'endDate', e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Activities Selection */}
+                {hotel.activities && Array.isArray(hotel.activities) && hotel.activities.length > 0 && (
+                  <div className="space-y-3">
+                    <Label>Select Activities (Optional)</Label>
+                    {hotel.activities.map((activity: any, idx: number) => {
+                      const selected = selectedActivities.find(a => a.name === activity.name);
+                      return (
+                        <div key={idx} className="border rounded p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                checked={!!selected}
+                                onCheckedChange={(checked) => toggleActivity(activity, !!checked)}
+                              />
+                              <div>
+                                <p className="font-medium">{activity.name}</p>
+                                <p className="text-xs text-muted-foreground">KSh {activity.price}/person</p>
+                              </div>
+                            </div>
+                          </div>
+                          {selected && (
+                            <div className="ml-8">
+                              <Label htmlFor={`activity-${idx}`}>Number of People</Label>
+                              <Input
+                                id={`activity-${idx}`}
+                                type="number"
+                                min="1"
+                                value={selected.numberOfPeople}
+                                onChange={(e) => updateActivityPeople(activity.name, parseInt(e.target.value) || 1)}
+                                className="w-24"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!user && (
+                  <>
+                    <div>
+                      <Label htmlFor="guest_name">Your Name</Label>
+                      <Input
+                        id="guest_name"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="guest_email">Email</Label>
+                      <Input
+                        id="guest_email"
+                        type="email"
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="guest_phone">Phone Number</Label>
+                      <Input
+                        id="guest_phone"
+                        type="tel"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <Label htmlFor="payment_method">Payment Method</Label>
+                  <select
+                    id="payment_method"
+                    className="w-full border rounded-md p-2"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="card">Card</option>
+                  </select>
+                </div>
+
+                {(paymentMethod === 'mpesa' || paymentMethod === 'airtel') && (
+                  <div>
+                    <Label htmlFor="payment_phone">Phone Number</Label>
+                    <Input
+                      id="payment_phone"
+                      type="tel"
+                      value={paymentPhone}
+                      onChange={(e) => setPaymentPhone(e.target.value)}
+                      placeholder="+254..."
+                      required
+                    />
+                  </div>
+                )}
+
+                {paymentMethod === 'card' && (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="card_number">Card Number</Label>
+                      <Input
+                        id="card_number"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="card_expiry">Expiry Date</Label>
+                        <Input
+                          id="card_expiry"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(e.target.value)}
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="card_cvv">CVV</Label>
+                        <Input
+                          id="card_cvv"
+                          type="password"
+                          value={cardCvv}
+                          onChange={(e) => setCardCvv(e.target.value)}
+                          placeholder="123"
+                          maxLength={4}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t">
+                  <p className="text-lg font-semibold">
+                    Total Amount: KSh {calculateTotal().toFixed(2)}
+                  </p>
+                </div>
+
+                <Button onClick={handleBooking} className="w-full" disabled={bookingLoading}>
+                  {bookingLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Complete Booking"
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <MobileBottomBar />
     </div>
