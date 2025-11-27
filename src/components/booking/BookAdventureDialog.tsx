@@ -183,12 +183,34 @@ export const BookAdventureDialog = ({ open, onOpenChange, place }: Props) => {
     try {
       // Initiate M-Pesa STK Push if M-Pesa is selected
       if (paymentMethod === "mpesa") {
+        const bookingData = {
+          user_id: user?.id || null,
+          booking_type: "adventure_place",
+          item_id: place.id,
+          visit_date: visitDate,
+          total_amount: calculateTotal(),
+          payment_method: paymentMethod,
+          payment_phone: paymentPhone || null,
+          is_guest_booking: !user,
+          guest_name: !user ? guestName : null,
+          guest_email: !user ? guestEmail : null,
+          guest_phone: !user ? guestPhone : null,
+          booking_details: {
+            place_name: place.name,
+            adults,
+            children,
+            facilities: selectedFacilities,
+            activities: selectedActivities,
+          },
+        };
+
         const { data: mpesaResponse, error: mpesaError } = await supabase.functions.invoke("mpesa-stk-push", {
           body: {
             phoneNumber: paymentPhone,
             amount: calculateTotal(),
             accountReference: `ADVENTURE-${place.id}`,
             transactionDesc: `Booking for ${place.name}`,
+            bookingData,
           },
         });
 
