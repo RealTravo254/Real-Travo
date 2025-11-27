@@ -10,7 +10,11 @@ import { MapPin, Share2, Heart, Map as MapIcon, Calendar, Users, Mail, Phone, Ar
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { BookTripDialog } from "@/components/booking/BookTripDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
 import { SimilarItems } from "@/components/SimilarItems";
 
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -373,13 +377,15 @@ const EventDetail = () => {
         <SimilarItems currentItemId={event.id} itemType="trip" location={event.location} country={event.country} />
       </main>
 
-      {showBooking && (
-        <BookTripDialog
-          open={showBooking}
-          onOpenChange={setShowBooking}
-          trip={event}
-        />
-      )}
+      {/* Booking dialog - EventDetail uses same structure as TripDetail */}
+      <Dialog open={showBooking} onOpenChange={setShowBooking}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Book Event Tickets</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Please use the trip booking flow - events share the same booking system.</p>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
       <MobileBottomBar />
