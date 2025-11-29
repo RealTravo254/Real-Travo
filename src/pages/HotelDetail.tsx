@@ -299,7 +299,7 @@ const HotelDetail = () => {
       <Header />
       
       <main className="container max-w-6xl mx-auto py-[2px] px-[24px]">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 text-xs font-mono text-right font-thin border-solid rounded-none">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 text-xs font-mono text-right font-thin border-solid rounded-none my-[10px]">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
