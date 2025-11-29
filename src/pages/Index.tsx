@@ -454,7 +454,7 @@ const Index = () => {
                                     </div> : listings.map((item, index) => <ListingCard key={item.id} id={item.id} type={item.type} name={item.name} imageUrl={item.image_url} location={item.location} country={item.country} price={item.price || item.entry_fee || item.price_adult || 0} date={item.date} isCustomDate={item.is_custom_date} onSave={handleSave} isSaved={savedItems.has(item.id)} hidePrice={item.type === "HOTEL" || item.type === "ADVENTURE PLACE"} showBadge={true} priority={index < 4} availableTickets={item.type === "TRIP" || item.type === "EVENT" ? item.available_tickets : undefined} bookedTickets={item.type === "TRIP" || item.type === "EVENT" ? bookingStats[item.id] || 0 : undefined} />)}
                             </div> :
           // Horizontal scroll view for latest items (when not searching)
-          <div className="relative">
+          <div className="relative px-0 py-px">
                                 {!searchQuery && listings.length > 0 && <>
                                         <Button variant="ghost" size="icon" onClick={() => scrollSection(featuredForYouRef, 'left')} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white">
                                             <ChevronLeft className="h-6 w-6" />
