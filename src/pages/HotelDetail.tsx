@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Share2, Mail, Calendar, Clock, ArrowLeft, Heart } from "lucide-react";
+import { MapPin, Phone, Share2, Mail, Calendar, Clock, ArrowLeft, Heart, Copy } from "lucide-react";
 import { SimilarItems } from "@/components/SimilarItems";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -106,6 +106,31 @@ const HotelDetail = () => {
       handleSaveItem(id, "hotel");
     }
   };
+  const handleCopyLink = async () => {
+    if (!hotel) {
+      toast({ title: "Unable to Copy", description: "Hotel information not available", variant: "destructive" });
+      return;
+    }
+
+    const refLink = await generateReferralLink(hotel.id, "hotel", hotel.id);
+
+    try {
+      await navigator.clipboard.writeText(refLink);
+      toast({ 
+        title: "Link Copied!", 
+        description: user 
+          ? "Share this link to earn commission on bookings!" 
+          : "Share this hotel with others!" 
+      });
+    } catch (error) {
+      toast({ 
+        title: "Copy Failed", 
+        description: "Unable to copy link to clipboard", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   const handleShare = async () => {
     if (!hotel) {
       toast({ title: "Unable to Share", description: "Hotel information not available", variant: "destructive" });
@@ -125,8 +150,7 @@ const HotelDetail = () => {
         console.log("Share failed:", error);
       }
     } else {
-      navigator.clipboard.writeText(refLink);
-      toast({ title: "Link Copied", description: user ? "Share this link to earn commission on bookings!" : "Share this hotel with others!" });
+      await handleCopyLink();
     }
   };
 
@@ -373,6 +397,10 @@ const HotelDetail = () => {
               <Button variant="outline" onClick={openInMaps} className="flex-1">
                 <MapPin className="h-4 w-4 mr-2" />
                 Map
+              </Button>
+              <Button variant="outline" onClick={handleCopyLink} className="flex-1">
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Link
               </Button>
               <Button variant="outline" onClick={handleShare} className="flex-1">
                 <Share2 className="h-4 w-4 mr-2" />
