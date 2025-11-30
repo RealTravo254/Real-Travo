@@ -76,8 +76,9 @@ export const ListingCard = ({
     }
   };
 
-  // Define the custom Teal background class
+  // Define the custom Teal background and text classes (0, 128, 128)
   const tealBgClass = "bg-[rgb(0,128,128)] text-white";
+  const tealTextClass = "text-[rgb(0,128,128)]";
 
   return (
     <Card 
@@ -97,7 +98,7 @@ export const ListingCard = ({
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 m-0 p-0"
         />
         
-        {/* --- MODIFICATION: Category Badges use Teal BG --- */}
+        {/* Category Badges use Teal BG (0, 128, 128) */}
         {type === "TRIP" && (
           <Badge className={cn("absolute top-2 left-2 backdrop-blur text-xs font-bold z-10 px-2 py-1", tealBgClass)}>
             TRIP
@@ -115,7 +116,6 @@ export const ListingCard = ({
             {type}
           </Badge>
         )}
-        {/* --- END MODIFICATION --- */}
 
 
         {onSave && (
@@ -139,7 +139,7 @@ export const ListingCard = ({
           </Button>
         )}
 
-        {/* --- MODIFICATION: Price as a Red Button (from previous request) --- */}
+        {/* Price as a Red Button (from previous request) */}
         {!hidePrice && price !== undefined && (type === "TRIP" || type === "EVENT") && (
           <Button 
             className="absolute bottom-2 left-2 bg-[rgb(200,0,0)] hover:bg-[rgb(255,0,0)] text-primary-foreground px-3 py-1.5 md:px-2 md:py-1 rounded-md shadow-lg z-10 h-auto"
@@ -150,7 +150,6 @@ export const ListingCard = ({
             </p>
           </Button>
         )}
-        {/* --- END MODIFICATION --- */}
 
         {(date || isCustomDate) && (
           <div className="absolute bottom-2 right-2 bg-background/90 backdrop-blur text-foreground px-2 py-1 rounded-md shadow-md z-10">
@@ -167,8 +166,8 @@ export const ListingCard = ({
         </h3>
         
         <div className="flex items-center gap-1">
-          {/* --- MODIFICATION: MapPin Icon Color to Teal (from previous request) --- */}
-          <MapPin className="h-3 w-3 md:h-4 md:w-4 **text-teal-500** flex-shrink-0" />
+          {/* --- MODIFICATION: MapPin Icon Color now uses custom Teal (0, 128, 128) --- */}
+          <MapPin className={cn("h-3 w-3 md:h-4 md:w-4 flex-shrink-0", tealTextClass)} />
           {/* --- END MODIFICATION --- */}
           <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
             {location}, {country}
