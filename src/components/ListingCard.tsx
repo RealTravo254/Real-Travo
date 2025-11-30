@@ -5,7 +5,26 @@ import { Button } from "@/components/ui/button";
 import { cn, optimizeSupabaseImage, generateImageSrcSet } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-// ... (Interface and other imports remain the same)
+// Note: Assuming ListingCardProps interface is defined elsewhere
+interface ListingCardProps {
+    id: string;
+    type: 'TRIP' | 'EVENT' | 'HOTEL' | 'ADVENTURE PLACE' | 'ACCOMMODATION' | 'ATTRACTION';
+    name: string;
+    imageUrl: string;
+    location: string;
+    country: string;
+    price?: number;
+    date?: string;
+    isCustomDate?: boolean;
+    onSave?: (id: string, type: string) => void;
+    isSaved?: boolean;
+    amenities?: string[];
+    hidePrice?: boolean;
+    availableTickets?: number;
+    bookedTickets?: number;
+    showBadge?: boolean;
+    priority?: boolean;
+}
 
 export const ListingCard = ({
   id,
@@ -29,7 +48,6 @@ export const ListingCard = ({
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    // ... (handleCardClick logic)
     const typeMap: Record<string, string> = {
       "TRIP": "trip",
       "EVENT": "event",
@@ -42,7 +60,6 @@ export const ListingCard = ({
   };
 
   const formatDate = (dateString: string | undefined) => {
-    // ... (formatDate logic)
     if (!dateString) return "";
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
@@ -59,11 +76,14 @@ export const ListingCard = ({
     }
   };
 
+  // Define the custom Teal background class
+  const tealBgClass = "bg-[rgb(0,128,128)] text-white";
+
   return (
     <Card 
       onClick={handleCardClick}
       className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border rounded-lg bg-card shadow-sm
-                    w-full" 
+                   w-full" 
     >
       <div className="relative aspect-[4/3] overflow-hidden m-0">
         <img
@@ -77,24 +97,26 @@ export const ListingCard = ({
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 m-0 p-0"
         />
         
-        {/* ... (Badge components remain the same) ... */}
+        {/* --- MODIFICATION: Category Badges use Teal BG --- */}
         {type === "TRIP" && (
-          <Badge className="absolute top-2 left-2 **bg-red-600** text-primary-foreground backdrop-blur text-xs font-bold z-10 px-2 py-1">
+          <Badge className={cn("absolute top-2 left-2 backdrop-blur text-xs font-bold z-10 px-2 py-1", tealBgClass)}>
             TRIP
           </Badge>
         )}
 
         {type === "EVENT" && (
-          <Badge className="absolute top-2 left-2 **bg-red-600** text-primary-foreground backdrop-blur text-xs font-bold z-10 px-2 py-1">
+          <Badge className={cn("absolute top-2 left-2 backdrop-blur text-xs font-bold z-10 px-2 py-1", tealBgClass)}>
             EVENT
           </Badge>
         )}
 
         {type !== "EVENT" && type !== "TRIP" && showBadge && (
-          <Badge className="absolute top-2 left-2 bg-red-600 text-white backdrop-blur text-[0.6rem] z-10 p-1">
+          <Badge className={cn("absolute top-2 left-2 backdrop-blur text-[0.6rem] z-10 p-1", tealBgClass)}>
             {type}
           </Badge>
         )}
+        {/* --- END MODIFICATION --- */}
+
 
         {onSave && (
           <Button
@@ -103,8 +125,7 @@ export const ListingCard = ({
             className={cn(
               "absolute top-2 right-2 z-20 h-10 w-10 md:h-8 md:w-8 rounded-full p-0 bg-transparent touch-manipulation active:scale-95 transition-transform",
               "border border-black hover:border-red-500 shadow-sm",
-              // *** Aggressive style overrides to remove all rings and blue/gray hover background ***
-              "**outline-none focus-visible:ring-0 focus-visible:bg-transparent hover:bg-transparent**" 
+              "outline-none focus-visible:ring-0 focus-visible:bg-transparent hover:bg-transparent" 
             )}
           >
             <Heart
@@ -118,14 +139,18 @@ export const ListingCard = ({
           </Button>
         )}
 
-        {/* ... (Price and Date display components remain the same) ... */}
+        {/* --- MODIFICATION: Price as a Red Button (from previous request) --- */}
         {!hidePrice && price !== undefined && (type === "TRIP" || type === "EVENT") && (
-          <div className="absolute bottom-2 left-2 **bg-red-600** text-primary-foreground px-3 py-1.5 md:px-2 md:py-1 **rounded-none** shadow-lg z-10">
+          <Button 
+            className="absolute bottom-2 left-2 bg-[rgb(200,0,0)] hover:bg-[rgb(255,0,0)] text-primary-foreground px-3 py-1.5 md:px-2 md:py-1 rounded-md shadow-lg z-10 h-auto"
+            onClick={(e) => e.stopPropagation()} // Prevent card click
+          >
             <p className="font-bold text-sm md:text-xs whitespace-nowrap">
               KSh {price}
             </p>
-          </div>
+          </Button>
         )}
+        {/* --- END MODIFICATION --- */}
 
         {(date || isCustomDate) && (
           <div className="absolute bottom-2 right-2 bg-background/90 backdrop-blur text-foreground px-2 py-1 rounded-md shadow-md z-10">
@@ -136,14 +161,15 @@ export const ListingCard = ({
         )}
       </div>
       
-      {/* ... (Card content remains the same) ... */}
       <div className="p-3 md:p-4 flex flex-col space-y-2">
         <h3 className="font-bold text-sm md:text-base line-clamp-2">
           {name}
         </h3>
         
         <div className="flex items-center gap-1">
-          <MapPin className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
+          {/* --- MODIFICATION: MapPin Icon Color to Teal (from previous request) --- */}
+          <MapPin className="h-3 w-3 md:h-4 md:w-4 **text-teal-500** flex-shrink-0" />
+          {/* --- END MODIFICATION --- */}
           <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
             {location}, {country}
           </p>
