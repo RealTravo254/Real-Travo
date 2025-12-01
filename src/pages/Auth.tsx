@@ -6,12 +6,13 @@ import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+// Import components. The `rounded-none` class is applied below where possible.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignupForm } from "@/components/auth/SignupForm";
 
-// Define the specified TEAL color
+// Define the specified TEAL color (#008080)
 const TEAL_COLOR = "#008080";
 const TEAL_HOVER_COLOR = "#005555"; // A darker shade of teal for hover
 
@@ -67,7 +68,7 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Pass the TEAL color properties to the LoginForm component */}
+                {/* Passes TEAL color properties for the Login button */}
                 <LoginForm 
                   onSwitchToSignup={() => handleSwitchTab("signup")} 
                   primaryColor={TEAL_COLOR} 
@@ -86,7 +87,7 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Pass the TEAL color properties to the SignupForm component */}
+                {/* Passes TEAL color properties for the Sign Up button */}
                 <SignupForm 
                   onSwitchToLogin={() => handleSwitchTab("login")} 
                   primaryColor={TEAL_COLOR} 
