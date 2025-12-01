@@ -122,7 +122,6 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
               <span className="font-bold text-base md:text-lg text-header-foreground block">
                 TripTrac
               </span>
-              {/* MODIFIED: Changed text-muted-foreground to text-white */}
               <p className="text-xs text-white block">Your journey starts now.</p>
             </div>
           </Link>
@@ -180,24 +179,22 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
           {/* Desktop Auth Actions (Right Side) - Notification, Theme, Account */}
           <div className="hidden md:flex items-center gap-2">
             
-            {/* Notification Bell Button */}
+            {/* Notification Bell Button (MODIFIED HOVER) */}
             <button 
               // Add your onClick handler for notifications here
-              className="rounded-full h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white group transition-colors"
+              className="rounded-full h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 group transition-colors"
               aria-label="Notifications"
             >
-              <NotificationBell className="h-5 w-5 text-white group-hover:text-[#008080]" />
+              <NotificationBell className="h-5 w-5 text-white group-hover:text-white" />
             </button>
 
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle Button (MODIFIED HOVER) */}
             <button 
-              // ThemeToggle usually handles its own click, but if it's just the icon, 
-              // you'd add the toggle logic here.
-              className="rounded-full h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white group transition-colors"
+              // Add your onClick handler for theme toggle here
+              className="rounded-full h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 group transition-colors"
               aria-label="Toggle Theme"
             >
-              {/* Note: ThemeToggle component must accept or be wrapped to apply these classes */}
-              <ThemeToggle className="h-5 w-5 text-white group-hover:text-[#008080]" />
+              <ThemeToggle className="h-5 w-5 text-white group-hover:text-white" />
             </button>
           
 
