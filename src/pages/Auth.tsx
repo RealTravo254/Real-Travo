@@ -14,11 +14,12 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignupForm } from "@/components/auth/SignupForm";
 
 /**
- * Define the specified TEAL colors.
- * Standard Teal (#008080) and a darker shade for hover/active states.
+ * Define the specified new color: #080800 (Dark Olive/Khaki)
+ * This is an extremely dark shade.
  */
-const TEAL_COLOR = "#008080"; // RGB (0, 128, 128)
-const TEAL_HOVER_COLOR = "#005555"; // A darker shade of teal for hover
+const PRIMARY_COLOR = "#080800"; // RGB (8, 8, 0)
+// A slightly darker shade for hover will be almost imperceptible due to how dark the base color is
+const PRIMARY_HOVER_COLOR = "#040400"; // RGB (4, 4, 0) - Even darker for hover
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -46,14 +47,14 @@ const Auth = () => {
       <Header />
       
       <main className="container px-4 py-8 max-w-md mx-auto">
-        {/* Back Button styled with TEAL color */}
+        {/* Back Button styled with the new PRIMARY color */}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate(-1)}
           className="mb-4"
-          // Inlining style for the teal text color
-          style={{ color: TEAL_COLOR }} 
+          // Inlining style for the text color
+          style={{ color: PRIMARY_COLOR }} 
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
@@ -74,11 +75,11 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Passes TEAL color properties for the Login button */}
+                {/* Passes the new PRIMARY color properties for the Login button */}
                 <LoginForm 
                   onSwitchToSignup={() => handleSwitchTab("signup")} 
-                  primaryColor={TEAL_COLOR} 
-                  primaryHoverColor={TEAL_HOVER_COLOR}
+                  primaryColor={PRIMARY_COLOR} 
+                  primaryHoverColor={PRIMARY_HOVER_COLOR}
                 />
               </CardContent>
             </Card>
@@ -93,11 +94,11 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Passes TEAL color properties for the Sign Up button */}
+                {/* Passes the new PRIMARY color properties for the Sign Up button */}
                 <SignupForm 
                   onSwitchToLogin={() => handleSwitchTab("login")} 
-                  primaryColor={TEAL_COLOR} 
-                  primaryHoverColor={TEAL_HOVER_COLOR}
+                  primaryColor={PRIMARY_COLOR} 
+                  primaryHoverColor={PRIMARY_HOVER_COLOR}
                 />
               </CardContent>
             </Card>
