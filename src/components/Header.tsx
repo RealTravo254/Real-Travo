@@ -98,14 +98,14 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-[#008080] text-white h-16 dark:bg-[#008080] dark:text-white">
+    <header className="sticky top-0 z-50 w-full border-b border-border **bg-primary text-primary-foreground** h-16">
       <div className="container flex h-full items-center justify-between px-4">
         
         {/* Logo and Drawer Trigger (Left Side) */}
         <div className="flex items-center gap-3">
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <SheetTrigger asChild>
-              <button className="inline-flex items-center justify-center h-10 w-10 rounded-md text-white hover:bg-[#006666] transition-colors">
+              <button className="inline-flex items-center justify-center h-10 w-10 rounded-md **text-primary-foreground** hover:bg-primary/90 transition-colors">
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
@@ -119,31 +119,32 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
               T
             </div>
             <div>
-              <span className="font-bold text-base md:text-lg text-header-foreground block">
+              <span className="font-bold text-base md:text-lg **text-primary-foreground** block">
                 TripTrac
               </span>
-              <p className="text-xs text-muted-foreground block">Your journey starts now.</p>
+              {/* Logo Description Text: Changed to white/primary-foreground */}
+              <p className="text-xs **text-primary-foreground/90** block">Your journey starts now.</p>
             </div>
           </Link>
         </div>
 
         {/* Desktop Navigation (Centered) */}
         <nav className="hidden lg:flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 font-bold hover:text-muted-foreground transition-colors">
+          <Link to="/" className="flex items-center gap-2 font-bold hover:text-primary-foreground/80 transition-colors">
             <Home className="h-4 w-4" />
             <span>Home</span>
           </Link>
-          <Link to="/bookings" className="flex items-center gap-2 font-bold hover:text-muted-foreground transition-colors">
+          <Link to="/bookings" className="flex items-center gap-2 font-bold hover:text-primary-foreground/80 transition-colors">
             <Ticket className="h-4 w-4" />
             <span>My Bookings</span>
           </Link>
-          <Link to="/saved" className="flex items-center gap-2 font-bold hover:text-muted-foreground transition-colors">
+          <Link to="/saved" className="flex items-center gap-2 font-bold hover:text-primary-foreground/80 transition-colors">
             <Heart className="h-4 w-4" />
             <span>Wishlist</span>
           </Link>
           <button 
             onClick={() => user ? navigate('/become-host') : navigate('/auth')} 
-            className="flex items-center gap-2 font-bold hover:text-muted-foreground transition-colors"
+            className="flex items-center gap-2 font-bold hover:text-primary-foreground/80 transition-colors"
           >
             <FolderOpen className="h-4 w-4" />
             <span>Become a Host</span>
@@ -164,10 +165,10 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}
-              className="rounded-full h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
+              className="rounded-full h-10 w-10 flex items-center justify-center bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors"
               aria-label="Search"
             >
-              <Search className="h-5 w-5 text-white" />
+              <Search className="h-5 w-5 **text-primary-foreground**" />
             </button>
           )}
             
@@ -182,10 +183,10 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
             <ThemeToggle />
             <button 
               onClick={() => user ? navigate('/account') : navigate('/auth')}
-              className="rounded-full h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
+              className="rounded-full h-10 w-10 flex items-center justify-center bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors"
               aria-label="Account"
             >
-              <User className="h-5 w-5 text-white" />
+              <User className="h-5 w-5 **text-primary-foreground**" />
             </button>
           </div>
         </div>
