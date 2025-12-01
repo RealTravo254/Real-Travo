@@ -37,6 +37,10 @@ const POPULAR_BANKS = [
   "Other"
 ];
 
+// Define the specified Teal color
+const TEAL_COLOR = "#008080";
+const TEAL_HOVER_COLOR = "#005555"; // A darker shade of teal for hover
+
 export default function Payment() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -355,6 +359,7 @@ export default function Payment() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Note: Not changing text-primary here, assuming it's an accent color for text */}
               <p className="text-4xl font-bold text-primary">
                 KSh {balance.toFixed(2)}
               </p>
@@ -461,8 +466,14 @@ export default function Payment() {
                   <div className="flex gap-2">
                     <Button 
                       onClick={handleSaveBankDetails} 
-                      className="flex-1"
+                      className="flex-1 text-white"
                       disabled={processing}
+                      style={{ 
+                        backgroundColor: TEAL_COLOR,
+                        borderColor: TEAL_COLOR 
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = TEAL_HOVER_COLOR}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = TEAL_COLOR}
                     >
                       {processing ? "Saving..." : "Save Bank Details"}
                     </Button>
@@ -485,8 +496,14 @@ export default function Payment() {
             <DialogTrigger asChild>
               <Button
                 disabled={verificationStatus !== "verified" || balance <= 0}
-                className="w-full"
+                className="w-full text-white"
                 size="lg"
+                style={{ 
+                  backgroundColor: TEAL_COLOR,
+                  borderColor: TEAL_COLOR 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = TEAL_HOVER_COLOR}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = TEAL_COLOR}
               >
                 Withdraw Funds
               </Button>
@@ -534,7 +551,13 @@ export default function Payment() {
                 <Button
                   onClick={handleWithdraw}
                   disabled={processing}
-                  className="w-full"
+                  className="w-full text-white"
+                  style={{ 
+                    backgroundColor: TEAL_COLOR,
+                    borderColor: TEAL_COLOR 
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = TEAL_HOVER_COLOR}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = TEAL_COLOR}
                 >
                   {processing ? "Processing..." : "Confirm Withdrawal"}
                 </Button>

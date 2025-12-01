@@ -12,6 +12,11 @@ import { Eye, EyeOff, Mail, Lock, Clock, Sparkles } from "lucide-react";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { generateStrongPassword } from "@/lib/passwordUtils";
 
+// Define the specified Teal color
+const TEAL_COLOR = "#008080";
+const TEAL_HOVER_COLOR = "#005555"; // A darker shade of teal for hover
+const LIGHT_TEAL_BG = "#0080801A"; // Teal with 10% opacity for background (used as replacement for bg-primary/10)
+
 const ForgotPassword = () => {
   const [step, setStep] = useState<'email' | 'verify'>('email');
   const [email, setEmail] = useState("");
@@ -185,8 +190,11 @@ const ForgotPassword = () => {
           {step === 'email' ? (
             <>
               <div className="flex flex-col items-center mb-6">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <Mail className="w-8 h-8 text-primary" />
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{ backgroundColor: LIGHT_TEAL_BG }}
+                >
+                  <Mail className="w-8 h-8" style={{ color: TEAL_COLOR }} />
                 </div>
                 <h1 className="text-2xl font-bold mb-2">Forgot Password?</h1>
                 <p className="text-muted-foreground text-center">
@@ -207,7 +215,17 @@ const ForgotPassword = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full text-white" 
+                  disabled={loading}
+                  style={{ 
+                    backgroundColor: TEAL_COLOR,
+                    borderColor: TEAL_COLOR 
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = TEAL_HOVER_COLOR}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = TEAL_COLOR}
+                >
                   {loading ? "Sending..." : "Send Verification Code"}
                 </Button>
 
@@ -215,7 +233,8 @@ const ForgotPassword = () => {
                   <button
                     type="button"
                     onClick={() => navigate("/auth")}
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm hover:underline"
+                    style={{ color: TEAL_COLOR }}
                   >
                     Back to login
                   </button>
@@ -225,8 +244,11 @@ const ForgotPassword = () => {
           ) : (
             <>
               <div className="flex flex-col items-center mb-6">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <Lock className="w-8 h-8 text-primary" />
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{ backgroundColor: LIGHT_TEAL_BG }}
+                >
+                  <Lock className="w-8 h-8" style={{ color: TEAL_COLOR }} />
                 </div>
                 <h1 className="text-2xl font-bold mb-2">Reset Password</h1>
                 <p className="text-muted-foreground text-center">
@@ -258,6 +280,7 @@ const ForgotPassword = () => {
                       size="sm"
                       onClick={handleGeneratePassword}
                       className="h-auto py-1 px-2 text-xs"
+                      style={{ color: TEAL_COLOR }}
                     >
                       <Sparkles className="h-3 w-3 mr-1" />
                       Generate
@@ -305,7 +328,17 @@ const ForgotPassword = () => {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full text-white" 
+                  disabled={loading}
+                  style={{ 
+                    backgroundColor: TEAL_COLOR,
+                    borderColor: TEAL_COLOR 
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = TEAL_HOVER_COLOR}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = TEAL_COLOR}
+                >
                   {loading ? "Resetting..." : "Reset Password"}
                 </Button>
 
@@ -320,7 +353,8 @@ const ForgotPassword = () => {
                     type="button"
                     onClick={handleResendCode}
                     disabled={loading || !canResend}
-                    className={`text-sm ${canResend ? 'text-primary hover:underline' : 'text-muted-foreground cursor-not-allowed'}`}
+                    className={`text-sm ${canResend ? 'hover:underline' : 'text-muted-foreground cursor-not-allowed'}`}
+                    style={{ color: canResend ? TEAL_COLOR : undefined }}
                   >
                     {loading ? "Sending..." : "Resend code"}
                   </button>
