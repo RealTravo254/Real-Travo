@@ -253,7 +253,7 @@ export const FilterBar = ({ type, onApplyFilters }: FilterBarProps) => {
             </div>
           </>
         )}
-
+  
         {type === "adventure" && (
           <div className="space-y-2 relative">
             <Label className="text-xs md:text-sm">Location</Label>
