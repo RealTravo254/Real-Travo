@@ -201,7 +201,7 @@ const VerificationDetail = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(`/admin/verification/${verification.status}`)}
+              onClick={() => navigate(`/admin/verification/list/${verification.status}`)}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>

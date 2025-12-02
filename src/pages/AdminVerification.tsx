@@ -120,7 +120,7 @@ const AdminVerification = () => {
           <Card>
             <div className="divide-y divide-border">
               <button
-                onClick={() => navigate("/admin/verification/pending")}
+                onClick={() => navigate("/admin/verification/list/pending")}
                 className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
               >
                 <div className="flex items-center gap-4">
@@ -134,7 +134,7 @@ const AdminVerification = () => {
               </button>
 
               <button
-                onClick={() => navigate("/admin/verification/approved")}
+                onClick={() => navigate("/admin/verification/list/approved")}
                 className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
               >
                 <div className="flex items-center gap-4">
@@ -148,7 +148,7 @@ const AdminVerification = () => {
               </button>
 
               <button
-                onClick={() => navigate("/admin/verification/rejected")}
+                onClick={() => navigate("/admin/verification/list/rejected")}
                 className="w-full flex items-center justify-between p-6 hover:bg-accent transition-colors"
               >
                 <div className="flex items-center gap-4">
