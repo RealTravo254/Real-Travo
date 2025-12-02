@@ -28,7 +28,7 @@ interface Booking {
 }
 
 const HostBookingDetails = () => {
-  const { type, itemId } = useParams();
+  const { itemType: type, id: itemId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
