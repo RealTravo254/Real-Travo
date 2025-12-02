@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Edit, Eye, MapPin, Mail, Phone, Calendar } from "lucide-react";
 
 const HostItemDetail = () => {
-  const { type, id } = useParams();
+  const { itemType: type, id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

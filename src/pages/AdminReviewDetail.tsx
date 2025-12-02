@@ -16,7 +16,7 @@ import { approvalStatusSchema } from "@/lib/validation";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const AdminReviewDetail = () => {
-  const { type, id } = useParams();
+  const { itemType: type, id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

@@ -122,7 +122,8 @@ const App = () => (
               <Route path="/payment-history" element={<PaymentHistory />} />
               <Route path="/my-referrals" element={<MyReferrals />} />
               <Route path="/install" element={<Install />} />
-              <Route path="/host-bookings" element={<Navigate to="/become-host" replace />} />
+              <Route path="/host-bookings" element={<HostBookings />} />
+              <Route path="/host-bookings/:itemType/:id" element={<HostBookingDetails />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
