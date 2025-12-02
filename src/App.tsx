@@ -94,7 +94,7 @@ const App = () => (
               <Route path="/admin/bookings" element={<AdminBookings />} />
               <Route path="/admin/verification" element={<AdminVerification />} />
               <Route path="/admin/verification/list/:status" element={<VerificationList />} />
-              <Route path="/admin/verification/:id" element={<VerificationDetail />} />
+              <Route path="/admin/verification-detail/:id" element={<VerificationDetail />} />
               <Route path="/admin/payment-verification" element={<AdminPaymentVerification />} />
               <Route path="/admin/referral-settings" element={<AdminReferralSettings />} />
               <Route path="/become-host" element={<BecomeHost />} />
