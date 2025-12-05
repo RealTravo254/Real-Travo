@@ -37,7 +37,39 @@ Deno.serve(async (req) => {
     const resultCode = stkCallback.ResultCode.toString();
     const resultDesc = stkCallback.ResultDesc;
 
-    // Insert into callback log - trigger will handle everything else
+    // Extract receipt number from CallbackMetadata if payment successful
+    let mpesaReceiptNumber = null;
+    if (resultCode === '0' && stkCallback.CallbackMetadata?.Item) {
+      const receiptItem = stkCallback.CallbackMetadata.Item.find(
+        (item: any) => item.Name === 'MpesaReceiptNumber'
+      );
+      if (receiptItem) {
+        mpesaReceiptNumber = receiptItem.Value;
+      }
+    }
+
+    // Determine payment status based on result code
+    const paymentStatus = resultCode === '0' ? 'completed' : 'failed';
+
+    // Update pending_payments table
+    const { error: updateError } = await supabaseClient
+      .from('pending_payments')
+      .update({
+        payment_status: paymentStatus,
+        result_code: resultCode,
+        result_desc: resultDesc,
+        mpesa_receipt_number: mpesaReceiptNumber,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('checkout_request_id', checkoutRequestId);
+
+    if (updateError) {
+      console.error('Error updating pending payment:', updateError);
+    } else {
+      console.log(`✅ Payment status updated to ${paymentStatus} for ${checkoutRequestId}`);
+    }
+
+    // Insert into callback log for audit
     const { error: logError } = await supabaseClient
       .from('mpesa_callback_log')
       .insert({
@@ -50,14 +82,9 @@ Deno.serve(async (req) => {
 
     if (logError) {
       console.error('Error inserting callback log:', logError);
-      return new Response(JSON.stringify({ success: false, error: logError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
 
-    console.log('✅ Callback logged successfully - trigger will process reconciliation');
-    console.log('CheckoutRequestID:', checkoutRequestId, 'ResultCode:', resultCode);
+    console.log('CheckoutRequestID:', checkoutRequestId, 'ResultCode:', resultCode, 'Status:', paymentStatus);
 
     return new Response(JSON.stringify({ 
       ResultCode: 0,
