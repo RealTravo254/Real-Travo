@@ -243,11 +243,17 @@ const AdminReviewDetail = () => {
               <div className="p-6 space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-2xl md:text-3xl font-bold mb-2">{item.name}</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold mb-2">{item.name || item.location_name}</h1>
+                    {item.local_name && (
+                      <p className="text-lg text-muted-foreground mb-2">"{item.local_name}"</p>
+                    )}
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin className="h-4 w-4" />
-                      <span>{item.location || item.location_name}, {item.place || ""} {item.country}</span>
+                      <span>{item.location || item.location_name}, {item.country}</span>
                     </div>
+                    {item.place && (
+                      <p className="text-sm text-muted-foreground mt-1">Place: {item.place}</p>
+                    )}
                   </div>
                   {getStatusBadge(item.approval_status)}
                 </div>

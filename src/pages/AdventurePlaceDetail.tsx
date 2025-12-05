@@ -32,6 +32,7 @@ interface Activity { name: string; price: number; }
 interface AdventurePlace {
   id: string;
   name: string;
+  local_name: string | null;
   location: string;
   place: string;
   country: string;
@@ -230,15 +231,21 @@ const AdventurePlaceDetail = () => {
             )}
           </div>
           
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{place.name}</h1>
-              <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                {/* Location Icon Teal */}
-                <MapPin className="h-4 w-4" style={{ color: TEAL_COLOR }} />
-                <span>{place.location}, {place.country}</span>
-              </div>
-            </div>
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{place.name}</h1>
+              {place.local_name && (
+                <p className="text-lg text-muted-foreground mb-2">"{place.local_name}"</p>
+              )}
+              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                {/* Location Icon Teal */}
+                <MapPin className="h-4 w-4" style={{ color: TEAL_COLOR }} />
+                <span>{place.location}, {place.country}</span>
+              </div>
+              {place.place && (
+                <p className="text-sm text-muted-foreground mb-4">Place: {place.place}</p>
+              )}
+            </div>
 
             <div className="space-y-3 p-4 border bg-card">
               {(place.opening_hours || place.closing_hours) && (

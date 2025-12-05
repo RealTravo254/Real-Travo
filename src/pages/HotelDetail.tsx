@@ -32,6 +32,7 @@ interface Activity {
 interface Hotel {
   id: string;
   name: string;
+  local_name: string | null;
   location: string;
   place: string;
   country: string;
@@ -281,11 +282,17 @@ const HotelDetail = () => {
           <div className="space-y-4">
             <div>
               <h1 className="text-3xl font-bold mb-2">{hotel.name}</h1>
-              <div className="flex items-center gap-2 text-muted-foreground mb-4">
+              {hotel.local_name && (
+                <p className="text-lg text-muted-foreground mb-2">"{hotel.local_name}"</p>
+              )}
+              <div className="flex items-center gap-2 text-muted-foreground mb-2">
                 {/* MapPin Icon Teal (As requested and confirmed) */}
                 <MapPin className="h-4 w-4" style={{ color: TEAL_COLOR }} />
                 <span>{hotel.location}, {hotel.country}</span>
               </div>
+              {hotel.place && (
+                <p className="text-sm text-muted-foreground mb-4">Place: {hotel.place}</p>
+              )}
             </div>
 
             {(hotel.opening_hours || hotel.closing_hours) && 
