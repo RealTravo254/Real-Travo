@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Users, Loader2, CheckCircle2 } from "lucide-react";
+import { Calendar, Users, Loader2, CheckCircle2, Phone } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
+import { PaymentStatusDialog } from "./PaymentStatusDialog";
+import { useMpesaPayment } from "@/hooks/useMpesaPayment";
 interface Facility {
   name: string;
   price: number;
@@ -32,6 +33,10 @@ interface MultiStepBookingProps {
   skipDateSelection?: boolean;
   fixedDate?: string;
   skipFacilitiesAndActivities?: boolean;
+  itemId?: string;
+  bookingType?: string;
+  hostId?: string;
+  onPaymentSuccess?: () => void;
 }
 
 export interface BookingFormData {
@@ -43,6 +48,7 @@ export interface BookingFormData {
   guest_name: string;
   guest_email: string;
   guest_phone: string;
+  mpesa_phone: string;
 }
 
 export const MultiStepBooking = ({
@@ -58,6 +64,10 @@ export const MultiStepBooking = ({
   skipDateSelection = false,
   fixedDate = "",
   skipFacilitiesAndActivities = false,
+  itemId = "",
+  bookingType = "",
+  hostId = "",
+  onPaymentSuccess,
 }: MultiStepBookingProps) => {
   const { user } = useAuth();
   
@@ -74,6 +84,14 @@ export const MultiStepBooking = ({
     guest_name: "",
     guest_email: user?.email || "",
     guest_phone: "",
+    mpesa_phone: "",
+  });
+
+  // M-Pesa payment integration
+  const { paymentStatus, errorMessage, initiatePayment, resetPayment, isPaymentInProgress } = useMpesaPayment({
+    onSuccess: () => {
+      if (onPaymentSuccess) onPaymentSuccess();
+    },
   });
 
   // Fetch user profile data
@@ -141,7 +159,41 @@ export const MultiStepBooking = ({
   };
 
   const handleSubmit = async () => {
-    await onSubmit(formData);
+    const totalAmount = calculateTotal();
+    
+    // If total is 0, it's a free booking - skip payment
+    if (totalAmount === 0) {
+      await onSubmit(formData);
+      return;
+    }
+
+    // Initiate M-Pesa payment
+    const bookingData = {
+      item_id: itemId,
+      booking_type: bookingType,
+      total_amount: totalAmount,
+      booking_details: {
+        adults: formData.num_adults,
+        children: formData.num_children,
+        selectedFacilities: formData.selectedFacilities,
+        selectedActivities: formData.selectedActivities,
+      },
+      user_id: user?.id || null,
+      is_guest_booking: !user,
+      guest_name: formData.guest_name,
+      guest_email: formData.guest_email,
+      guest_phone: formData.guest_phone || undefined,
+      visit_date: formData.visit_date,
+      slots_booked: formData.num_adults + formData.num_children,
+      payment_method: 'mpesa',
+      payment_phone: formData.mpesa_phone,
+      host_id: hostId,
+      emailData: {
+        itemName,
+      },
+    };
+
+    await initiatePayment(formData.mpesa_phone, totalAmount, bookingData);
   };
 
   const toggleFacility = (facility: Facility) => {
@@ -482,7 +534,6 @@ export const MultiStepBooking = ({
             )}
             <div className="border-t border-primary/30 pt-2 mt-2">
               <p className="text-xl font-bold text-primary">Total: KES {calculateTotal().toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Payment pending</p>
             </div>
           </div>
 
@@ -492,6 +543,25 @@ export const MultiStepBooking = ({
             <p><span className="text-muted-foreground">Email:</span> {formData.guest_email}</p>
             {formData.guest_phone && <p><span className="text-muted-foreground">Phone:</span> {formData.guest_phone}</p>}
           </div>
+
+          {/* M-Pesa Payment */}
+          {calculateTotal() > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-primary" />
+                <Label htmlFor="mpesa_phone_logged">M-Pesa Phone Number *</Label>
+              </div>
+              <Input
+                id="mpesa_phone_logged"
+                type="tel"
+                value={formData.mpesa_phone}
+                onChange={(e) => setFormData({ ...formData, mpesa_phone: e.target.value })}
+                placeholder="e.g., 0712345678"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground">Enter the phone number to receive M-Pesa payment prompt</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -553,9 +623,27 @@ export const MultiStepBooking = ({
             )}
             <div className="border-t border-primary/30 pt-2 mt-2">
               <p className="text-xl font-bold text-primary">Total: KES {calculateTotal().toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Payment pending</p>
             </div>
           </div>
+
+          {/* M-Pesa Payment */}
+          {calculateTotal() > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-primary" />
+                <Label htmlFor="mpesa_phone_guest">M-Pesa Phone Number *</Label>
+              </div>
+              <Input
+                id="mpesa_phone_guest"
+                type="tel"
+                value={formData.mpesa_phone}
+                onChange={(e) => setFormData({ ...formData, mpesa_phone: e.target.value })}
+                placeholder="e.g., 0712345678"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground">Enter the phone number to receive M-Pesa payment prompt</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -587,14 +675,38 @@ export const MultiStepBooking = ({
             className="ml-auto w-40"
             disabled={
               isProcessing || 
+              isPaymentInProgress ||
               !formData.guest_name || 
-              !formData.guest_email
+              !formData.guest_email ||
+              (calculateTotal() > 0 && !formData.mpesa_phone)
             }
           >
-            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Submit Booking'}
+            {isProcessing || isPaymentInProgress ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : calculateTotal() > 0 ? (
+              'Pay with M-Pesa'
+            ) : (
+              'Confirm Booking'
+            )}
           </Button>
         )}
       </div>
+
+      {/* Payment Status Dialog */}
+      <PaymentStatusDialog
+        open={paymentStatus !== 'idle'}
+        status={paymentStatus}
+        errorMessage={errorMessage}
+        onClose={() => {
+          resetPayment();
+          if (paymentStatus === 'success' && onPaymentSuccess) {
+            onPaymentSuccess();
+          }
+        }}
+        onRetry={() => {
+          resetPayment();
+        }}
+      />
     </div>
   );
 };
