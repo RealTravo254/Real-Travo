@@ -242,8 +242,8 @@ const Saved = () => {
         </div>
         
         {isLoading || authLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {[...Array(10)].map((_, i) => (
               <div key={i} className="space-y-3">
                 <Skeleton className="h-48 w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
@@ -268,7 +268,7 @@ const Saved = () => {
             <p className="text-muted-foreground mt-2">Start exploring and save your favorites!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {savedListings.map((item) => (
               <div
                 key={item.id}
@@ -297,7 +297,7 @@ const Saved = () => {
                   country={item.country}
                   onSave={() => handleSave(item.id, item.savedType)}
                   isSaved={true}
-                  minimalDisplay={true}
+                  showBadge={true}
                 />
               </div>
             ))}
