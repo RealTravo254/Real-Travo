@@ -26,6 +26,9 @@ interface Notification {
   created_at: string;
 }
 
+// Custom Teal color based on rgba(0, 128, 128, 0.8) which is approximately #008080CC
+const UNREAD_BADGE_CLASS = "bg-[#008080CC] text-white";
+
 export const NotificationBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -130,12 +133,14 @@ export const NotificationBell = () => {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <button className="rounded-full h-10 w-10 flex items-center justify-center transition-colors bg-white/10 hover:bg-white group relative">
-          <Bell className="h-5 w-5 text-white group-hover:text-[#008080]" />
+        {/* Hover over notification removed: changed `group relative` to `relative`, and updated `hover:bg-white group relative` */}
+        <button className="rounded-full h-10 w-10 flex items-center justify-center transition-colors bg-white/10 relative">
+          {/* Removed `group-hover:text-[#008080]` */}
+          <Bell className="h-5 w-5 text-white" />
           {unreadCount > 0 && (
             <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              // Replaced `variant="destructive"` with custom class for Teal color
+              className={`absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs ${UNREAD_BADGE_CLASS}`}
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
