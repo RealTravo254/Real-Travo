@@ -262,7 +262,7 @@ const CreateTripEvent = () => {
                     onChange={(e) => setFormData({...formData, type: e.target.value as "trip" | "event"})}
                     className="w-4 h-4"
                   />
-                  <span>Trip (Flexible Dates)</span>
+                  <span>Trip (Flexible Dates or fixed)</span>
                 </label>
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
