@@ -211,7 +211,7 @@ const BecomeHost = () => {
             <ArrowLeft className="h-5 w-5" />
             Back
           </Button>
-          <h1 className="text-3xl font-bold">Become a Host</h1>
+          
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
