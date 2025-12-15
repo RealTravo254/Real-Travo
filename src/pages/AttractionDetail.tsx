@@ -6,7 +6,8 @@ import { Header } from "@/components/Header";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Share2, Mail, Clock, ArrowLeft, Heart, Copy } from "lucide-react";
+// Icons will be Teal: #008080
+import { MapPin, Phone, Share2, Mail, Clock, Calendar, DollarSign, ArrowLeft, Heart, Copy } from "lucide-react"; 
 import { SimilarItems } from "@/components/SimilarItems";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -20,75 +21,80 @@ import { generateReferralLink, trackReferralClick } from "@/lib/referralUtils";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 
-// Define the specific colors
-const TEAL_COLOR = "#008080"; // Icons, Links, Book Button, and now FACILITIES
-const RED_COLOR = "#FF0000"; // New color for AMENITIES
-const ORANGE_COLOR = "#FF9800"; // Activities
-
-interface Facility { name: string; price: number; capacity?: number; }
-interface Activity { name: string; price: number; }
-
-interface AdventurePlace {
-  id: string;
+interface Facility {
   name: string;
+  price?: number;
+  capacity?: number;
+}
+
+interface Activity {
+  name: string;
+  price: number;
+}
+
+interface Attraction {
+  id: string;
+  location_name: string;
   local_name: string | null;
-  location: string;
-  place: string;
   country: string;
-  image_url: string;
-  images: string[];
+  photo_urls: string[];
   gallery_images: string[];
   description: string;
-  entry_fee: number;
-  entry_fee_type: string;
-  phone_numbers: string[];
+  entrance_type: string;
+  price_adult: number;
+  price_child: number;
+  phone_number: string;
   email: string;
   facilities: Facility[];
   activities: Activity[];
   amenities: string[];
-  registration_number: string;
-  map_link: string;
   opening_hours: string | null;
   closing_hours: string | null;
   days_opened: string[] | null;
-  available_slots: number;
-  created_by: string;
+  location_link: string | null;
+  created_by: string | null;
 }
 
-const AdventurePlaceDetail = () => {
+// Define the Teal color for repeated use (0,128,128)
+const TEAL_COLOR = "#008080";
+const ORANGE_COLOR = "#FF9800";
+const RED_COLOR = "#EF4444"; // Using a strong red for visibility
+
+const AttractionDetail = () => {
   const { slug } = useParams();
   const id = slug ? extractIdFromSlug(slug) : null;
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [place, setPlace] = useState<AdventurePlace | null>(null);
+  const [attraction, setAttraction] = useState<Attraction | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const { savedItems, handleSave: handleSaveItem } = useSavedItems();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  
   const isSaved = savedItems.has(id || "");
 
-  useEffect(() => { 
-    fetchPlace(); 
+  useEffect(() => {
+    fetchAttraction();
     
     // Track referral clicks
     const urlParams = new URLSearchParams(window.location.search);
     const refSlug = urlParams.get("ref");
     if (refSlug && id) {
-      trackReferralClick(refSlug, id, "adventure_place", "booking");
+      trackReferralClick(refSlug, id, "attraction", "booking");
     }
   }, [id]);
 
-  const fetchPlace = async () => {
+  const fetchAttraction = async () => {
     if (!id) return;
     try {
-      let { data, error } = await supabase.from("adventure_places").select("*").eq("id", id).single();
+      let { data, error } = await supabase.from("attractions").select("*").eq("id", id).single();
       
       if (error && id.length === 8) {
         const { data: prefixData, error: prefixError } = await supabase
-          .from("adventure_places")
+          .from("attractions")
           .select("*")
           .ilike("id", `${id}%`)
           .single();
@@ -99,24 +105,28 @@ const AdventurePlaceDetail = () => {
       }
       
       if (error) throw error;
-      setPlace(data as any);
+      setAttraction(data as any);
     } catch (error) {
-      console.error("Error fetching adventure place:", error);
-      toast({ title: "Error", description: "Failed to load place details", variant: "destructive" });
+      console.error("Error fetching attraction:", error);
+      toast({ title: "Error", description: "Failed to load attraction details", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = () => { if (id) handleSaveItem(id, "adventure_place"); };
+  const handleSave = () => {
+    if (id) {
+      handleSaveItem(id, "attraction");
+    }
+  };
 
   const handleCopyLink = async () => {
-    if (!place) {
-      toast({ title: "Unable to Copy", description: "Place information not available", variant: "destructive" });
+    if (!attraction) {
+      toast({ title: "Unable to Copy", description: "Attraction information not available", variant: "destructive" });
       return;
     }
 
-    const refLink = await generateReferralLink(place.id, "adventure_place", place.id);
+    const refLink = await generateReferralLink(attraction.id, "attraction", attraction.id);
 
     try {
       await navigator.clipboard.writeText(refLink);
@@ -124,7 +134,7 @@ const AdventurePlaceDetail = () => {
         title: "Link Copied!", 
         description: user 
           ? "Share this link to earn commission on bookings!" 
-          : "Share this place with others!" 
+          : "Share this attraction with others!" 
       });
     } catch (error) {
       toast({ 
@@ -136,18 +146,18 @@ const AdventurePlaceDetail = () => {
   };
 
   const handleShare = async () => {
-    if (!place) {
-      toast({ title: "Unable to Share", description: "Place information not available", variant: "destructive" });
+    if (!attraction) {
+      toast({ title: "Unable to Share", description: "Attraction information not available", variant: "destructive" });
       return;
     }
 
-    const refLink = await generateReferralLink(place.id, "adventure_place", place.id);
+    const refLink = await generateReferralLink(attraction.id, "attraction", attraction.id);
 
     if (navigator.share) {
-      try { 
-        await navigator.share({ title: place?.name, text: place?.description, url: refLink }); 
-      } catch (error) { 
-        console.log("Share failed:", error); 
+      try {
+        await navigator.share({ title: attraction?.location_name, text: attraction?.description, url: refLink });
+      } catch (error) {
+        console.log("Share failed:", error);
       }
     } else {
       await handleCopyLink();
@@ -155,10 +165,10 @@ const AdventurePlaceDetail = () => {
   };
 
   const openInMaps = () => {
-    if (place?.map_link) {
-      window.open(place.map_link, '_blank');
+    if (attraction?.location_link) {
+      window.open(attraction.location_link, '_blank');
     } else {
-      const query = encodeURIComponent(`${place?.name}, ${place?.location}, ${place?.country}`);
+      const query = encodeURIComponent(`${attraction?.location_name}, ${attraction?.country}`);
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     }
   };
@@ -166,38 +176,31 @@ const AdventurePlaceDetail = () => {
   const { submitBooking } = useBookingSubmit();
 
   const handleBookingSubmit = async (data: BookingFormData) => {
-    if (!place) return;
+    if (!attraction) return;
+
     setIsProcessing(true);
 
     try {
-      const totalAmount = (data.num_adults * (place.entry_fee_type === 'free' ? 0 : place.entry_fee)) +
-                         (data.num_children * (place.entry_fee_type === 'free' ? 0 : place.entry_fee)) +
-                         data.selectedFacilities.reduce((sum, f) => { 
-                           if (f.startDate && f.endDate) {
-                             const days = Math.ceil((new Date(f.endDate).getTime() - new Date(f.startDate).getTime()) / (1000 * 60 * 60 * 24));
-                             return sum + (f.price * Math.max(days, 1));
-                           }
-                           return sum + f.price;
-                         }, 0) +
-                         data.selectedActivities.reduce((sum, a) => sum + (a.price * a.numberOfPeople), 0);
+      const totalAmount = (data.num_adults * (attraction.price_adult || 0)) +
+                           (data.num_children * (attraction.price_child || 0)) +
+                           data.selectedActivities.reduce((sum, a) => sum + (a.price * a.numberOfPeople), 0);
       const totalPeople = data.num_adults + data.num_children;
 
       await submitBooking({
-        itemId: place.id,
-        itemName: place.name,
-        bookingType: 'adventure_place',
+        itemId: attraction.id,
+        itemName: attraction.location_name,
+        bookingType: 'attraction',
         totalAmount,
         slotsBooked: totalPeople,
         visitDate: data.visit_date,
         guestName: data.guest_name,
         guestEmail: data.guest_email,
         guestPhone: data.guest_phone,
-        hostId: place.created_by,
+        hostId: attraction.created_by,
         bookingDetails: {
-          place_name: place.name,
+          attraction_name: attraction.location_name,
           adults: data.num_adults,
           children: data.num_children,
-          facilities: data.selectedFacilities,
           activities: data.selectedActivities
         }
       });
@@ -211,25 +214,55 @@ const AdventurePlaceDetail = () => {
     }
   };
 
-  if (loading || !place) return <div className="min-h-screen bg-background"><Header /><div className="h-96 bg-muted animate-pulse" /><MobileBottomBar /></div>;
+  if (loading || !attraction) {
+    return (
+      <div className="min-h-screen bg-background pb-20 md:pb-0">
+        <Header />
+        <div className="container px-4 py-6"><div className="h-96 bg-muted animate-pulse rounded-lg" /></div>
+        <MobileBottomBar />
+      </div>
+    );
+  }
 
-  const displayImages = [place.image_url, ...(place.gallery_images || []), ...(place.images || [])].filter(Boolean);
+  const images = [
+    ...(attraction.photo_urls || []),
+    ...(attraction.gallery_images || [])
+  ].filter(Boolean);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
-      <main className="container px-4 py-6 **sm:py-4** max-w-6xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 **sm:mb-2**">
-          <ArrowLeft className="mr-2 h-4 w-4" />Back
+      
+      <main className="container px-4 py-6 max-w-6xl mx-auto">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
         </Button>
-        
-        <div className="grid lg:grid-cols-[2fr,1fr] gap-6 **sm:gap-4**">
+
+        <div className="grid lg:grid-cols-[2fr,1fr] gap-6">
+          {/* --- Image Carousel Section --- */}
           <div className="w-full relative">
-            <Carousel opts={{ loop: true }} plugins={[Autoplay({ delay: 3000 })]} className="w-full rounded-2xl overflow-hidden">
+            <Carousel
+              opts={{ loop: true }}
+              plugins={[Autoplay({ delay: 3000 })]}
+              className="w-full rounded-2xl overflow-hidden"
+              setApi={(api) => {
+                if (api) {
+                  api.on("select", () => {
+                    setCurrent(api.selectedScrollSnap());
+                  });
+                }
+              }}
+            >
               <CarouselContent>
-                {displayImages.map((img, idx) => <CarouselItem key={idx}><img src={img} alt={`${place.name} ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-64 md:h-96 object-cover" /></CarouselItem>)}
+                {images?.map((url, index) => (
+                  <CarouselItem key={index}>
+                    <img src={url} alt={`${attraction.location_name} ${index + 1}`} loading="lazy" decoding="async" className="w-full h-64 md:h-96 object-cover" />
+                  </CarouselItem>
+                ))}
               </CarouselContent>
-              {displayImages.length > 1 && (
+
+              {images && images.length > 1 && (
                 <>
                   <CarouselPrevious className="left-4 z-10 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border-none" />
                   <CarouselNext className="right-4 z-10 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border-none" />
@@ -237,61 +270,49 @@ const AdventurePlaceDetail = () => {
               )}
             </Carousel>
             
-            {/* START: Description Section with slide-down effect and border radius */}
-            {place.description && (
-              <div 
-                className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm text-white p-4 **sm:p-3** z-10 
-                           rounded-b-2xl 
-                           shadow-lg 
-                           transform translate-y-2" // The key styling for the "slide down" effect
-              >
-                <h2 className="text-lg **sm:text-base** font-semibold mb-2 **sm:mb-1**">About This Place</h2>
-                <p className="text-sm line-clamp-3">{place.description}</p>
+            {attraction.description && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm text-white p-4 **sm:p-2** z-10">
+                <h2 className="text-lg **sm:text-base** font-semibold mb-2">About This Attraction</h2>
+                <p className="text-sm line-clamp-3">{attraction.description}</p>
               </div>
             )}
-            {/* END: Description Section */}
           </div>
-          
-          <div className="space-y-4 **sm:space-y-3**">
+
+          {/* --- Detail/Booking Section (Right Column on large screens, Stacked on small) --- */}
+          <div className="space-y-4">
             <div>
-              <h1 className="text-3xl **sm:text-2xl** font-bold mb-2">{place.name}</h1>
-              {place.local_name && (
-                <p className="text-lg **sm:text-base** text-muted-foreground mb-2">"{place.local_name}"</p>
-              )}
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <h1 className="text-3xl **sm:text-2xl** font-bold mb-2">{attraction.location_name}</h1>
+              {attraction.local_name && <p className="text-xl **sm:text-base** text-muted-foreground mb-2">{attraction.local_name}</p>}
+              <div className="flex items-center gap-2 text-muted-foreground mb-4 **sm:mb-2**">
                 {/* Location Icon Teal */}
-                <MapPin className="h-4 w-4" style={{ color: TEAL_COLOR }} />
-                <span className="**sm:text-sm**">{place.location}, {place.country}</span>
+                <MapPin className="h-4 w-4" style={{ color: TEAL_COLOR }} /> 
+                <span className="**sm:text-sm**">{attraction.country}</span>
               </div>
-              {place.place && (
-                <p className="text-sm **sm:text-xs** text-muted-foreground mb-4 **sm:mb-2**">Place: {place.place}</p>
-              )}
             </div>
 
-            <div className="space-y-3 p-4 **sm:p-3** border bg-card">
-              {(place.opening_hours || place.closing_hours) && (
+            {/* Price and Operating Card */}
+            <div className="space-y-3 **sm:space-y-2** p-4 **sm:p-3** border bg-card">
+              {(attraction.opening_hours || attraction.closing_hours) && (
                 <div className="flex items-center gap-2">
                   {/* Clock Icon Teal */}
-                  <Clock className="h-5 w-5" style={{ color: TEAL_COLOR }} />
+                  <Clock className="h-5 w-5" style={{ color: TEAL_COLOR }} /> 
                   <div>
                     <p className="text-sm **sm:text-xs** text-muted-foreground">Operating Hours</p>
-                    <p className="font-semibold **sm:text-sm**">{place.opening_hours} - {place.closing_hours}</p>
-                    {place.days_opened && place.days_opened.length > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">{place.days_opened.join(', ')}</p>
+                    <p className="font-semibold **sm:text-sm**">{attraction.opening_hours} - {attraction.closing_hours}</p>
+                    {attraction.days_opened && attraction.days_opened.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">{attraction.days_opened.join(', ')}</p>
                     )}
                   </div>
                 </div>
               )}
               
-              <div className={`${place.opening_hours || place.closing_hours ? 'border-t pt-3 **sm:pt-2**' : ''}`}>
-                <p className="text-sm **sm:text-xs** text-muted-foreground mb-1">Entry Fee</p>
+              <div className={`${attraction.opening_hours || attraction.closing_hours ? 'border-t pt-3 **sm:pt-2**' : ''}`}>
+                <p className="text-sm **sm:text-xs** text-muted-foreground mb-1">Entrance Fee</p>
                 <p className="text-2xl **sm:text-xl** font-bold">
-                  {place.entry_fee_type === 'free' ? 'Free Entry' : 
-                   place.entry_fee ? `KSh ${place.entry_fee}` : 'Contact for pricing'}
+                  {attraction.entrance_type === 'free' ? 'Free Entry' : 
+                    attraction.price_adult ? `KSh ${attraction.price_adult}` : 'Contact for pricing'}
                 </p>
-                {place.available_slots !== null && place.available_slots !== undefined && (
-                   <p className="text-sm **sm:text-xs** text-muted-foreground mt-2 **sm:mt-1**">Available Slots: {place.available_slots}</p>
-                )}
+                {attraction.price_child > 0 && <p className="text-sm **sm:text-xs** text-muted-foreground">Child: KSh {attraction.price_child}</p>}
               </div>
 
               {/* Book Now Button Teal and dark hover */}
@@ -307,13 +328,14 @@ const AdventurePlaceDetail = () => {
               </Button>
             </div>
 
+            {/* Action Buttons */}
             <div className="flex gap-2">
               {/* Map Button: Border/Icon Teal */}
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={openInMaps} 
-                className="flex-1 **h-9**"
+                className="flex-1 **h-9**" 
                 style={{ borderColor: TEAL_COLOR, color: TEAL_COLOR }}
               >
                 <MapPin className="h-4 w-4 md:mr-2" style={{ color: TEAL_COLOR }} />
@@ -355,16 +377,16 @@ const AdventurePlaceDetail = () => {
           </div>
         </div>
 
-        {/* --- Amenities Section (RED) --- */}
-        {place.amenities && place.amenities.length > 0 && (
+        {/* --- Amenities Section --- */}
+        {attraction.amenities && attraction.amenities.length > 0 && (
           <div className="mt-6 **sm:mt-4** p-6 **sm:p-3** border bg-card">
             <h2 className="text-xl **sm:text-lg** font-semibold mb-4 **sm:mb-2**">Amenities</h2>
             <div className="flex flex-wrap gap-2 **sm:gap-1**">
-              {place.amenities.map((amenity: any, idx: number) => (
-                // Amenities Badge RED
+              {attraction.amenities.map((amenity: string, idx: number) => (
+                // Amenities Badge Red
                 <div 
                   key={idx} 
-                  className="px-4 py-2 **sm:px-3 sm:py-1** text-primary-foreground rounded-full text-sm **sm:text-xs**"
+                  className="px-4 py-2 **sm:px-3 sm:py-1** text-white rounded-full text-sm **sm:text-xs**"
                   style={{ backgroundColor: RED_COLOR }} 
                 >
                   {amenity}
@@ -374,20 +396,22 @@ const AdventurePlaceDetail = () => {
           </div>
         )}
 
-        {/* --- Facilities Section (TEAL) --- */}
-        {place.facilities && place.facilities.length > 0 && (
+        {/* --- Facilities Section --- */}
+        {attraction.facilities && attraction.facilities.length > 0 && (
           <div className="mt-6 **sm:mt-4** p-6 **sm:p-3** border bg-card">
-            <h2 className="text-xl **sm:text-lg** font-semibold mb-4 **sm:mb-2**">Facilities (Rentable Spaces)</h2>
+            <h2 className="text-xl **sm:text-lg** font-semibold mb-4 **sm:mb-2**">Facilities</h2>
             <div className="flex flex-wrap gap-2 **sm:gap-1**">
-              {place.facilities.map((facility: Facility, idx: number) => (
-                // Facilities Badge TEAL
+              {attraction.facilities.map((facility: any, idx: number) => (
+                // Facilities Badge Teal
                 <div 
                   key={idx} 
-                  className="px-4 py-2 **sm:px-3 sm:py-1** text-primary-foreground rounded-full text-sm **sm:text-xs** flex items-center gap-2 **sm:gap-1**"
-                  style={{ backgroundColor: TEAL_COLOR }} 
+                  className="px-4 py-2 **sm:px-3 sm:py-1** text-white rounded-full text-sm **sm:text-xs** flex items-center gap-2 **sm:gap-1**"
+                  style={{ backgroundColor: TEAL_COLOR }}
                 >
                   <span className="font-medium">{facility.name}</span>
-                  <span className="text-xs opacity-90">{facility.price === 0 ? 'Free' : `KSh ${facility.price}/day`}</span>
+                  {facility.price !== undefined && (
+                    <span className="text-xs opacity-90">{facility.price === 0 ? 'Free' : `KSh ${facility.price}`}</span>
+                  )}
                   {facility.capacity && <span className="text-xs opacity-90">• Capacity: {facility.capacity}</span>}
                 </div>
               ))}
@@ -395,17 +419,17 @@ const AdventurePlaceDetail = () => {
           </div>
         )}
 
-        {/* --- Activities Section (ORANGE) --- */}
-        {place.activities && place.activities.length > 0 && (
+        {/* --- Activities Section --- */}
+        {attraction.activities && attraction.activities.length > 0 && (
           <div className="mt-6 **sm:mt-4** p-6 **sm:p-3** border bg-card">
-            <h2 className="text-xl **sm:text-lg** font-semibold mb-4 **sm:mb-2**">Activities (Bookable Experiences)</h2>
+            <h2 className="text-xl **sm:text-lg** font-semibold mb-4 **sm:mb-2**">Activities</h2>
             <div className="flex flex-wrap gap-2 **sm:gap-1**">
-              {place.activities.map((activity: Activity, idx: number) => (
+              {attraction.activities.map((activity: Activity, idx: number) => (
                 // Activities Badge Orange
                 <div 
                   key={idx} 
-                  className="px-4 py-2 **sm:px-3 sm:py-1** text-primary-foreground rounded-full text-sm **sm:text-xs** flex items-center gap-2 **sm:gap-1**"
-                  style={{ backgroundColor: ORANGE_COLOR }}
+                  className="px-4 py-2 **sm:px-3 sm:py-1** text-white rounded-full text-sm **sm:text-xs** flex items-center gap-2 **sm:gap-1**"
+                  style={{ backgroundColor: ORANGE_COLOR }} 
                 >
                   <span className="font-medium">{activity.name}</span>
                   <span className="text-xs opacity-90">{activity.price === 0 ? 'Free' : `KSh ${activity.price}/person`}</span>
@@ -416,24 +440,22 @@ const AdventurePlaceDetail = () => {
         )}
 
         {/* --- Contact Information Section --- */}
-        {(place.phone_numbers || place.email) && (
+        {(attraction.phone_number || attraction.email) && (
           <div className="mt-6 **sm:mt-4** p-6 **sm:p-3** border bg-card">
             <h2 className="text-xl **sm:text-lg** font-semibold mb-3 **sm:mb-2**">Contact Information</h2>
             <div className="space-y-2 **sm:space-y-1**">
-              {place.phone_numbers?.map((phone, idx) => (
-                <p key={idx} className="flex items-center gap-2 **sm:text-sm**">
+              {attraction.phone_number && (
+                <p className="flex items-center gap-2 **sm:text-sm**">
                   {/* Phone Icon Teal */}
-                  <Phone className="h-4 w-4" style={{ color: TEAL_COLOR }} />
-                  {/* Phone Link Teal */}
-                  <a href={`tel:${phone}`} className="hover:underline" style={{ color: TEAL_COLOR }}>{phone}</a>
+                  <Phone className="h-4 w-4" style={{ color: TEAL_COLOR }} /> 
+                  <a href={`tel:${attraction.phone_number}`} className="hover:underline" style={{ color: TEAL_COLOR }}>{attraction.phone_number}</a>
                 </p>
-              ))}
-              {place.email && (
+              )}
+              {attraction.email && (
                 <p className="flex items-center gap-2 **sm:text-sm**">
                   {/* Mail Icon Teal */}
-                  <Mail className="h-4 w-4" style={{ color: TEAL_COLOR }} />
-                  {/* Mail Link Teal */}
-                  <a href={`mailto:${place.email}`} className="hover:underline" style={{ color: TEAL_COLOR }}>{place.email}</a>
+                  <Mail className="h-4 w-4" style={{ color: TEAL_COLOR }} /> 
+                  <a href={`mailto:${attraction.email}`} className="hover:underline" style={{ color: TEAL_COLOR }}>{attraction.email}</a>
                 </p>
               )}
             </div>
@@ -442,25 +464,26 @@ const AdventurePlaceDetail = () => {
 
         {/* --- Review Section --- */}
         <div className="mt-6 **sm:mt-4**">
-          <ReviewSection itemId={place.id} itemType="adventure_place" />
+          <ReviewSection itemId={attraction.id} itemType="attraction" />
         </div>
 
         {/* --- Similar Items Section --- */}
-        {place && <SimilarItems currentItemId={place.id} itemType="adventure" country={place.country} />}
+        {attraction && <SimilarItems currentItemId={attraction.id} itemType="attraction" country={attraction.country} />}
       </main>
 
       <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+        {/* Calendar Icon used internally in MultiStepBooking may need internal update for Teal */}
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <MultiStepBooking 
             onSubmit={handleBookingSubmit} 
-            facilities={place.facilities || []} 
-            activities={place.activities || []} 
-            priceAdult={place.entry_fee_type === 'free' ? 0 : place.entry_fee} 
-            priceChild={place.entry_fee_type === 'free' ? 0 : place.entry_fee} 
-            entranceType={place.entry_fee_type} 
+            priceAdult={attraction.price_adult || 0}
+            priceChild={attraction.price_child || 0}
+            entranceType={attraction.entrance_type}
+            facilities={(attraction.facilities || []).map(f => ({ ...f, price: f.price || 0 }))}
+            activities={attraction.activities || []}
             isProcessing={isProcessing} 
             isCompleted={isCompleted} 
-            itemName={place.name}
+            itemName={attraction.location_name} 
           />
         </DialogContent>
       </Dialog>
@@ -470,4 +493,4 @@ const AdventurePlaceDetail = () => {
   );
 };
 
-export default AdventurePlaceDetail;
+export default AttractionDetail;

@@ -130,8 +130,12 @@ export default function Payment() {
                 .single();
               isCreator = adventure?.created_by === user.id;
             } else if (booking.booking_type === "attraction") {
-              // Attractions table doesn't exist - skip
-              isCreator = false;
+              const { data: attraction } = await supabase
+                .from("attractions")
+                .select("created_by")
+                .eq("id", booking.item_id)
+                .single();
+              isCreator = attraction?.created_by === user.id;
             }
 
             if (isCreator) {

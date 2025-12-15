@@ -47,35 +47,17 @@ export const useBookingSubmit = () => {
 
     // 2. Create notification for user (if logged in)
     if (user?.id) {
-      const details = data.bookingDetails;
-      const totalPeople = (details.adults || 0) + (details.children || 0);
-      
-      // Build facilities and activities summary
-      const facilitiesList = details.selectedFacilities?.map((f: any) => f.name).join(', ') || '';
-      const activitiesList = details.selectedActivities?.map((a: any) => a.name).join(', ') || '';
-      
-      let messageDetails = `Booked by: ${data.guestName}. People: ${totalPeople} (${details.adults || 0} adults, ${details.children || 0} children).`;
-      if (facilitiesList) messageDetails += ` Facilities: ${facilitiesList}.`;
-      if (activitiesList) messageDetails += ` Activities: ${activitiesList}.`;
-      messageDetails += ` Total: KES ${data.totalAmount}. Payment is pending.`;
-      
       await supabase.from('notifications').insert([{
         user_id: user.id,
         type: 'booking_created',
-        title: `Booking for ${data.itemName}`,
-        message: messageDetails,
+        title: 'Booking Submitted',
+        message: `Your booking for ${data.itemName} has been submitted. Total: KES ${data.totalAmount}. Payment is pending.`,
         data: {
           booking_id: booking.id,
           item_id: data.itemId,
           booking_type: data.bookingType,
           total_amount: data.totalAmount,
-          visit_date: data.visitDate,
-          guest_name: data.guestName,
-          total_people: totalPeople,
-          adults: details.adults || 0,
-          children: details.children || 0,
-          facilities: details.selectedFacilities || [],
-          activities: details.selectedActivities || []
+          visit_date: data.visitDate
         }
       }]);
     }

@@ -81,9 +81,8 @@ export const EmailVerification = ({
     }
   };
 
-  const handleVerifyOtp = async (codeToVerify?: string) => {
-    const code = codeToVerify || otp;
-    if (code.length !== 6) {
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) {
       toast({
         title: "Invalid Code",
         description: "Please enter the complete 6-digit code",
@@ -98,7 +97,7 @@ export const EmailVerification = ({
     try {
       const { error } = await supabase.auth.verifyOtp({
         email,
-        token: code,
+        token: otp,
         type: 'email'
       });
 
@@ -185,15 +184,7 @@ export const EmailVerification = ({
             <InputOTP
               maxLength={6}
               value={otp}
-              onChange={(value) => {
-                setOtp(value);
-                // Auto-submit when 6 digits entered
-                if (value.length === 6) {
-                  setTimeout(() => {
-                    handleVerifyOtp(value);
-                  }, 100);
-                }
-              }}
+              onChange={setOtp}
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -204,9 +195,14 @@ export const EmailVerification = ({
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-            {verifying && (
-              <span className="text-sm text-muted-foreground">Verifying...</span>
-            )}
+            <Button
+              type="button"
+              onClick={handleVerifyOtp}
+              disabled={verifying || otp.length !== 6}
+              size="sm"
+            >
+              {verifying ? "Verifying..." : "Verify"}
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground">
             Check your email for the verification code

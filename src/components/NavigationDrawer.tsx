@@ -1,7 +1,7 @@
-import { Home, Ticket, Heart, Phone, Info, Video, LogIn, LogOut, Sun, Moon, User, FileText, Shield } from "lucide-react";
+import { Home, Ticket, Heart, Phone, Info, Video, LogIn, LogOut, Sun, Moon, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-// Removed unused Button import
+import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,19 +18,17 @@ const MobileThemeToggle = () => {
   };
 
   return (
-    <li className="list-none">
+    <li className="pt-2 border-t border-gray-200 dark:border-gray-700">
       <button
         onClick={toggleTheme}
-        // REDUCED: py-2.5 -> py-2, Icons h-5 w-5 -> h-4 w-4
-        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
       >
         {theme === "dark" ? (
-          <Sun className="h-4 w-4 text-black dark:text-white group-hover:text-yellow-600 transition-colors" />
+          <Sun className="h-5 w-5 text-black dark:text-white group-hover:text-yellow-600 transition-colors" />
         ) : (
-          <Moon className="h-4 w-4 text-black dark:text-white group-hover:text-blue-600 transition-colors" />
+          <Moon className="h-5 w-5 text-black dark:text-white group-hover:text-blue-600 transition-colors" />
         )}
-        {/* REDUCED FONT SIZE: text-sm */}
-        <span className="text-sm font-medium text-black dark:text-white">
+        <span className="font-medium text-black dark:text-white">
           {theme === "dark" ? "Light Mode" : "Dark Mode"}
         </span>
       </button>
@@ -38,21 +36,17 @@ const MobileThemeToggle = () => {
   );
 };
 
-// Component to render a thin separator line
-const Separator = () => (
-  // REDUCED MARGIN AND THICKNESS: my-2 -> my-1.5, dark:border-gray-700/50 -> dark:border-gray-700/30
-  <hr className="my-1.5 border-gray-200/50 dark:border-gray-700/30" />
-);
-
-
 export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
   const { user, signOut } = useAuth();
   const [userName, setUserName] = useState("");
+
+  // Removed isInstalled and deferredPrompt state, and all associated effects/handlers
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
 
+      // Fetch only user profile name (not email)
       const { data: profile } = await supabase
         .from("profiles")
         .select("name")
@@ -69,12 +63,12 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
   const handleProtectedNavigation = async (path: string) => {
     if (!user) {
-      // Use window.location.href to force a full reload and redirect outside of React Router context
       window.location.href = "/auth";
       onClose();
       return;
     }
 
+    // Direct navigation for protected routes
     window.location.href = path;
     onClose();
   };
@@ -86,10 +80,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
     { icon: Info, label: "About", path: "/about", protected: false },
   ];
 
-  const legalItems = [
-    { icon: FileText, label: "Terms of Service", path: "/terms-of-service" },
-    { icon: Shield, label: "Privacy Policy", path: "/privacy-policy" },
-  ];
+  // Removed appNavItems
 
   const topContentItems = [
     { icon: Home, label: "Home", path: "/", protected: false },
@@ -103,50 +94,38 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
     onClose();
   };
 
+  // Auth Display with blue Login button
   const AuthDisplay = user ? (
-    // ADJUSTED: pt-4 -> pt-2 to reduce space, border-t remains for grouping
-    <li className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-800">
+    <li className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+      <p className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Account</p>
       <Link
         to="/profile"
         onClick={onClose}
-        // REDUCED: py-2.5 -> py-2, mb-2 removed to rely on Separator
-        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group mb-2"
       >
-        {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-        <User className="h-4 w-4 text-black dark:text-white" />
-        {/* REDUCED FONT SIZE: text-sm */}
-        <span className="text-sm font-medium truncate text-black dark:text-white">
+        <User className="h-5 w-5 text-black dark:text-white" />
+        <span className="font-medium truncate text-black dark:text-white">
           {userName || "My Profile"}
         </span>
       </Link>
-      <Separator /> 
       <button
         onClick={handleLogout}
-        // REDUCED: py-2.5 -> py-2
-        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 group"
+        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 group"
       >
-        {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-        <LogOut className="h-4 w-4 text-red-600 dark:text-red-400" />
-        {/* REDUCED FONT SIZE: text-sm */}
-        <span className="text-sm font-medium text-red-600 dark:text-red-400">Logout</span>
+        <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
+        <span className="font-medium text-red-600 dark:text-red-400">Logout</span>
       </button>
-      <Separator /> 
     </li>
   ) : (
-    // ADJUSTED: pt-4 -> pt-2 to reduce space, border-t remains for grouping
-    <li className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-800">
+    <li className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
       <Link
         to="/auth"
         onClick={onClose}
-        // REDUCED: py-2.5 -> py-2
-        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg bg-teal-600 dark:bg-teal-800 text-white hover:bg-teal-700 dark:hover:bg-teal-700 transition-all duration-200 group"
+        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg bg-blue-600 dark:bg-blue-800 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-all duration-200 group"
       >
-        {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-        <LogIn className="h-4 w-4 text-white" />
-        {/* REDUCED FONT SIZE: text-sm */}
-        <span className="text-sm font-medium text-white">Login / Register</span>
+        <LogIn className="h-5 w-5 text-white" />
+        <span className="font-medium text-white">Login / Register</span>
       </Link>
-      <Separator /> 
     </li>
   );
 
@@ -156,7 +135,6 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
       {/* Header section with logo, name, and paragraph - Teal */}
       <div className="p-4 border-b bg-[#008080] text-white border-[#006666]">
         <div className="flex items-center gap-3 mb-2">
-          {/* LOGO SIZE REMAINS 8x8 */}
           <div className="h-8 w-8 rounded-lg bg-[#006666] flex items-center justify-center font-bold text-lg text-white">
             T
           </div>
@@ -172,59 +150,48 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
       {/* Navigation links section */}
       <nav
         className="flex-1 p-4 pt-6 overflow-y-auto bg-white dark:bg-gray-950
-               [&::-webkit-scrollbar]:hidden
-               [-ms-overflow-style:none]
-               [scrollbar-width:none]"
+                  [&::-webkit-scrollbar]:hidden
+                  [-ms-overflow-style:none]
+                  [scrollbar-width:none]"
       >
-        {/* REDUCED SPACING: space-y-2 -> space-y-0.5 to rely on Separator */}
-        <ul className="space-y-0.5">
+        <ul className="space-y-2">
 
           {/* 1. HOME, MY BOOKINGS, WISHLIST (TOP SECTION) */}
-          {/* ADJUSTED: mb-4 removed, pt-2 removed */}
-          <li>
-            <ul className="space-y-0.5">
+          <li className="mb-4 pt-2">
+            <p className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Navigation</p>
+            <ul className="space-y-1">
               {topContentItems.map((item, index) => {
                 return (
                   <li key={item.path}>
+                    {/* Home is a link, others are buttons for protected navigation */}
                     {item.label === "Home" ? (
                       <Link
                         to={item.path}
                         onClick={onClose}
-                        // REDUCED: py-2.5 -> py-2
-                        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
                       >
-                        {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-                        <item.icon className="h-4 w-4 text-black dark:text-white" />
-                        {/* REDUCED FONT SIZE: text-sm */}
-                        <span className="text-sm font-medium text-black dark:text-white">
+                        <item.icon className="h-5 w-5 text-black dark:text-white" />
+                        <span className="font-medium text-black dark:text-white">
                           {item.label}
                         </span>
                       </Link>
                     ) : (
                       <button
                         onClick={() => handleProtectedNavigation(item.path)}
-                        // REDUCED: py-2.5 -> py-2
-                        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
                       >
-                        {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-                        <item.icon className="h-4 w-4 text-black dark:text-white" />
-                        {/* REDUCED FONT SIZE: text-sm */}
-                        <span className="text-sm font-medium text-black dark:text-white">
+                        <item.icon className="h-5 w-5 text-black dark:text-white" />
+                        <span className="font-medium text-black dark:text-white">
                           {item.label}
                         </span>
                       </button>
                     )}
-                    
-                    {/* ADD SEPARATOR AFTER EACH ITEM (Home, My Bookings, Wishlist) */}
-                    <Separator />
-
-                    {/* DARK MODE TOGGLE IS PLACED AFTER WISHLIST/SAVED */}
+                    {/* ADD DARK MODE TOGGLE */}
                     {item.label === "Wishlist" && (
-                        <>
-                          {/* MobileThemeToggle now uses the smaller py-2/h-4w-4 size inside */}
-                          <MobileThemeToggle /> 
-                          <Separator /> {/* ADD SEPARATOR AFTER DARK MODE TOGGLE */}
-                        </>
+                      <>
+                        {/* Dark/Light Mode Toggle */}
+                        <MobileThemeToggle />
+                      </>
                     )}
                   </li>
                 );
@@ -233,56 +200,27 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           </li>
 
           {/* 2. VLOG, CONTACT, ABOUT (COMPANY SECTION) */}
-          {/* ADJUSTED: mb-4 removed, pt-4 -> pt-2 for slightly less break space */}
-          <li className="pt-2"> 
-            <ul className="space-y-0.5">
-              {bottomNavItems.map((item, index) => (
+          <li className="mb-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <p className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Company</p>
+            <ul className="space-y-1">
+              {bottomNavItems.map((item) => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
                     onClick={onClose}
-                    // REDUCED: py-2.5 -> py-2
-                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
                   >
-                    {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-                    <item.icon className="h-4 w-4 text-black dark:text-white" />
-                    {/* REDUCED FONT SIZE: text-sm */}
-                    <span className="text-sm font-medium text-black dark:text-white">
+                    <item.icon className="h-5 w-5 text-black dark:text-white" />
+                    <span className="font-medium text-black dark:text-white">
                       {item.label}
                     </span>
                   </Link>
-                  {/* ADD SEPARATOR AFTER EACH ITEM (Vlog, Contact, About) */}
-                  <Separator />
                 </li>
               ))}
             </ul>
           </li>
 
-          {/* 3. LEGAL SECTION */}
-          {/* ADJUSTED: mb-4 removed, pt-4 -> pt-2 for slightly less break space */}
-          <li className="pt-2">
-            <ul className="space-y-0.5">
-              {legalItems.map((item) => (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    onClick={onClose}
-                    // REDUCED: py-2.5 -> py-2
-                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
-                  >
-                    {/* REDUCED ICON SIZE: h-5 w-5 -> h-4 w-4 */}
-                    <item.icon className="h-4 w-4 text-black dark:text-white" />
-                    {/* REDUCED FONT SIZE: text-sm */}
-                    <span className="text-sm font-medium text-black dark:text-white">
-                      {item.label}
-                    </span>
-                  </Link>
-                  {/* ADD SEPARATOR AFTER EACH ITEM (Terms, Privacy) */}
-                  <Separator />
-                </li>
-              ))}
-            </ul>
-          </li>
+          {/* Removed 3. INSTALL APP SECTION */}
 
           {/* LOGIN/LOGOUT ICON AND NAME */}
           {AuthDisplay}
@@ -292,5 +230,5 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
       {/* Removed Install App Bottom Banner */}
     </div>
-  );
+   );
 };

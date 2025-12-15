@@ -1,26 +1,16 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
+import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, DollarSign, Users, MapPin, CalendarClock, RefreshCw, XCircle } from "lucide-react";
+import { Calendar, DollarSign, Users, MapPin, CalendarClock, RefreshCw } from "lucide-react";
 import { RescheduleBookingDialog } from "@/components/booking/RescheduleBookingDialog";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface Booking {
   id: string;
@@ -49,9 +39,6 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
   const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
   const [retryingPaymentId, setRetryingPaymentId] = useState<string | null>(null);
-  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -64,15 +51,15 @@ const Bookings = () => {
     if (user) {
       fetchBookings();
 
-      // Subscribe to real-time updates on payments
+      // Subscribe to real-time updates on pending_payments
       const channel = supabase
-        .channel('payments-updates')
+        .channel('pending-payments-updates')
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
-            table: 'payments',
+            table: 'pending_payments',
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
@@ -100,12 +87,12 @@ const Bookings = () => {
 
       if (bookingsError) throw bookingsError;
 
-      // Fetch pending/failed payments from payments table
+      // Fetch pending payments (not yet converted to bookings)
       const { data: pendingPayments, error: pendingError } = await supabase
-        .from("payments" as any)
+        .from("pending_payments")
         .select("*")
         .eq("user_id", user?.id)
-        .in("payment_status", ["pending", "failed"])
+        .in("payment_status", ["pending", "failed", "cancelled", "timeout"])
         .order("created_at", { ascending: false });
 
       if (pendingError) throw pendingError;
@@ -220,39 +207,6 @@ const Bookings = () => {
     return ["failed", "cancelled", "timeout"].includes(payment_status);
   };
 
-  // Check if booking can be rescheduled - 48hr advance for all except fixed date trips/events
-  const canReschedule = (booking: Booking) => {
-    // Only paid/completed bookings can be rescheduled
-    if (!['paid', 'completed'].includes(booking.payment_status)) return false;
-    
-    // Cancelled bookings cannot be rescheduled
-    if (booking.status === 'cancelled') return false;
-
-    // Events with fixed dates cannot be rescheduled
-    if (booking.booking_type === 'event') return false;
-
-    return true;
-  };
-
-  // Check if booking can be cancelled - must be at least 48 hours before visit date
-  const canCancel = (booking: Booking) => {
-    // Only paid/completed bookings can be cancelled
-    if (!['paid', 'completed'].includes(booking.payment_status)) return false;
-    
-    // Already cancelled bookings
-    if (booking.status === 'cancelled') return false;
-
-    // Check 48-hour constraint if visit_date exists
-    if (booking.visit_date) {
-      const visitDate = new Date(booking.visit_date);
-      const now = new Date();
-      const hoursUntil = (visitDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-      if (hoursUntil < 48) return false;
-    }
-
-    return true;
-  };
-
   const getTypeLabel = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
@@ -266,9 +220,9 @@ const Bookings = () => {
     setRetryingPaymentId(booking.pendingPaymentId);
 
     try {
-      // Get the payment record to retrieve booking data
+      // Get the pending payment to retrieve booking data
       const { data: pendingPayment, error: fetchError } = await supabase
-        .from("payments" as any)
+        .from("pending_payments")
         .select("*")
         .eq("id", booking.pendingPaymentId)
         .single();
@@ -277,25 +231,23 @@ const Bookings = () => {
         throw new Error("Could not find payment record");
       }
 
-      const payment = pendingPayment as any;
-
       // Call M-Pesa STK Push
       const { data, error } = await supabase.functions.invoke("mpesa-stk-push", {
         body: {
-          phoneNumber: payment.phone_number,
-          amount: payment.amount,
-          accountReference: payment.account_reference,
-          transactionDesc: `Retry: ${payment.transaction_desc || "Booking Payment"}`,
-          bookingData: payment.booking_data,
+          phoneNumber: pendingPayment.phone_number,
+          amount: pendingPayment.amount,
+          accountReference: pendingPayment.account_reference,
+          transactionDesc: `Retry: ${pendingPayment.transaction_desc || "Booking Payment"}`,
+          bookingData: pendingPayment.booking_data,
         },
       });
 
       if (error) throw error;
 
       if (data?.success) {
-        // Update payment record with new checkout request ID
+        // Update pending payment with new checkout request ID
         await supabase
-          .from("payments" as any)
+          .from("pending_payments")
           .update({
             checkout_request_id: data.checkoutRequestId,
             merchant_request_id: data.merchantRequestId,
@@ -320,86 +272,6 @@ const Bookings = () => {
       toast.error(error.message || "Failed to retry payment. Please try again.");
     } finally {
       setRetryingPaymentId(null);
-    }
-  };
-
-  const openCancelDialog = (booking: Booking) => {
-    setBookingToCancel(booking);
-    setShowCancelDialog(true);
-  };
-
-  const handleCancelBooking = async () => {
-    if (!bookingToCancel) return;
-    
-    setCancellingBookingId(bookingToCancel.id);
-    
-    try {
-      // Update booking status to cancelled
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status: 'cancelled',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', bookingToCancel.id);
-
-      if (error) throw error;
-
-      // Get item name for notification
-      const itemName = bookingToCancel.booking_details.trip_name || 
-                       bookingToCancel.booking_details.event_name || 
-                       bookingToCancel.booking_details.hotel_name ||
-                       bookingToCancel.booking_details.place_name ||
-                       'Your booking';
-
-      // Create notification for user
-      await supabase.from('notifications').insert({
-        user_id: user?.id,
-        type: 'booking_cancelled',
-        title: 'Booking Cancelled',
-        message: `Your booking for ${itemName} has been cancelled.`,
-        data: {
-          booking_id: bookingToCancel.id
-        }
-      });
-
-      // Notify host
-      let creatorId = null;
-      if (bookingToCancel.booking_type === 'trip') {
-        const { data } = await supabase.from('trips').select('created_by').eq('id', bookingToCancel.item_id).single();
-        creatorId = data?.created_by;
-      } else if (bookingToCancel.booking_type === 'hotel') {
-        const { data } = await supabase.from('hotels').select('created_by').eq('id', bookingToCancel.item_id).single();
-        creatorId = data?.created_by;
-      } else if (bookingToCancel.booking_type === 'adventure' || bookingToCancel.booking_type === 'adventure_place') {
-        const { data } = await supabase.from('adventure_places').select('created_by').eq('id', bookingToCancel.item_id).single();
-        creatorId = data?.created_by;
-      } else if (bookingToCancel.booking_type === 'attraction') {
-        // Attractions table doesn't exist - skip
-        creatorId = null;
-      }
-
-      if (creatorId) {
-        await supabase.from('notifications').insert({
-          user_id: creatorId,
-          type: 'booking_cancelled_host',
-          title: 'Booking Cancelled',
-          message: `Booking #${bookingToCancel.id.substring(0, 8)} for ${itemName} has been cancelled by the user.`,
-          data: {
-            booking_id: bookingToCancel.id
-          }
-        });
-      }
-
-      toast.success("Booking cancelled successfully");
-      fetchBookings();
-    } catch (error: any) {
-      console.error("Error cancelling booking:", error);
-      toast.error(error.message || "Failed to cancel booking. Please try again.");
-    } finally {
-      setCancellingBookingId(null);
-      setShowCancelDialog(false);
-      setBookingToCancel(null);
     }
   };
 
@@ -442,9 +314,7 @@ const Bookings = () => {
                         </Badge>
                       ) : (
                         <>
-                          <Badge className={booking.status === 'cancelled' ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"}>
-                            {booking.status}
-                          </Badge>
+                          <Badge className="bg-green-500/10 text-green-500">{booking.status}</Badge>
                           <Badge className={getStatusColor(booking)}>
                             {getPaymentStatusLabel(booking)}
                           </Badge>
@@ -477,12 +347,6 @@ const Bookings = () => {
 
                       {/* Booking Details */}
                       <div className="flex flex-wrap gap-4 text-muted-foreground">
-                        {booking.visit_date && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>Visit: {new Date(booking.visit_date).toLocaleDateString()}</span>
-                          </div>
-                        )}
                         {booking.booking_details.date && (
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
@@ -553,8 +417,7 @@ const Bookings = () => {
                       </Button>
                     )}
                     
-                    {/* Reschedule Button */}
-                    {canReschedule(booking) && (
+                    {booking.visit_date && booking.status !== 'cancelled' && booking.payment_status === 'paid' && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -563,20 +426,6 @@ const Bookings = () => {
                       >
                         <CalendarClock className="h-4 w-4 mr-2" />
                         Reschedule
-                      </Button>
-                    )}
-
-                    {/* Cancel Button */}
-                    {canCancel(booking) && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => openCancelDialog(booking)}
-                        disabled={cancellingBookingId === booking.id}
-                        className="w-fit"
-                      >
-                        <XCircle className={`h-4 w-4 mr-2 ${cancellingBookingId === booking.id ? 'animate-spin' : ''}`} />
-                        {cancellingBookingId === booking.id ? 'Cancelling...' : 'Cancel Booking'}
                       </Button>
                     )}
                   </div>
@@ -593,38 +442,6 @@ const Bookings = () => {
         onOpenChange={(open) => !open && setRescheduleBooking(null)}
         onSuccess={fetchBookings}
       />
-
-      {/* Cancel Booking Confirmation Dialog */}
-      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Booking?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to cancel this booking for{" "}
-              <span className="font-semibold">
-                {bookingToCancel?.booking_details.trip_name || 
-                 bookingToCancel?.booking_details.event_name || 
-                 bookingToCancel?.booking_details.hotel_name ||
-                 bookingToCancel?.booking_details.place_name ||
-                 'this item'}
-              </span>?
-              <br />
-              <br />
-              This action cannot be undone. Please contact support for refund inquiries.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep Booking</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCancelBooking}
-              disabled={cancellingBookingId !== null}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {cancellingBookingId ? "Cancelling..." : "Yes, Cancel Booking"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Footer />
       <MobileBottomBar />

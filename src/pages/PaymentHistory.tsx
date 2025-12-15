@@ -64,8 +64,7 @@ export default function PaymentHistory() {
         {
           event: '*',
           schema: 'public',
-          table: 'payments',
-          filter: `user_id=eq.${user.id}`
+          table: 'payments'
         },
         (payload) => {
           console.log('Payment update received:', payload);
@@ -81,11 +80,33 @@ export default function PaymentHistory() {
 
   const fetchPayments = async () => {
     try {
-      // Fetch payments by user_id directly
+      // Fetch user's phone number from profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone_number")
+        .eq("id", user?.id)
+        .single();
+
+      if (!profile?.phone_number) {
+        setLoading(false);
+        return;
+      }
+
+      // Format phone number to match stored format (254...)
+      let formattedPhone = profile.phone_number.replace(/\s/g, "");
+      if (formattedPhone.startsWith("0")) {
+        formattedPhone = "254" + formattedPhone.substring(1);
+      } else if (formattedPhone.startsWith("+254")) {
+        formattedPhone = formattedPhone.substring(1);
+      } else if (!formattedPhone.startsWith("254")) {
+        formattedPhone = "254" + formattedPhone;
+      }
+
+      // Fetch payments from the payments table (using type assertion for renamed table)
       const { data, error } = await supabase
-        .from("payments")
+        .from("payments" as any)
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("phone_number", formattedPhone)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

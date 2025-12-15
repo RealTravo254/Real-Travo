@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,7 @@ import { registrationNumberSchema, descriptionSchema, approvalStatusSchema } fro
 import { CountrySelector } from "@/components/creation/CountrySelector";
 import { PageHeader } from "@/components/creation/PageHeader";
 import { PhoneInput } from "@/components/creation/PhoneInput";
-import { EmailVerification } from "@/components/creation/EmailVerification";
+import { AutoVerifyEmail } from "@/components/creation/AutoVerifyEmail";
 
 const CreateHotel = () => {
   const navigate = useNavigate();
@@ -41,9 +41,7 @@ const CreateHotel = () => {
     entranceFeeType: "free",
     childPrice: "0",
     adultPrice: "0",
-    establishmentType: "hotel",
-    latitude: null as number | null,
-    longitude: null as number | null
+    establishmentType: "hotel"
   });
   
   const [workingDays, setWorkingDays] = useState({
@@ -95,21 +93,16 @@ const CreateHotel = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-          setFormData(prev => ({
-            ...prev, 
-            locationLink: mapUrl,
-            latitude: latitude,
-            longitude: longitude
-          }));
+          setFormData({...formData, locationLink: mapUrl});
           toast({
             title: "Location Added",
-            description: `Coordinates captured: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            description: "Your current location has been added to the map link.",
           });
         },
         (error) => {
           toast({
             title: "Location Error",
-            description: "Unable to get your location. Please try again.",
+            description: "Unable to get your location. Please add the link manually.",
             variant: "destructive"
           });
         }
@@ -187,10 +180,10 @@ const CreateHotel = () => {
       return;
     }
 
-    if (!formData.latitude || !formData.longitude) {
+    if (!formData.locationLink) {
       toast({
         title: "Location Required",
-        description: "Please click the button to capture your location coordinates",
+        description: "Please click the button to access your current location",
         variant: "destructive"
       });
       return;
@@ -296,8 +289,8 @@ const CreateHotel = () => {
       const { error } = await supabase
         .from("hotels")
         .insert([{
-          name: formData.registrationName,
-          local_name: formData.localName || null,
+        name: formData.registrationName,
+        local_name: formData.localName || null,
           registration_number: formData.registrationNumber,
           location: formData.locationName,
           place: formData.place || formData.locationName,
@@ -306,8 +299,6 @@ const CreateHotel = () => {
           email: formData.email || null,
           phone_numbers: formData.phoneNumber ? [formData.phoneNumber] : null,
           map_link: formData.locationLink || null,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
           image_url: uploadedUrls[0] || "",
           gallery_images: uploadedUrls,
           establishment_type: formData.establishmentType,
@@ -359,7 +350,7 @@ const CreateHotel = () => {
               <h3 className="text-lg font-semibold">Registration & Contact</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="registrationName">Registration Name (as per government documentation) </Label>
+                <Label htmlFor="registrationName">Registration Name (as per government documentation) *</Label>
                 <Input
                   id="registrationName"
                   required
@@ -370,7 +361,7 @@ const CreateHotel = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="registrationNumber">Registration Number </Label>
+                <Label htmlFor="registrationNumber">Registration Number *</Label>
                 <Input
                   id="registrationNumber"
                   required
@@ -381,7 +372,7 @@ const CreateHotel = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="locationName">Location Name </Label>
+                <Label htmlFor="locationName">Location Name *</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -429,7 +420,7 @@ const CreateHotel = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description (100 words max) </Label>
+                <Label htmlFor="description">Description (100 words max) *</Label>
                 <Textarea
                   id="description"
                   required
@@ -440,7 +431,7 @@ const CreateHotel = () => {
                 />
               </div>
 
-              <EmailVerification
+              <AutoVerifyEmail
                 email={formData.email}
                 onEmailChange={(email) => setFormData({...formData, email})}
                 isVerified={emailVerified}
@@ -448,7 +439,7 @@ const CreateHotel = () => {
               />
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number </Label>
+                <Label htmlFor="phone">Phone Number *</Label>
                 <PhoneInput
                   value={formData.phoneNumber}
                   onChange={(value) => setFormData({...formData, phoneNumber: value})}
@@ -464,29 +455,27 @@ const CreateHotel = () => {
               <h3 className="text-lg font-semibold">Operational Details</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="locationLink">Location Coordinates </Label>
-                <div className="flex flex-col gap-2">
-                  <Button type="button" variant="outline" onClick={getCurrentLocation} className="w-full sm:w-auto">
-                    <Navigation className="h-4 w-4 mr-2" />
-                    {formData.latitude ? 'Update My Location' : 'Auto-Detect My Location'}
+                <Label htmlFor="locationLink">Location Link *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="locationLink"
+                    required
+                    disabled
+                    value={formData.locationLink}
+                    placeholder="Click button to access your current location"
+                    className="cursor-not-allowed"
+                  />
+                  <Button type="button" variant="outline" onClick={getCurrentLocation} className="shrink-0">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Auto-Access My Location
                   </Button>
-                  {formData.latitude && formData.longitude && (
-                    <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-md">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium text-primary">
-                        📍 {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
-                      </span>
-                    </div>
-                  )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {formData.latitude ? 'Location captured successfully' : 'Click the button to capture your current location coordinates'}
-                </p>
+                <p className="text-sm text-muted-foreground">Use the button to access your current location</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="openingHours">Opening Hours </Label>
+                  <Label htmlFor="openingHours">Opening Hours *</Label>
                   <div className="relative">
                     <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -501,7 +490,7 @@ const CreateHotel = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="closingHours">Closing Hours </Label>
+                  <Label htmlFor="closingHours">Closing Hours *</Label>
                   <div className="relative">
                     <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input

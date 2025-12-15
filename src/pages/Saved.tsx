@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
+import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -191,7 +191,9 @@ const Saved = () => {
       <Header />
       
       <main className="container px-4 py-8">
-        <div className="flex items-center justify-between mb-8">          
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Saved Items</h1>
+          
           {savedListings.length > 0 && (
             <div className="flex gap-2">
               {!isSelectionMode ? (
@@ -240,8 +242,8 @@ const Saved = () => {
         </div>
         
         {isLoading || authLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {[...Array(10)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-3">
                 <Skeleton className="h-48 w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
@@ -266,7 +268,7 @@ const Saved = () => {
             <p className="text-muted-foreground mt-2">Start exploring and save your favorites!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {savedListings.map((item) => (
               <div
                 key={item.id}
@@ -289,13 +291,14 @@ const Saved = () => {
                 <ListingCard
                   id={item.id}
                   type={item.savedType.replace("_", " ").toUpperCase() as any}
-                  name={item.name || item.local_name || item.location_name}
-                  imageUrl={item.image_url || item.photo_urls?.[0] || ""}
-                  location={item.location || item.location_name}
+                  name={item.name}
+                  imageUrl={item.image_url}
+                  location={item.location}
                   country={item.country}
+                  price={item.price}
+                  date={item.date}
                   onSave={() => handleSave(item.id, item.savedType)}
                   isSaved={true}
-                  showBadge={true}
                 />
               </div>
             ))}
