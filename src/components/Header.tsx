@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Heart, Ticket, Shield, Home, FolderOpen, User, Search, Bell } from "lucide-react";
+import { Menu, Heart, Ticket, Shield, Home, FolderOpen, User, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NavigationDrawer } from "./NavigationDrawer";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ThemeToggle } from "./ThemeToggle";
-import { NotificationBell } from "./NotificationBell"; // <-- Component needs update to accept props
+import { Link, useNavigate, useLocation } from "react-router-dom"; 
+import { ThemeToggle } from "./ThemeToggle"; 
+import { NotificationBell } from "./NotificationBell";
 
 interface HeaderProps {
   onSearchClick?: () => void;
@@ -26,73 +26,50 @@ interface HeaderProps {
 
 export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { user, signOut } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   
-  // State for scroll position
+  // State for scroll position (Still needed for the background change logic)
   const [scrollPosition, setScrollPosition] = useState(0);
 
   // Check if current page is the index page ('/')
   const isIndexPage = location.pathname === "/";
   
-  // Define the scroll handler
   const handleScroll = () => {
     setScrollPosition(window.pageYOffset);
   };
   
-  // Attach and cleanup scroll listener
   useEffect(() => {
     if (isIndexPage) {
       window.addEventListener("scroll", handleScroll, { passive: true });
     } else {
-      setScrollPosition(1); // Ensure non-index pages always have the solid background
+      setScrollPosition(1); 
     }
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [isIndexPage]);
 
-  // Check if we are past the scroll threshold (50px)
+  // Determine header background color
   const isScrolled = scrollPosition > 50; 
   
-  // Determine if we are on a small screen (mobile view)
-  const isSmallScreen = window.innerWidth < 768; 
+  // **Header Background Logic (Mobile only)**
+  // When at the top of the index page on mobile: bg-transparent
+  // When scrolled on the index page on mobile: bg-[#008080] (Teal)
+  const mobileHeaderBgClass = isIndexPage && !isScrolled
+    ? "bg-transparent border-b-transparent"
+    : "bg-[#008080] border-b-border"; 
 
-  // **Header Background Logic**
-  let headerBgClass = "bg-[#008080] border-b-border dark:bg-[#008080]"; // Default (Desktop/Non-Index Page)
-  let headerTextColorClass = "text-white dark:text-white"; // Default text color
+  // **Icon Button Background Logic (Mobile only)**
+  // When at the top of the index page on mobile: rgba darker color (bg-black/30)
+  // When scrolled on the index page on mobile: Standard semi-transparent white (bg-white/10)
+  const iconBgClass = isIndexPage && !isScrolled
+    ? "bg-black/30 hover:bg-black/40" 
+    : "bg-white/10 hover:bg-white/20"; 
 
-  if (isIndexPage && isSmallScreen) {
-    if (isScrolled) {
-      // Scrolled on mobile index page: solid white background
-      headerBgClass = "bg-white border-b border-border shadow-md"; 
-      headerTextColorClass = "text-black dark:text-black";
-    } else {
-      // At top on mobile index page: fully transparent background (clear)
-      headerBgClass = "bg-transparent border-b-transparent"; 
-      headerTextColorClass = "text-white dark:text-white"; // Text color needed for the icons' Lucide elements
-    }
-  }
-
-  // **Icon Button Background Logic (Mobile Index Page Only)**
-  let iconBgClass = "bg-white/10 hover:bg-white/20"; // Default for icons (Desktop/Scrolled/Non-Index)
-  let iconHoverTextClass = "group-hover:text-[#008080]"; // Default icon hover color
-
-  if (isIndexPage && isSmallScreen) {
-    if (isScrolled) {
-      // Scrolled: Icons need light background on white header
-      iconBgClass = "bg-gray-100 hover:bg-gray-200";
-      iconHoverTextClass = "group-hover:text-[#008080]";
-    } else {
-      // At Top: Icons need rgba darker background for visibility on transparent header
-      iconBgClass = "bg-black/30 hover:bg-black/40"; 
-      iconHoverTextClass = "group-hover:text-white"; // Use white text for hover on dark background
-    }
-  }
-  
-  // Fetch user data (kept for completeness)
+  /* --- User Data Fetching (Kept for completeness) --- */
   useEffect(() => {
     const checkRole = async () => {
       // ... (existing checkRole logic)
@@ -123,24 +100,29 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
       setShowMobileAccountDialog(!showMobileAccountDialog);
     }
   };
+  /* ------------------------------------------------ */
 
   return (
-    // Apply dynamic header background and text color class
-    <header className={`sticky top-0 z-50 w-full h-16 transition-colors duration-300 ${headerBgClass} ${headerTextColorClass}`}>
+    // APPLYING FIXED POSITION AND RESPONSIVE DISPLAY
+    // Small Screen: fixed top-0 w-full z-50 (Always visible, full width)
+    // Medium/Desktop: sticky top-0 md:bg-[#008080] (Regular desktop header)
+    <header className={`
+        fixed top-0 w-full z-50 h-16 transition-colors duration-300
+        ${mobileHeaderBgClass} 
+        md:sticky md:bg-[#008080] md:border-b md:border-border md:dark:bg-[#008080]
+    `}>
       <div className="container flex h-full items-center justify-between px-4">
         
-        {/* Logo and Drawer Trigger (Left Side) */}
+        {/* Left Side: Menu Icon ONLY on small screen */}
         <div className="flex items-center gap-3">
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <SheetTrigger asChild>
-              {/* Menu Icon: Apply conditional background */}
+              {/* Menu Icon: Apply conditional background, always visible on mobile/desktop */}
               <button 
-                // Apply iconBgClass. For desktop/scrolled, it defaults to light.
-                className={`inline-flex items-center justify-center h-10 w-10 rounded-md text-white transition-colors lg:bg-white/10 lg:hover:bg-[#006666] ${iconBgClass}`} 
+                className={`inline-flex items-center justify-center h-10 w-10 rounded-md text-white transition-colors lg:bg-white/10 lg:hover:bg-[#006666] ${iconBgClass} md:bg-white/10 md:hover:bg-white/20`} 
                 aria-label="Open navigation menu"
               >
-                {/* Icon color needs to be white when transparent, and match text color when scrolled/desktop */}
-                <Menu className={`h-5 w-5 ${isIndexPage && !isScrolled && isSmallScreen ? 'text-white' : 'text-current'}`} />
+                <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0 h-screen">
@@ -148,22 +130,14 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
             </SheetContent>
           </Sheet>
           
-          {/* Logo and Name/Description: HIDDEN on all small screens (md:flex) */}
-          {/* This satisfies the requirement "logo and name and description should not be there" */}
-          <Link to="/" className="hidden md:flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-[#0066cc] font-bold text-lg">
-              T
-            </div>
-            <div>
-              <span className="font-bold text-base md:text-lg text-white block">
-                TripTrac
-              </span>
-              <p className="text-xs text-white/90 block">Your journey starts now.</p>
-            </div>
+          {/* Logo and Name/Description: HIDDEN on all screens (Removed md:flex) */}
+          {/* If you wanted it back on desktop, use: <Link to="/" className="hidden md:flex items-center gap-3"> */}
+          <Link to="/" className="hidden">
+            {/* ... Logo Content ... */}
           </Link>
         </div>
 
-        {/* Desktop Navigation (Centered) */}
+        {/* Desktop Navigation (Centered) - Hidden on mobile, only appears on large screens (lg:flex) */}
         <nav className="hidden lg:flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 font-bold hover:text-muted-foreground transition-colors">
             <Home className="h-4 w-4" />
@@ -189,7 +163,7 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
         {/* Account Controls (Right Side) */}
         <div className="flex items-center gap-2">
           
-          {/* Search Icon Button: Apply conditional background */}
+          {/* Search Icon Button: Apply conditional background, always visible on mobile/desktop */}
           {showSearchIcon && (
             <button 
               onClick={() => {
@@ -200,31 +174,22 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}
-              // Applies iconBgClass (transparent/darker on mobile index top)
-              className={`rounded-full h-10 w-10 flex items-center justify-center transition-colors group lg:bg-white/10 lg:hover:bg-white ${iconBgClass}`}
+              // Applies iconBgClass on mobile, standard background on desktop
+              className={`rounded-full h-10 w-10 flex items-center justify-center transition-colors group ${iconBgClass} md:bg-white/10 md:hover:bg-white/20`}
               aria-label="Search"
             >
-              <Search className={`h-5 w-5 ${isIndexPage && !isScrolled && isSmallScreen ? 'text-white' : 'text-current'} ${isIndexPage && isScrolled && isSmallScreen ? 'group-hover:text-[#008080]' : iconHoverTextClass}`} />
+              <Search className="h-5 w-5 text-white group-hover:text-[#008080]" />
             </button>
           )}
           
-          {/* Mobile: Notification Bell: Pass the conditional background class */}
+          {/* Notification Bell: Apply conditional background, always visible on mobile/desktop */}
           <div className="flex items-center gap-2"> 
-            <NotificationBell 
-              buttonClassName={iconBgClass} 
-              iconColorClass={isIndexPage && !isScrolled && isSmallScreen ? 'text-white' : 'text-current'}
-              iconHoverTextClass={isIndexPage && isScrolled && isSmallScreen ? 'group-hover:text-[#008080]' : iconHoverTextClass}
-            />
+            {/* Pass iconBgClass for mobile/index transparency, default for desktop */}
+            <NotificationBell buttonClassName={iconBgClass} desktopButtonClassName="bg-white/10 hover:bg-white/20" />
           </div>
 
-          {/* Desktop Auth Actions (Right Side) */}
+          {/* Desktop Auth Actions (Theme Toggle & Account Icon) - HIDDEN on small screens */}
           <div className="hidden md:flex items-center gap-2">
-            {/* Desktop Notification Bell (using standard background) */}
-            <NotificationBell 
-              buttonClassName="bg-white/10 hover:bg-white/20" 
-              iconColorClass="text-white"
-              iconHoverTextClass="group-hover:text-[#008080]"
-            /> 
             
             <ThemeToggle />
             
