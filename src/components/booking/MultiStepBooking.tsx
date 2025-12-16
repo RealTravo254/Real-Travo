@@ -349,7 +349,7 @@ export const MultiStepBooking = ({
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-4">
                         <Calendar className="h-5 w-5" style={{ color: TEAL_COLOR }} />
-                        <h3 className="text-lg font-semibold">Step 1: Select Visit Date</h3>
+                        <h3 className="text-lg font-semibold">Select Visit Date</h3>
                     </div>
                     <div>
                         <Label htmlFor="visit_date">Visit Date</Label>
@@ -371,7 +371,7 @@ export const MultiStepBooking = ({
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-4">
                         <Users className="h-5 w-5" style={{ color: TEAL_COLOR }} />
-                        <h3 className="text-lg font-semibold">Step 2: Number of Guests</h3>
+                        <h3 className="text-lg font-semibold">Number of Guests</h3>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -415,7 +415,7 @@ export const MultiStepBooking = ({
             {/* Step 3: Facilities & Activities (shown for hotel, attraction, adventure place - not trips/events) */}
             {currentStep === 3 && !skipFacilitiesAndActivities && (
                 <div className="space-y-6">
-                    <h3 className="text-lg font-semibold">Step 3: Additional Services (Optional)</h3>
+                    <h3 className="text-lg font-semibold">Additional Services (Optional)</h3>
                     
                     {facilities.length > 0 && (
                         <div>
@@ -553,7 +553,7 @@ export const MultiStepBooking = ({
                             <div className="space-y-4 border p-4 rounded-lg">
                                 <h4 className="font-medium">Contact Details</h4>
                                 <div>
-                                    <Label htmlFor="guest_name">Full Name *</Label>
+                                    <Label htmlFor="guest_name">Full Name</Label>
                                     <Input
                                         id="guest_name"
                                         value={formData.guest_name}
@@ -564,7 +564,7 @@ export const MultiStepBooking = ({
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="guest_email">Email *</Label>
+                                    <Label htmlFor="guest_email">Email</Label>
                                     <Input
                                         id="guest_email"
                                         type="email"
@@ -611,7 +611,7 @@ export const MultiStepBooking = ({
                     {/* Payment Method Selection */}
                     {total > 0 && (
                         <div className="space-y-3 pt-3 border-t">
-                            <h4 className="font-semibold">Select Payment Method *</h4>
+                            <h4 className="font-semibold">Select Payment Method</h4>
                             <div className="flex gap-4">
                                 <Button
                                     onClick={() => setPaymentMethod('mpesa')}
@@ -634,7 +634,7 @@ export const MultiStepBooking = ({
 
                             {isMpesaSelected && (
                                 <div className="space-y-2 pt-2">
-                                    <Label htmlFor="mpesa_phone_final">M-Pesa Phone Number *</Label>
+                                    <Label htmlFor="mpesa_phone_final">M-Pesa Phone Number </Label>
                                     <Input
                                         id="mpesa_phone_final"
                                         type="tel"
