@@ -319,7 +319,7 @@ const HotelDetail = () => {
                   alt={`${hotel.name} ${idx + 1}`} 
                   loading="lazy" 
                   decoding="async" 
-                  className="w-full h-[60vh] md:h-96 lg:h-[500px] object-cover" // Ensure height consistency
+                  className="w-full h-[42vh] md:h-96 lg:h-[500px] object-cover" // <-- HEIGHT MODIFIED HERE
                 />
               </CarouselItem>
             ))}
@@ -358,7 +358,7 @@ const HotelDetail = () => {
           <div className="space-y-4 sm:space-y-3 order-1 lg:order-3">
             
             {/* Operating Hours/Availability Card (Booking Card structure) */}
-            <div className="space-y-3 p-4 sm:p-3 border bg-card rounded-lg">
+            <div className="space-y-3 p-4 sm:p-3 border bg-card rounded-lg lg:sticky lg:top-20"> {/* Added sticky for desktop */}
               
               <div className="flex items-start gap-2">
                 <Clock className="h-5 w-5 mt-1" style={{ color: TEAL_COLOR }} />
@@ -379,7 +379,6 @@ const HotelDetail = () => {
               </div>
 
               <div className="border-t pt-3 sm:pt-2">
-               {/* The entire block for "Available Rooms" has been removed from here */}
                   <p className="text-xs text-muted-foreground mt-2 sm:mt-1">
                       Room prices vary by type/facilities selected
                   </p>
@@ -398,7 +397,7 @@ const HotelDetail = () => {
               </Button>
             </div>
             
-            {/* Contact Information Section (Always in the right column / bottom of mobile section) */}
+            {/* Contact Information Section (Desktop Only) */}
             {(hotel.phone_numbers || hotel.email) && (
               <div className="p-4 sm:p-3 border bg-card rounded-lg hidden lg:block"> {/* Hidden on small screen, visible on large */}
                 <h2 className="text-xl sm:text-lg font-semibold mb-4 sm:mb-3">Contact Information </h2>
@@ -450,7 +449,7 @@ const HotelDetail = () => {
                 <p className="text-sm sm:text-xs text-muted-foreground mb-4 sm:mb-2">Place: {hotel.place}</p>
               )}
               
-              {/* Mobile Order 3: Action Buttons (Share, Copy Link) */}
+              {/* Mobile Order 3: Action Buttons (Map, Copy Link, Share) */}
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -501,7 +500,6 @@ const HotelDetail = () => {
                   {hotel.amenities.map((amenity, idx) => (
                     <div 
                       key={idx} 
-                      // --- ADDED rounded-full for 50% border-radius ---
                       className="px-3 py-2 text-white rounded-full text-sm flex items-center justify-center text-center min-h-[44px]"
                       style={{ backgroundColor: RED_COLOR }}
                     >
@@ -520,7 +518,6 @@ const HotelDetail = () => {
                   {hotel.facilities.map((facility, idx) => (
                     <div 
                       key={idx} 
-                      // --- ADDED rounded-full for 50% border-radius ---
                       className="px-3 py-2 text-white rounded-full text-sm flex flex-col items-center justify-center text-center min-h-[60px] leading-tight"
                       style={{ backgroundColor: TEAL_COLOR }}
                     >
@@ -541,7 +538,6 @@ const HotelDetail = () => {
                   {hotel.activities.map((activity, idx) => (
                     <div 
                       key={idx} 
-                      // --- ADDED rounded-full for 50% border-radius ---
                       className="px-3 py-2 text-white rounded-full text-sm flex flex-col items-center justify-center text-center min-h-[60px] leading-tight"
                       style={{ backgroundColor: ORANGE_COLOR }}
                     >
@@ -553,7 +549,7 @@ const HotelDetail = () => {
               </div>
             )}
             
-            {/* Contact Information Section (Always in the right column / bottom of mobile section) */}
+            {/* Contact Information Section (Mobile Only) */}
             {(hotel.phone_numbers || hotel.email) && (
               <div className="p-4 sm:p-3 border bg-card rounded-lg lg:hidden"> {/* Visible on small screen, hidden on large */}
                 <h2 className="text-xl sm:text-lg font-semibold mb-4 sm:mb-3">Contact Information</h2>
