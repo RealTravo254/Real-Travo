@@ -141,7 +141,7 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
                 <span className="font-bold text-base md:text-lg text-white block">
                   TripTrac
                 </span>
-                <p className="text-xs text-white/90 hidden sm:block">Your journey starts now.</p>
+                <p className="text-xs text-white/90">Your journey starts now.</p>
               </div>
           </Link>
         </div>
