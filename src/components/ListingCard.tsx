@@ -110,8 +110,8 @@ export const ListingCard = ({
     quality: 70
   });
   return <Card onClick={handleCardClick} className={cn("group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border bg-card shadow-sm w-full flex flex-col",
-  // Changed "rounded-lg" to "rounded-none" to remove border radius
-  "rounded-none", compact ? "h-auto" : "h-auto")}>
+    // Changed "rounded-lg" to "rounded-none" to remove border radius
+    "rounded-none", compact ? "h-auto" : "h-auto")}>
       {/* Image Container with intersection observer */}
       {/* INCREASED paddingBottom from '60%' to '75%' for a taller card */}
       <div ref={imageContainerRef} className="relative overflow-hidden m-0 bg-muted" style={{
@@ -129,14 +129,19 @@ export const ListingCard = ({
             </div>}
         
         {/* Category Badges */}
-        {type === "TRIP" && <Badge className={cn("absolute top-1.5 left-1.5 backdrop-blur text-[10px] md:text-xs font-bold z-10 px-1.5 py-0.5 md:px-2 md:py-1", tealBgClass)}>
-            TRIP
+        {/* TRIP Badge (Lowercase, not bold) */}
+        {type === "TRIP" && <Badge className={cn("absolute top-1.5 left-1.5 backdrop-blur text-[10px] md:text-xs z-10 px-1.5 py-0.5 md:px-2 md:py-1", tealBgClass, "lowercase")}>
+            trip
         </Badge>}
 
-        {type === "EVENT"}
+        {/* EVENT Badge - ADDED (Lowercase, not bold) */}
+        {type === "EVENT" && <Badge className={cn("absolute top-1.5 left-1.5 backdrop-blur text-[10px] md:text-xs z-10 px-1.5 py-0.5 md:px-2 md:py-1", tealBgClass, "lowercase")}>
+            event
+        </Badge>}
 
-        {type !== "EVENT" && type !== "TRIP" && showBadge && <Badge className={cn("absolute top-1.5 left-1.5 backdrop-blur text-[8px] md:text-[0.6rem] z-10 px-1 py-0.5 md:p-1", tealBgClass)}>
-            {type}
+        {/* Other Types Badge (Lowercase, not bold, only when showBadge is true) */}
+        {type !== "EVENT" && type !== "TRIP" && showBadge && <Badge className={cn("absolute top-1.5 left-1.5 backdrop-blur text-[8px] md:text-[0.6rem] z-10 px-1 py-0.5 md:p-1", tealBgClass, "lowercase")}>
+            {type.toLowerCase()}
         </Badge>}
 
         {onSave && <Button size="icon" onClick={handleSaveClick} aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"} className={cn("absolute top-1.5 right-1.5 z-20 h-8 w-8 md:h-8 md:w-8 p-0 bg-transparent touch-manipulation active:scale-95 transition-transform", "border-none shadow-none", "outline-none focus-visible:ring-0 focus-visible:bg-transparent hover:bg-transparent")}>
@@ -146,8 +151,9 @@ export const ListingCard = ({
       
       {/* Content Area */}
       <div className="p-2 md:p-4 flex flex-col space-y-1 md:space-y-2 flex-1"> 
-        <h3 className="font-bold text-xs md:text-base line-clamp-2">
-            {name}
+        {/* Name is now consistently uppercase */}
+        <h3 className="font-bold text-xs md:text-base line-clamp-2 uppercase">
+            {name.toUpperCase()}
         </h3>
         
         {/* Location - Always visible */}
@@ -158,8 +164,8 @@ export const ListingCard = ({
             </p>
             {/* Distance inline for non-trip/event types */}
             {distance !== undefined && type !== "TRIP" && type !== "EVENT" && <span className={cn("text-[8px] md:text-xs px-1.5 py-0.5 rounded-full bg-primary/10 font-medium whitespace-nowrap", tealTextClass)}>
-                    📍 {distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`}
-                </span>}
+                        📍 {distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`}
+                    </span>}
         </div>
         
         {/* Price, Date and Few slots remaining for Trips/Events - on same row */}
