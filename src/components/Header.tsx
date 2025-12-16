@@ -144,15 +144,12 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
             </SheetContent>
           </Sheet>
           
-          {/*             MODIFICATION START: Logo/Description for all non-index pages (and desktop)
-            The logic is now: 
-            - Show on desktop (`md:flex`)
-            - OR show on mobile when it's NOT the index page (`!isIndexPage`)
-            The initial class is `flex` and we hide it only for the index page on mobile (`${isIndexPage ? 'hidden' : 'flex'}`)
-          */}
+          {/* Logo/Description: ***MODIFIED CLASS FOR MOBILE/NON-INDEX PAGE DISPLAY*** */}
+          {/* Original: className="hidden md:flex items-center gap-3" */}
+          {/* New: Conditional display based on isIndexPage */}
           <Link 
             to="/" 
-            className={`${isIndexPage ? 'hidden' : 'flex'} items-center gap-3 md:flex`}
+            className={`items-center gap-3 ${isIndexPage ? 'hidden' : 'flex'} md:flex`}
           >
               <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-[#0066cc] font-bold text-lg">
                 T
@@ -164,7 +161,6 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
                 <p className="text-xs text-white/90 block">Your journey starts now.</p>
               </div>
           </Link>
-          {/* MODIFICATION END */}
         </div>
 
         {/* Desktop Navigation (Centered) - Unchanged */}
