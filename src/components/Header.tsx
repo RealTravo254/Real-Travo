@@ -134,7 +134,7 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
           
           {/* Logo/Description: Show on all non-index pages (mobile and desktop), hide only on index mobile page */}
           <Link to="/" className={`${isIndexPage ? 'hidden' : 'flex'} items-center gap-3 md:flex`}>
-              <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-[#0066cc] font-bold text-lg">
+              <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-[#008080] font-bold text-lg">
                 T
               </div>
               <div>
@@ -219,19 +219,6 @@ export const Header = ({ onSearchClick, showSearchIcon = true }: HeaderProps) =>
               <User className="h-5 w-5 text-white group-hover:text-[#008080]" />
             </button>
           </div>
-          
-          {/* Mobile Account Icon for Index Page ONLY - REMOVED per user request */}
-          {/* {isIndexPage && (
-            <button 
-              onClick={() => user ? navigate('/account') : navigate('/auth')}
-              className="md:hidden rounded-full h-10 w-10 flex items-center justify-center transition-colors hover:bg-white/20" 
-              aria-label="Account"
-              style={isIndexPage ? { backgroundColor: MOBILE_ICON_BG } : {}}
-            >
-              <User className="h-5 w-5 text-white" />
-            </button>
-          )} */}
-
         </div>
       </div>
     </header>
