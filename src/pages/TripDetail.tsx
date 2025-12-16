@@ -6,13 +6,13 @@ import { Header } from "@/components/Header";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Share2, Calendar, Mail, ArrowLeft, Heart, Copy } from "lucide-react";
+import { MapPin, Phone, Share2, Calendar, Mail, ArrowLeft, Heart, Copy, Star } from "lucide-react"; 
 import { generateReferralLink, trackReferralClick } from "@/lib/referralUtils";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { SimilarItems } from "@/components/SimilarItems";
 import { ReviewSection } from "@/components/ReviewSection";
 import Autoplay from "embla-carousel-autoplay";
@@ -23,11 +23,12 @@ import { extractIdFromSlug } from "@/lib/slugUtils";
 // Define the specific colors
 const TEAL_COLOR = "#008080"; // 0,128,128
 const ORANGE_COLOR = "#FF9800"; // FF9800
-const RED_COLOR = "#FF0000"; // Added for price emphasis
+const RED_COLOR = "#EF4444"; // Changed to a slightly softer red for better contrast/emphasis
 
 interface Activity {
   name: string;
   price: number;
+  numberOfPeople?: number; // Added for type safety in booking calculation
 }
 
 interface Trip {
@@ -50,7 +51,46 @@ interface Trip {
   map_link: string;
   activities?: Activity[];
   created_by: string;
+  latitude: number | null; // Added for completeness, often present on geo-items
+  longitude: number | null; // Added for completeness, often present on geo-items
 }
+
+// --- Helper Component: Read-only Star Rating Display (Placeholder) ---
+// Defined here for structural completeness, assuming this component exists elsewhere.
+interface StarRatingDisplayProps {
+  rating: number | null;
+  count: number | null;
+  iconSize?: number; 
+}
+
+const StarRatingDisplay = ({ rating, count, iconSize = 5 }: StarRatingDisplayProps) => {
+  if (rating === null || rating === 0) return null;
+
+  const fullStars = Math.floor(rating);
+  
+  return (
+    <div className="flex items-center gap-1">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`h-${iconSize} w-${iconSize}`}
+          style={{ color: ORANGE_COLOR }}
+          fill={i < fullStars ? ORANGE_COLOR : "transparent"} 
+          stroke={ORANGE_COLOR}
+        />
+      ))}
+      <span className="text-base font-semibold ml-1" style={{ color: ORANGE_COLOR }}>
+        {rating.toFixed(1)}
+      </span>
+      {count !== null && (
+        <span className="text-sm text-muted-foreground">
+          ({count} reviews)
+        </span>
+      )}
+    </div>
+  );
+};
+
 
 const TripDetail = () => {
   const { slug } = useParams();
@@ -58,20 +98,23 @@ const TripDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [referralLink, setReferralLink] = useState<string>("");
   const { savedItems, handleSave: handleSaveItem } = useSavedItems();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [averageRating, setAverageRating] = useState<number | null>(null); // New State
+  const [reviewCount, setReviewCount] = useState<number | null>(null); // New State
   
   const isSaved = savedItems.has(id || "");
 
   useEffect(() => {
     fetchTrip();
     
+    // Track referral clicks
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get("ref");
     if (refId && id) {
@@ -121,7 +164,6 @@ const TripDetail = () => {
     }
 
     const refLink = await generateReferralLink(trip.id, "trip", trip.id);
-    setReferralLink(refLink);
 
     try {
       await navigator.clipboard.writeText(refLink);
@@ -147,7 +189,6 @@ const TripDetail = () => {
     }
 
     const refLink = await generateReferralLink(trip.id, "trip", trip.id);
-    setReferralLink(refLink);
 
     if (navigator.share) {
       try {
@@ -165,7 +206,7 @@ const TripDetail = () => {
       window.open(trip.map_link, '_blank');
     } else {
       const query = encodeURIComponent(`${trip?.name}, ${trip?.location}, ${trip?.country}`);
-      // NOTE: Removed 'https://maps.google.com/?q=$' prefix as it's likely a typo and should be 'https://www.google.com/maps/search/?api=1&query='
+      // Fixed the typo in the map URL construction
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     }
   };
@@ -178,6 +219,7 @@ const TripDetail = () => {
     setIsProcessing(true);
     
     try {
+      // Calculate total amount including base price and activities
       const totalAmount = (data.num_adults * trip.price) + (data.num_children * trip.price_child) +
                          data.selectedActivities.reduce((sum, a) => sum + (a.price * a.numberOfPeople), 0);
       const totalPeople = data.num_adults + data.num_children;
@@ -243,9 +285,11 @@ const TripDetail = () => {
       <Header />
       
       <main className="container px-4 max-w-6xl mx-auto">
+        {/* Main Grid: 2/3rds for Content (Left), 1/3rd for Details/Actions (Right) */}
         <div className="grid lg:grid-cols-[2fr,1fr] gap-6 sm:gap-4">
-          {/* --- Image Carousel Section (Left Column) --- */}
-          <div className="w-full">
+          
+          {/* --- Image Carousel Section & Main Content (Left Column on large screens) --- */}
+          <div className="order-1 lg:order-1 w-full"> 
             <div className="relative">
               {/* Back Button over carousel */}
               <Button 
@@ -272,10 +316,27 @@ const TripDetail = () => {
                   }
                 }}
               >
-                <CarouselContent>
+                <CarouselContent
+                  // Styling for Border Radius and Color
+                  className={`
+                    rounded-b-lg // Bottom radius for small screens
+                    lg:rounded-b-none 
+                    lg:rounded-br-lg // Bottom-right radius for large screens
+                  `}
+                  style={{ 
+                    borderBottom: `2px solid ${TEAL_COLOR}`,
+                    borderRight: `2px solid ${TEAL_COLOR}` // Right border for large screens
+                  }}
+                >
                   {displayImages.map((img, idx) => (
                     <CarouselItem key={idx}>
-                      <img src={img} alt={`${trip.name} ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-64 md:h-96 object-cover" />
+                      <img 
+                        src={img} 
+                        alt={`${trip.name} ${idx + 1}`} 
+                        loading="lazy" 
+                        decoding="async" 
+                        className="w-full h-64 md:h-96 object-cover" 
+                      />
                     </CarouselItem>
                   ))}
                 </CarouselContent>
@@ -294,7 +355,7 @@ const TripDetail = () => {
               )}
             </div>
             
-            {/* Description Section below slideshow */}
+            {/* Description Section (Mobile Order 2, Desktop Order 2) */}
             {trip.description && (
               <div className="bg-card border rounded-lg p-4 sm:p-3 mt-4">
                 <h2 className="text-lg sm:text-base font-semibold mb-2 sm:mb-1">About This Trip</h2>
@@ -302,7 +363,7 @@ const TripDetail = () => {
               </div>
             )}
             
-            {/* --- Included Activities Section (Kept in Left Column) --- */}
+            {/* --- Included Activities Section (ORANGE) (Mobile Order 3, Desktop Order 3) --- */}
             {trip.activities && trip.activities.length > 0 && (
               <div className="mt-6 sm:mt-4 p-4 sm:p-3 border bg-card rounded-lg">
                 <h2 className="text-xl sm:text-lg font-semibold mb-4 sm:mb-3">Included Activities</h2>
@@ -321,15 +382,23 @@ const TripDetail = () => {
               </div>
             )}
             
-            {/* --- Review Section (Kept in Left Column) --- */}
+            {/* --- Review Section (Mobile Order 4, Desktop Order 4) --- */}
             <div className="mt-6 sm:mt-4">
-              <ReviewSection itemId={trip.id} itemType="trip" />
+              <ReviewSection 
+                itemId={trip.id} 
+                itemType="trip" 
+                // Handler to capture the rating for the header display
+                onRatingsChange={({ averageRating, reviewCount }: { averageRating: number | null, reviewCount: number | null }) => {
+                    setAverageRating(averageRating);
+                    setReviewCount(reviewCount);
+                }}
+              />
             </div>
             
-          </div> {/* End of Left Column */}
+          </div> {/* End of Left Column (order-1 lg:order-1) */}
 
-          {/* --- Detail/Booking/Contact Section (Right Column on large screens) --- */}
-          <div className="space-y-4 sm:space-y-3">
+          {/* --- Detail/Booking/Contact Section (Right Column on large screens, Stacked on small) --- */}
+          <div className="order-2 lg:order-2 space-y-4 sm:space-y-3">
             <div>
               <h1 className="text-3xl sm:text-2xl font-bold mb-2">{trip.name}</h1>
               <div className="flex items-center gap-2 text-muted-foreground mb-4 sm:mb-2">
@@ -339,7 +408,15 @@ const TripDetail = () => {
               </div>
             </div>
 
-            <div className="space-y-3 p-4 sm:p-3 border bg-card">
+            {/* NEW: Overall Star Rating Display (Mobile Order: 5, Above Price Card) */}
+            {averageRating !== null && (
+                <div className="p-2 sm:p-0">
+                    <StarRatingDisplay rating={averageRating} count={reviewCount} iconSize={6} />
+                </div>
+            )}
+
+            {/* Price/Booking Card (Teal border) (Mobile Order 6, Desktop Order 2) */}
+            <div className="space-y-3 p-4 sm:p-3 border bg-card rounded-lg" style={{ borderColor: TEAL_COLOR }}>
               <div className="flex items-center gap-2">
                 {/* Calendar Icon Teal */}
                 <Calendar className="h-5 w-5" style={{ color: TEAL_COLOR }} />
@@ -371,7 +448,7 @@ const TripDetail = () => {
               </Button>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons (Mobile Order 7, Desktop Order 3) */}
             <div className="flex gap-2">
               {/* Map Button: Border/Icon Teal */}
               <Button 
@@ -418,11 +495,10 @@ const TripDetail = () => {
               </Button>
             </div>
             
-            {/* --- Contact Information Section (MOVED TO RIGHT COLUMN, STACKED VERTICALLY) --- */}
+            {/* --- Contact Information Section (Mobile Order 8, Desktop Order 4) --- */}
             {(trip.phone_number || trip.email) && (
               <div className="mt-4 p-4 sm:p-3 border bg-card rounded-lg">
                 <h2 className="text-xl sm:text-lg font-semibold mb-3">Contact Information</h2>
-                {/* Changed from grid to space-y-2 to enforce vertical stacking */}
                 <div className="space-y-2"> 
                   {trip.phone_number && (
                     <a 
@@ -448,7 +524,7 @@ const TripDetail = () => {
               </div>
             )}
             
-          </div> {/* End of Right Column */}
+          </div> {/* End of Right Column (order-2 lg:order-2) */}
         </div>
 
         {/* --- Similar Items Section (Full width below the main grid) --- */}
@@ -465,9 +541,11 @@ const TripDetail = () => {
             isProcessing={isProcessing}
             isCompleted={isCompleted}
             itemName={trip.name}
-            skipDateSelection={!trip.is_custom_date}
+            // Trip-specific flags for MultiStepBooking
+            skipDateSelection={!trip.is_custom_date} 
             fixedDate={trip.date}
-            skipFacilitiesAndActivities={true}
+            // Trips usually don't have facilities, only activities/slots
+            skipFacilitiesAndActivities={false} 
             itemId={trip.id}
             bookingType="trip"
             hostId={trip.created_by || ""}
