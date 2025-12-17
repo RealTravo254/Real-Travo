@@ -1,4 +1,4 @@
-import { Home, Ticket, Heart, Phone, Info, Video, LogIn, LogOut, Sun, Moon, User, FileText, Shield } from "lucide-react";
+import { Home, Ticket, Heart, Phone, Info, LogIn, LogOut, Sun, Moon, User, FileText, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 // Removed unused Button import
@@ -81,7 +81,6 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
 
   const bottomNavItems = [
-    { icon: Video, label: "Vlog", path: "/vlog", protected: false },
     { icon: Phone, label: "Contact", path: "/contact", protected: false },
     { icon: Info, label: "About", path: "/about", protected: false },
   ];
