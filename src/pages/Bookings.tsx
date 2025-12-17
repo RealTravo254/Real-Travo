@@ -9,17 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Calendar, 
+  DollarSign, 
   Users, 
+  CalendarClock, 
   RefreshCw, 
+  XCircle, 
   Download, 
   Ticket,
-  CheckCircle2,
-  QrCode
+  CheckCircle2
 } from "lucide-react";
 import { RescheduleBookingDialog } from "@/components/booking/RescheduleBookingDialog";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
-import QRCode from "qrcode";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,7 +63,9 @@ const Bookings = () => {
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth");
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -79,17 +82,22 @@ const Bookings = () => {
 
   const fetchBookings = async () => {
     try {
-      const { data: confirmedBookings } = await supabase
+      const { data: confirmedBookings, error: bookingsError } = await supabase
         .from("bookings")
         .select("*")
         .eq("user_id", user?.id)
         .order("created_at", { ascending: false });
 
-      const { data: pendingPayments } = await supabase
+      if (bookingsError) throw bookingsError;
+
+      const { data: pendingPayments, error: pendingError } = await supabase
         .from("payments" as any)
         .select("*")
         .eq("user_id", user?.id)
-        .in("payment_status", ["pending", "failed"]);
+        .in("payment_status", ["pending", "failed"])
+        .order("created_at", { ascending: false });
+
+      if (pendingError) throw pendingError;
 
       const pendingAsBookings: Booking[] = (pendingPayments || []).map((pp: any) => ({
         id: pp.id,
@@ -115,152 +123,178 @@ const Bookings = () => {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       ));
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching bookings:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // ASYNC PDF Generation with QR Code
-  const generateTicketPDF = async (booking: Booking, personIndex?: number) => {
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: [100, 160] });
-    const ticketID = personIndex !== undefined ? `${booking.id}-T${personIndex + 1}` : booking.id;
+  // PDF Generation Logic
+  const generateTicketPDF = (booking: Booking, personIndex?: number) => {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [100, 150]
+    });
 
-    try {
-      // 1. Generate QR Code
-      const qrDataUrl = await QRCode.toDataURL(ticketID, { margin: 1, width: 200 });
+    // Design Elements
+    doc.setFillColor(30, 41, 59); // Dark background header
+    doc.rect(0, 0, 100, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("E-TICKET", 50, 15, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.text(personIndex !== undefined ? `PASSENGER ${personIndex + 1}` : "GENERAL BOOKING", 50, 25, { align: "center" });
 
-      // 2. Styling - Header
-      doc.setFillColor(15, 23, 42); // Navy Blue
-      doc.rect(0, 0, 100, 45, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.text("ADMISSION PASS", 50, 18, { align: "center" });
-      
-      doc.setFontSize(9);
-      doc.text(personIndex !== undefined ? `TICKET ${personIndex + 1} OF ${booking.slots_booked}` : "GROUP SUMMARY", 50, 26, { align: "center" });
+    // Body
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    const title = booking.booking_details.trip_name || booking.booking_details.hotel_name || 'Booking';
+    doc.text(title, 10, 55);
 
-      // 3. QR Code Placement
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(30, 32, 40, 40, 3, 3, 'F');
-      doc.addImage(qrDataUrl, 'PNG', 32, 34, 36, 36);
-
-      // 4. Content - Booking Details
-      doc.setTextColor(15, 23, 42);
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      const title = booking.booking_details.trip_name || booking.booking_details.hotel_name || 'Booking';
-      doc.text(title.toUpperCase(), 10, 85);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(`Reference: #${booking.id.slice(0, 8).toUpperCase()}`, 10, 95);
-      doc.text(`Date: ${booking.visit_date ? new Date(booking.visit_date).toDateString() : 'N/A'}`, 10, 102);
-      doc.text(`Guest: ${booking.guest_name || 'Valued Customer'}`, 10, 109);
-      
-      if (personIndex === undefined) {
-        doc.text(`Total Passengers: ${booking.slots_booked}`, 10, 116);
-      }
-
-      // 5. Footer Security
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineDash([1, 1]);
-      doc.line(5, 135, 95, 135);
-      
-      doc.setFontSize(7);
-      doc.setTextColor(100, 100, 100);
-      doc.text("Valid for one entry only. Do not share this QR code.", 50, 145, { align: "center" });
-      doc.text(`Generated on ${new Date().toLocaleString()}`, 50, 150, { align: "center" });
-
-      const fileName = personIndex !== undefined 
-        ? `Ticket_${booking.id.slice(0,5)}_P${personIndex+1}.pdf`
-        : `Booking_Summary_${booking.id.slice(0,5)}.pdf`;
-
-      doc.save(fileName);
-      toast.success("Ticket downloaded!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to generate QR code");
+    doc.setFontSize(10);
+    doc.text(`Reference: ${booking.id.split('-')[0].toUpperCase()}`, 10, 65);
+    doc.text(`Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'N/A'}`, 10, 72);
+    doc.text(`Guest: ${booking.guest_name || 'Valued Customer'}`, 10, 79);
+    
+    if (personIndex === undefined) {
+      doc.text(`Total Group Size: ${booking.slots_booked}`, 10, 86);
     }
+
+    // Border/Cut line
+    doc.setLineDash([2, 2]);
+    doc.line(5, 120, 95, 120);
+    
+    doc.setFontSize(8);
+    doc.text("Scan at the entrance. Valid for one-time entry.", 50, 135, { align: "center" });
+
+    const fileName = personIndex !== undefined 
+      ? `Ticket_${booking.id.slice(0,5)}_P${personIndex+1}.pdf`
+      : `Booking_Summary_${booking.id.slice(0,5)}.pdf`;
+
+    doc.save(fileName);
+    toast.success("Download started");
   };
 
   const getStatusColor = (booking: Booking) => {
-    if (booking.result_code === "0" || booking.payment_status === "paid") return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    if (booking.isPending) return "bg-amber-50 text-amber-700 border-amber-200";
-    return "bg-slate-50 text-slate-700 border-slate-200";
+    if (booking.result_code === "0" || booking.payment_status === "paid") return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
+    if (booking.isPending) return "bg-amber-500/10 text-amber-600 border-amber-200";
+    return "bg-slate-500/10 text-slate-600 border-slate-200";
   };
 
-  if (authLoading || loading) return <div className="p-8">Loading...</div>;
+  const getPaymentStatusLabel = (booking: Booking) => {
+    if (booking.result_code === "0" || booking.payment_status === "paid") return "Confirmed";
+    if (booking.payment_status === "pending") return "Awaiting Payment";
+    return booking.payment_status;
+  };
+
+  const canRetryPayment = (booking: Booking) => {
+    return booking.isPending && ["failed", "cancelled", "1032"].includes(booking.payment_status || booking.result_code || "");
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex flex-col"><Header /><main className="flex-1 p-8">Loading...</main></div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-50/50">
       <Header />
-      <main className="flex-1 container px-4 py-8 pb-24 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">My Bookings</h1>
+      
+      <main className="flex-1 container px-4 py-8 pb-24 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 tracking-tight">My Bookings</h1>
         
-        <div className="space-y-4">
-          {bookings.map((booking) => (
-            <Card key={booking.id} className="overflow-hidden border-slate-200 shadow-sm">
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <Badge variant="outline" className={`mb-2 ${getStatusColor(booking)}`}>
-                      {booking.payment_status === 'paid' ? 'Confirmed' : 'Pending'}
-                    </Badge>
-                    <h3 className="font-bold text-lg text-slate-900 leading-tight">
-                      {booking.booking_details.trip_name || booking.booking_details.hotel_name || 'Package Booking'}
-                    </h3>
+        {bookings.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-xl border border-dashed">
+            <p className="text-muted-foreground">You haven't made any bookings yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {bookings.map((booking) => (
+              <Card key={booking.id} className="overflow-hidden border-none shadow-sm ring-1 ring-slate-200">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="space-y-1">
+                      <div className="flex gap-2 mb-2">
+                        <Badge variant="outline" className="capitalize font-medium">{booking.booking_type}</Badge>
+                        <Badge className={getStatusColor(booking)}>{getPaymentStatusLabel(booking)}</Badge>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900">
+                        {booking.booking_details.trip_name || booking.booking_details.hotel_name || 'Travel Booking'}
+                      </h3>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground uppercase font-semibold">Total Paid</p>
+                      <p className="text-xl font-black text-primary">KSh {booking.total_amount}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-500 block uppercase">Price</span>
-                    <span className="font-bold text-primary">KSh {booking.total_amount}</span>
+
+                  <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-100 mb-4">
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="p-2 bg-slate-100 rounded-lg"><Calendar className="h-4 w-4 text-slate-600" /></div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Date</p>
+                        <p className="font-medium">{booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="p-2 bg-slate-100 rounded-lg"><Users className="h-4 w-4 text-slate-600" /></div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Guests</p>
+                        <p className="font-medium">{booking.slots_booked} {booking.slots_booked === 1 ? 'Person' : 'People'}</p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Actions for Non-Paid Bookings */}
+                  {!['paid', 'completed'].includes(booking.payment_status) && (
+                    <div className="flex gap-2">
+                      {canRetryPayment(booking) && (
+                        <Button className="w-full" onClick={() => {/* retry logic */}}>
+                          <RefreshCw className="h-4 w-4 mr-2" /> Retry Payment
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex gap-6 text-sm text-slate-600 mb-2">
-                  <div className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> {booking.visit_date}</div>
-                  <div className="flex items-center gap-1.5"><Users className="h-4 w-4" /> {booking.slots_booked} Pax</div>
-                </div>
-              </div>
-
-              {/* DOWNLOAD SECTION */}
-              {(booking.payment_status === 'paid' || booking.result_code === "0") && (
-                <div className="bg-slate-50 border-t p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                      <QrCode className="h-3 w-3" /> Digital Tickets
-                    </span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7 text-xs text-primary"
-                      onClick={() => generateTicketPDF(booking)}
-                    >
-                      Summary PDF
-                    </Button>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from({ length: booking.slots_booked || 1 }).map((_, i) => (
-                      <Button 
-                        key={i} 
-                        variant="outline" 
-                        size="sm" 
-                        className="bg-white text-xs h-8"
-                        onClick={() => generateTicketPDF(booking, i)}
-                      >
-                        <Ticket className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
-                        Ticket {i + 1}
+                {/* Ticket Download Section - Only for Confirmed Bookings */}
+                {(booking.payment_status === 'paid' || booking.payment_status === 'completed' || booking.result_code === "0") && (
+                  <div className="bg-slate-50 border-t border-slate-100 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Tickets Ready
+                      </span>
+                      <Button variant="link" size="sm" onClick={() => generateTicketPDF(booking)} className="h-auto p-0 text-primary">
+                        Download General Details
                       </Button>
-                    ))}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from({ length: booking.slots_booked || 1 }).map((_, i) => (
+                        <Button 
+                          key={i} 
+                          variant="secondary" 
+                          size="sm" 
+                          className="bg-white border shadow-sm hover:bg-slate-50"
+                          onClick={() => generateTicketPDF(booking, i)}
+                        >
+                          <Ticket className="h-3 w-3 mr-2 text-slate-400" />
+                          Ticket {i + 1}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
+
       <MobileBottomBar />
     </div>
   );
