@@ -118,13 +118,14 @@ const EventDetail = () => {
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header className="hidden md:block" />
 
-      {/* Hero Image Section */}
-      <div className="relative w-full overflow-hidden h-[45vh] md:h-[55vh]">
-        <div className="absolute top-4 left-4 right-4 z-30 flex justify-between">
-          <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0">
+      {/* Hero Image Section with Concentrated RGBA Background */}
+      <div className="relative w-full overflow-hidden h-[50vh] md:h-[65vh]">
+        {/* Nav Overlays */}
+        <div className="absolute top-4 left-4 right-4 z-30 flex justify-between items-center">
+          <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0 hover:bg-black/50 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30"}`}>
+          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg transition-all ${isSaved ? "bg-red-500" : "bg-black/30 hover:bg-black/50"}`}>
             <Heart className={`h-5 w-5 text-white ${isSaved ? "fill-white" : ""}`} />
           </Button>
         </div>
@@ -135,29 +136,39 @@ const EventDetail = () => {
               <CarouselItem key={idx} className="h-full">
                 <div className="relative h-full w-full">
                   <img src={img} alt={event.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                  
+                  {/* Concentrated Overlay: Darkest in center, fades to transparent at edges */}
+                  <div 
+                    className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+                    style={{
+                      background: `radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)`
+                    }}
+                  >
+                    <Badge className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-4 py-1.5 mb-4 uppercase font-black tracking-widest text-[11px] shadow-xl">
+                      Adventure Place
+                    </Badge>
+                    
+                    <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none drop-shadow-2xl text-white mb-6 max-w-4xl">
+                      {event.name}
+                    </h1>
+
+                    <div className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl">
+                      <MapPin className="h-5 w-5 text-[#FF7F50]" />
+                      <span className="text-sm md:text-base font-bold uppercase tracking-widest text-white">
+                        {event.location}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
         </Carousel>
-
-        <div className="absolute bottom-8 left-6 right-6 text-white">
-          <Badge className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 mb-3 uppercase font-black tracking-widest text-[10px]">Upcoming Event</Badge>
-          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-none drop-shadow-xl mb-2">
-            {event.name}
-          </h1>
-          <div className="flex items-center gap-2 opacity-90">
-            <MapPin className="h-4 w-4 text-[#FF7F50]" />
-            <span className="text-sm font-bold uppercase tracking-wider">{event.location}</span>
-          </div>
-        </div>
       </div>
 
-      <main className="container px-4 max-w-6xl mx-auto -mt-6 relative z-40">
+      <main className="container px-4 max-w-6xl mx-auto -mt-10 relative z-40">
         <div className="grid lg:grid-cols-[1.7fr,1fr] gap-6">
           
-          {/* Main Content Column */}
           <div className="space-y-6">
             {/* About Card */}
             <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
@@ -179,6 +190,26 @@ const EventDetail = () => {
                 </div>
               </div>
             )}
+
+            {/* STYLED REVIEW CARD */}
+            <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Guest Ratings</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified Community Feedback</p>
+                </div>
+                {event.average_rating > 0 && (
+                  <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                    <Star className="h-4 w-4 fill-[#FF7F50] text-[#FF7F50]" />
+                    <span className="text-lg font-black" style={{ color: COLORS.TEAL }}>{event.average_rating.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="min-h-[100px]">
+                <ReviewSection itemId={event.id} itemType="event" />
+              </div>
+            </div>
           </div>
 
           {/* Booking Sidebar Column */}
@@ -233,25 +264,6 @@ const EventDetail = () => {
               </div>
             </div>
           </div>
-            {/* STYLED REVIEW CARD */}
-            <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Guest Ratings</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified Community Feedback</p>
-                </div>
-                {event.average_rating > 0 && (
-                  <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                    <Star className="h-4 w-4 fill-[#FF7F50] text-[#FF7F50]" />
-                    <span className="text-lg font-black" style={{ color: COLORS.TEAL }}>{event.average_rating.toFixed(1)}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="min-h-[100px]">
-                <ReviewSection itemId={event.id} itemType="event" />
-              </div>
-            </div>
         </div>
 
         <div className="mt-16">
