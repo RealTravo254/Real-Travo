@@ -522,7 +522,7 @@ const Index = () => {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="container md:px-4 px-4">
           <h1 className="text-white text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 md:mb-6">
-            Discover Your Next Adventure
+            Discover Your Next Adventure and Experiences.
           </h1>
           <SearchBarWithSuggestions 
             value={searchQuery} 
