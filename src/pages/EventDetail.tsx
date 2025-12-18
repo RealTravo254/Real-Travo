@@ -18,17 +18,15 @@ import { generateReferralLink, trackReferralClick } from "@/lib/referralUtils";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
 
-// Updated Color Palette
 const COLORS = {
-  TEAL: "#008080",      // Primary Brand Text
-  CORAL: "#FF7F50",     // Booking Button Base
-  CORAL_LIGHT: "#FF9E7A", // For gradients
-  KHAKI: "#F0E68C",     // Button Backgrounds
-  KHAKI_DARK: "#857F3E", // Icon and Button Text
-  RED: "#FF0000",       // Heart/Saved
-  SOFT_GRAY: "#F8F9FA"  // Background
+  TEAL: "#008080",
+  CORAL: "#FF7F50",
+  CORAL_LIGHT: "#FF9E7A",
+  KHAKI: "#F0E68C",
+  KHAKI_DARK: "#857F3E",
+  RED: "#FF0000",
+  SOFT_GRAY: "#F8F9FA"
 };
 
 const EventDetail = () => {
@@ -97,7 +95,7 @@ const EventDetail = () => {
     if (!event) return;
     setIsProcessing(true);
     try {
-      const totalAmount = (data.num_adults * event.price) + (data.num_children * event.price_child);
+      const totalAmount = (data.num_adults * event.price) + (data.num_children * (event.price_child || 0));
       await submitBooking({
         itemId: event.id, itemName: event.name, bookingType: 'event', totalAmount,
         slotsBooked: data.num_adults + data.num_children, visitDate: event.date,
@@ -111,33 +109,30 @@ const EventDetail = () => {
     } finally { setIsProcessing(false); }
   };
 
-  // Star Rating Helper for Mobile Summary
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map((s) => (
-          <Star 
-            key={s} 
-            className={`h-3 w-3 ${s <= Math.round(rating || 5) ? "fill-[#FF7F50] text-[#FF7F50]" : "text-slate-200"}`} 
-          />
-        ))}
-      </div>
-    );
-  };
-
   if (loading) return <div className="min-h-screen bg-slate-50 animate-pulse" />;
 
   const allImages = [event?.image_url, ...(event?.images || [])].filter(Boolean);
+
+  // Helper for Star Rating Summary
+  const RatingSummary = () => (
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center">
+        <Star className="h-3 w-3 fill-[#FFD700] text-[#FFD700]" />
+      </div>
+      <span className="text-xs font-black text-slate-700">{event.average_rating ? event.average_rating.toFixed(1) : "New"}</span>
+      <span className="text-[10px] text-slate-400 font-bold uppercase">({event.total_reviews || 0} reviews)</span>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header className="hidden md:block" />
 
       {/* Hero Image Section */}
-      <div className="relative w-full overflow-hidden h-[40vh] md:h-[50vh]">
+      <div className="relative w-full overflow-hidden h-[45vh] md:h-[55vh]">
         <div className="absolute top-4 left-4 right-4 z-30 flex justify-between">
           <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0">
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeftIcon className="h-5 w-5" />
           </Button>
           <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30"}`}>
             <Heart className={`h-5 w-5 text-white ${isSaved ? "fill-white" : ""}`} />
@@ -150,150 +145,140 @@ const EventDetail = () => {
               <CarouselItem key={idx} className="h-full">
                 <div className="relative h-full w-full">
                   <img src={img} alt={event.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
         </Carousel>
 
-        <div className="absolute bottom-6 left-6 text-white">
-          <Badge className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 mb-2">UPCOMING EVENT</Badge>
-          <h1 className="text-2xl md:text-4xl font-bold uppercase tracking-tight leading-tight drop-shadow-lg">
+        <div className="absolute bottom-8 left-6 right-6 text-white">
+          <Badge className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 mb-3">UPCOMING EVENT</Badge>
+          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-none drop-shadow-xl mb-2">
             {event.name}
           </h1>
-          <div className="flex items-center gap-1 opacity-90 mt-1">
-            <MapPin className="h-3 w-3" />
-            <span className="text-xs font-medium uppercase">{event.location}</span>
+          <div className="flex items-center gap-2 opacity-90">
+            <MapPin className="h-4 w-4 text-[#FF7F50]" />
+            <span className="text-sm font-bold uppercase tracking-wider">{event.location}</span>
           </div>
         </div>
       </div>
 
-      <main className="container px-4 max-w-6xl mx-auto -mt-4 relative z-40">
+      <main className="container px-4 max-w-6xl mx-auto -mt-6 relative z-40">
         <div className="grid lg:grid-cols-[1.7fr,1fr] gap-6">
           
           <div className="space-y-4">
             {/* About Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-sm">
-              <h2 className="text-lg font-bold mb-3" style={{ color: COLORS.TEAL }}>About the Event</h2>
-              <p className="text-slate-500 text-sm leading-relaxed leading-6">{event.description}</p>
+            <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>About</h2>
+                <div className="lg:hidden">
+                    <RatingSummary />
+                </div>
+              </div>
+              <p className="text-slate-500 text-sm leading-relaxed">{event.description}</p>
             </div>
 
-            {/* Highlights Card */}
+            {/* Highlights */}
             {event.activities?.length > 0 && (
-              <div className="bg-white rounded-[24px] p-6 shadow-sm">
-                <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.TEAL }}>Included Highlights</h2>
+              <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+                <h2 className="text-xl font-black uppercase tracking-tight mb-5" style={{ color: COLORS.TEAL }}>Highlights</h2>
                 <div className="flex flex-wrap gap-2">
                   {event.activities.map((act: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 bg-[#F0E68C]/30 px-4 py-2 rounded-full border border-[#F0E68C]">
+                    <div key={i} className="flex items-center gap-2 bg-[#F0E68C]/20 px-4 py-2.5 rounded-2xl border border-[#F0E68C]/50">
                       <CheckCircle2 className="h-4 w-4 text-[#857F3E]" />
-                      <span className="text-xs font-bold text-[#857F3E] uppercase">{act.name}</span>
+                      <span className="text-[11px] font-black text-[#857F3E] uppercase tracking-wide">{act.name}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            
-            {/* Review Section - Shown ONLY on large screens */}
+
+            {/* Desktop Reviews - Hidden on Mobile */}
             <div className="hidden lg:block">
-               <ReviewSection itemId={event.id} itemType="event" />
+              <ReviewSection itemId={event.id} itemType="event" />
             </div>
           </div>
 
-          {/* Sidebar / Booking Card */}
+          {/* Booking Sidebar */}
           <div className="space-y-4">
-            <div className="bg-white rounded-[24px] p-6 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
+            <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
               
-              {/* MOBILE ONLY REVIEW SUMMARY: Stars and Average Rating */}
-              <div className="flex items-center justify-between mb-5 lg:hidden pb-4 border-b border-slate-50">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Guest Experience</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-black text-slate-800 leading-none">
-                      {event.average_rating || "4.8"}
-                    </span>
-                    <div className="flex flex-col justify-center">
-                      {renderStars(event.average_rating || 4.8)}
-                      <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
-                        {event.review_count || "12"} Verified Reviews
-                      </span>
-                    </div>
-                  </div>
+              {/* Mobile Rating Summary inside Sidebar */}
+              <div className="lg:hidden mb-6 flex justify-between items-center border-b border-dashed border-slate-100 pb-6">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Guest Experience</p>
+                  <RatingSummary />
                 </div>
-                <div className="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center border border-teal-100">
-                  <CheckCircle2 className="h-5 w-5 text-teal-600" />
-                </div>
+                {user && (
+                  <Button variant="link" className="text-xs font-black uppercase text-[#008080] p-0 h-auto">
+                    Write Review
+                  </Button>
+                )}
               </div>
 
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-end mb-8">
                 <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pricing Starts at</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black" style={{ color: COLORS.TEAL }}>KSh {event.price}</span>
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-tighter">per adult</span>
+                    <span className="text-3xl font-black" style={{ color: COLORS.TEAL }}>KSh {event.price}</span>
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">/ adult</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                <div className="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 flex items-center gap-2">
                   <Calendar className="h-4 w-4" style={{ color: COLORS.CORAL }} />
-                  <span className="text-[11px] font-black text-slate-500 uppercase">
+                  <span className="text-xs font-black text-slate-600 uppercase">
                     {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-4 py-4 border-t border-b border-dashed border-slate-200 mb-6">
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-slate-400 font-bold uppercase">Child Price</span>
-                  <span className="font-bold">KSh {event.price_child || 0}</span>
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between text-xs font-bold uppercase tracking-tight">
+                  <span className="text-slate-400">Child (Under 12)</span>
+                  <span className="text-slate-700">KSh {event.price_child || 0}</span>
                 </div>
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-slate-400 font-bold uppercase">Availability</span>
-                  <span className="font-bold text-green-500">{event.available_tickets} slots left</span>
+                <div className="flex justify-between text-xs font-bold uppercase tracking-tight">
+                  <span className="text-slate-400">Status</span>
+                  <span className={event.available_tickets > 0 ? "text-green-600" : "text-red-500"}>
+                    {event.available_tickets > 0 ? `${event.available_tickets} slots left` : "Sold Out"}
+                  </span>
                 </div>
               </div>
 
               <Button 
                 onClick={() => setShowBooking(true)}
                 disabled={event.available_tickets <= 0}
-                className="w-full py-7 rounded-xl text-md font-black uppercase tracking-widest text-white shadow-xl transition-all active:scale-95 border-none"
+                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all active:scale-95 border-none"
                 style={{ 
                     background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`,
-                    boxShadow: `0 10px 20px -5px ${COLORS.CORAL}66`
+                    boxShadow: `0 12px 24px -8px ${COLORS.CORAL}88`
                 }}
               >
-                {event.available_tickets <= 0 ? "Fully Booked" : "Reserve Your Spot"}
+                {event.available_tickets <= 0 ? "Fully Booked" : "Reserve Spot"}
               </Button>
-              
-              <p className="text-[10px] text-center text-slate-400 mt-4 uppercase font-bold tracking-tighter italic">
-                Instant confirmation • Secure payment
-              </p>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-slate-50">
-                <Button variant="ghost" onClick={openInMaps} className="flex-col h-auto py-2 bg-[#F0E68C]/20 text-[#857F3E] rounded-xl hover:bg-[#F0E68C]/40">
-                  <MapPin className="h-5 w-5 mb-1" />
-                  <span className="text-[9px] font-black uppercase">Map</span>
-                </Button>
-                <Button variant="ghost" onClick={handleCopyLink} className="flex-col h-auto py-2 bg-[#F0E68C]/20 text-[#857F3E] rounded-xl hover:bg-[#F0E68C]/40">
-                  <Copy className="h-5 w-5 mb-1" />
-                  <span className="text-[9px] font-black uppercase">Copy</span>
-                </Button>
-                <Button variant="ghost" onClick={handleShare} className="flex-col h-auto py-2 bg-[#F0E68C]/20 text-[#857F3E] rounded-xl hover:bg-[#F0E68C]/40">
-                  <Share2 className="h-5 w-5 mb-1" />
-                  <span className="text-[9px] font-black uppercase">Share</span>
-                </Button>
+              <div className="grid grid-cols-3 gap-3 mt-8">
+                <UtilityButton icon={<MapPin className="h-5 w-5" />} label="Map" onClick={openInMaps} />
+                <UtilityButton icon={<Copy className="h-5 w-5" />} label="Copy" onClick={handleCopyLink} />
+                <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={handleShare} />
+              </div>
+
+              {/* Mobile Reviews - Positioned below the main actions on small screens */}
+              <div className="lg:hidden mt-10 pt-10 border-t border-slate-100">
+                <ReviewSection itemId={event.id} itemType="event" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-12">
-            <SimilarItems currentItemId={event.id} itemType="trip" location={event.location} country={event.country} />
+        <div className="mt-16">
+           <SimilarItems currentItemId={event.id} itemType="trip" location={event.location} country={event.country} />
         </div>
       </main>
 
-      {/* Booking Dialog */}
       <Dialog open={showBooking} onOpenChange={setShowBooking}>
-        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[32px] border-none shadow-2xl">
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[40px] border-none shadow-2xl">
           <MultiStepBooking 
             onSubmit={handleBookingSubmit} activities={event.activities || []} 
             priceAdult={event.price} priceChild={event.price_child} 
@@ -309,5 +294,19 @@ const EventDetail = () => {
     </div>
   );
 };
+
+// Internal sub-components for cleaner code
+const ArrowLeftIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+  </svg>
+);
+
+const UtilityButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
+  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F0E68C]/10 text-[#857F3E] rounded-2xl hover:bg-[#F0E68C]/30 transition-colors border border-[#F0E68C]/20">
+    <div className="mb-1">{icon}</div>
+    <span className="text-[10px] font-black uppercase tracking-tighter">{label}</span>
+  </Button>
+);
 
 export default EventDetail;
