@@ -28,6 +28,22 @@ const COLORS = {
   SOFT_GRAY: "#F8F9FA"
 };
 
+// Helper component for Review Header to avoid redundancy
+const ReviewHeader = ({ event }: { event: any }) => (
+  <div className="flex justify-between items-center mb-8">
+    <div>
+      <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Guest Ratings</h2>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified Community Feedback</p>
+    </div>
+    {event.average_rating > 0 && (
+      <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+        <Star className="h-4 w-4 fill-[#FF7F50] text-[#FF7F50]" />
+        <span className="text-lg font-black" style={{ color: COLORS.TEAL }}>{event.average_rating.toFixed(1)}</span>
+      </div>
+    )}
+  </div>
+);
+
 const EventDetail = () => {
   const { slug } = useParams();
   const id = slug ? extractIdFromSlug(slug) : null;
@@ -122,7 +138,7 @@ const EventDetail = () => {
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header className="hidden md:block" />
 
-      {/* Hero Image Section - FIXED TO FILL SECTION */}
+      {/* Hero Image Section */}
       <div className="relative w-full overflow-hidden h-[55vh] md:h-[70vh] bg-slate-900">
         <div className="absolute top-4 left-4 right-4 z-50 flex justify-between">
           <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0 hover:bg-black/50 transition-all">
@@ -134,16 +150,11 @@ const EventDetail = () => {
         </div>
 
         <Carousel plugins={[Autoplay({ delay: 4000 })]} className="w-full h-full">
-          <CarouselContent className="h-full ml-0"> {/* ml-0 removes slide gap */}
+          <CarouselContent className="h-full ml-0">
             {allImages.map((img, idx) => (
-              <CarouselItem key={idx} className="h-full pl-0 basis-full"> {/* pl-0 and basis-full for edge-to-edge */}
+              <CarouselItem key={idx} className="h-full pl-0 basis-full">
                 <div className="relative h-full w-full">
-                  <img 
-                    src={img} 
-                    alt={event.name} 
-                    className="w-full h-full object-cover object-center" 
-                  />
-                  {/* Enhanced gradient for better text contrast */}
+                  <img src={img} alt={event.name} className="w-full h-full object-cover object-center" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
                 </div>
               </CarouselItem>
@@ -191,26 +202,15 @@ const EventDetail = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Guest Ratings</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified Community Feedback</p>
-                </div>
-                {event.average_rating > 0 && (
-                  <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                    <Star className="h-4 w-4 fill-[#FF7F50] text-[#FF7F50]" />
-                    <span className="text-lg font-black" style={{ color: COLORS.TEAL }}>{event.average_rating.toFixed(1)}</span>
-                  </div>
-                )}
-              </div>
+            {/* REVIEWS: Desktop Version (Hidden on mobile) */}
+            <div className="hidden lg:block bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+              <ReviewHeader event={event} />
               <ReviewSection itemId={event.id} itemType="event" />
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
-              
               <div className="flex justify-between items-end mb-8">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ticket Price</p>
@@ -299,6 +299,12 @@ const EventDetail = () => {
                   </a>
                 )}
               </div>
+            </div>
+
+            {/* REVIEWS: Mobile Version (Appears below price card, hidden on desktop) */}
+            <div className="lg:hidden bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+              <ReviewHeader event={event} />
+              <ReviewSection itemId={event.id} itemType="event" />
             </div>
           </div>
         </div>
