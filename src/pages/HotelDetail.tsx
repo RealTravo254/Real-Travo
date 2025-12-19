@@ -21,7 +21,7 @@ import { MultiStepBooking, BookingFormData } from "@/components/booking/MultiSte
 import { generateReferralLink } from "@/lib/referralUtils";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
-import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation"; // Logic for distance
+import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 
 const COLORS = {
   TEAL: "#008080",
@@ -47,14 +47,13 @@ const HotelDetail = () => {
   const { savedItems, handleSave: handleSaveItem } = useSavedItems();
   const isSaved = savedItems.has(id || "");
 
-  // Calculate Distance
   const distance = position && hotel?.latitude && hotel?.longitude
     ? calculateDistance(position.latitude, position.longitude, hotel.latitude, hotel.longitude)
     : null;
 
   useEffect(() => {
     if (id) fetchHotel();
-    requestLocation(); // Request user location on mount
+    requestLocation();
   }, [id]);
 
   const fetchHotel = async () => {
@@ -68,20 +67,14 @@ const HotelDetail = () => {
     } finally { setLoading(false); }
   };
 
-  /**
-   * ENTRANCE FEE LOGIC
-   */
   const getDisplayPrice = () => {
     if (!hotel) return { price: 0, label: "Starting Price" };
     const allItems = [...(hotel.facilities || []), ...(hotel.activities || [])];
-    
     const entranceFee = allItems.find(item => 
       item.name?.toLowerCase().includes("entrance fee") || 
       item.name?.toLowerCase().includes("entry fee")
     );
-
     if (entranceFee) return { price: entranceFee.price, label: "Entrance Fee" };
-
     const prices = allItems.map(i => i.price).filter(p => p !== undefined && p !== null);
     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
     return { price: minPrice, label: "Starting Price" };
@@ -173,13 +166,13 @@ const HotelDetail = () => {
       <main className="container px-4 max-w-6xl mx-auto -mt-10 relative z-50">
         <div className="flex flex-col lg:grid lg:grid-cols-[1.7fr,1fr] gap-6">
           
-          {/* MOBILE ORDER 1: DESCRIPTION */}
+          {/* DESCRIPTION */}
           <div className="order-1 lg:order-none bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
             <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>Description</h2>
             <p className="text-slate-500 text-sm leading-relaxed">{hotel.description}</p>
           </div>
 
-          {/* MOBILE ORDER 2: PRICE CARD (SIDEBAR) */}
+          {/* PRICE & CONTACT CARD (SIDEBAR) */}
           <div className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
               <div className="flex justify-between items-start mb-6">
@@ -191,9 +184,9 @@ const HotelDetail = () => {
                   </div>
                 </div>
                 {distance && (
-                  <div className="bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-100">
-                    <span className="text-[10px] font-black text-[#008080] block text-center uppercase">{distance.toFixed(1)} KM</span>
-                    <span className="text-[8px] font-bold text-slate-400 block text-center uppercase">Away</span>
+                  <div className="bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-100 text-center">
+                    <span className="text-[10px] font-black text-[#008080] block uppercase">{distance.toFixed(1)} KM</span>
+                    <span className="text-[8px] font-bold text-slate-400 block uppercase">Away</span>
                   </div>
                 )}
               </div>
@@ -212,18 +205,34 @@ const HotelDetail = () => {
                 <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={() => {}} />
               </div>
 
-              <div className="space-y-4 pt-6 border-t border-slate-50">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Host Contacts</h3>
+              {/* UPDATED CONTACT SECTION */}
+              <div className="space-y-4 pt-6 border-t border-slate-100">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Host Inquiries</h3>
+                
+                {/* Email Section */}
+                {hotel.email && (
+                  <a href={`mailto:${hotel.email}`} className="flex items-center gap-3 text-slate-600 hover:text-[#008080] transition-colors group">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50 transition-colors">
+                      <Mail className="h-4 w-4 text-[#008080]" />
+                    </div>
+                    <span className="text-xs font-bold truncate">{hotel.email}</span>
+                  </a>
+                )}
+
+                {/* Phone Numbers Section */}
                 {hotel.phone_numbers?.map((p: string, i: number) => (
-                  <a key={i} href={`tel:${p}`} className="flex items-center gap-3 text-slate-600 font-bold text-xs">
-                    <Phone className="h-4 w-4 text-[#008080]" /> {p}
+                  <a key={i} href={`tel:${p}`} className="flex items-center gap-3 text-slate-600 hover:text-[#008080] transition-colors group">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50 transition-colors">
+                      <Phone className="h-4 w-4 text-[#008080]" />
+                    </div>
+                    <span className="text-xs font-bold">{p}</span>
                   </a>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* MOBILE ORDER 3: FACILITIES & ACTIVITIES */}
+          {/* FACILITIES & ACTIVITIES */}
           <div className="order-3 lg:col-start-1 space-y-6">
             {hotel.facilities?.length > 0 && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">

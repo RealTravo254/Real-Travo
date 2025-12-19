@@ -67,31 +67,37 @@ const AdventurePlaceDetail = () => {
     } finally { setLoading(false); }
   };
 
-  /**
-   * ENTRANCE FEE LOGIC
-   * Prioritizes the main 'entry_fee' field. 
-   * Fallback to lowest facility/activity price if entry is free/0.
-   */
   const getDisplayPrice = () => {
     if (!place) return { price: 0, label: "Starting Price" };
-    
-    // 1. Check if an explicit Entry Fee exists
     if (place.entry_fee && place.entry_fee > 0) {
       return { price: place.entry_fee, label: "Entrance Fee" };
     }
-
-    // 2. Fallback: Find cheapest item in facilities/activities
     const allItems = [...(place.facilities || []), ...(place.activities || [])];
     const prices = allItems.map(i => i.price).filter(p => p !== undefined && p !== null && p > 0);
     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-    
     return { 
       price: minPrice, 
-      label: place.entry_fee_type === 'free' && minPrice > 0 ? "Activity Starting at" : "Entrance Fee" 
+      label: place.entry_fee_type === 'free' && minPrice > 0 ? "Starting Price" : "Entrance Fee" 
     };
   };
 
   const handleSave = () => id && handleSaveItem(id, "adventure_place");
+  
+  const handleCopyLink = async () => {
+    if (!place) return;
+    const refLink = await generateReferralLink(place.id, "adventure_place", place.id);
+    await navigator.clipboard.writeText(refLink);
+    toast({ title: "Link Copied!" });
+  };
+
+  const handleShare = async () => {
+    if (!place) return;
+    const refLink = await generateReferralLink(place.id, "adventure_place", place.id);
+    if (navigator.share) {
+      try { await navigator.share({ title: place.name, url: refLink }); } catch (e) {}
+    } else { handleCopyLink(); }
+  };
+
   const openInMaps = () => {
     const query = encodeURIComponent(`${place?.name}, ${place?.location}`);
     window.open(place?.map_link || `https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
@@ -126,13 +132,13 @@ const AdventurePlaceDetail = () => {
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header className="hidden md:block" />
 
-      {/* Hero Image Section */}
+      {/* 1. HERO SECTION */}
       <div className="relative w-full overflow-hidden h-[50vh] md:h-[60vh]">
         <div className="absolute top-4 left-4 right-4 z-50 flex justify-between">
-          <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0 hover:bg-black/50">
+          <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg transition-colors ${isSaved ? "bg-red-500" : "bg-black/30 hover:bg-black/50"}`}>
+          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30"}`}>
             <Heart className={`h-5 w-5 text-white ${isSaved ? "fill-white" : ""}`} />
           </Button>
         </div>
@@ -143,7 +149,7 @@ const AdventurePlaceDetail = () => {
               <CarouselItem key={idx} className="h-full">
                 <div className="relative h-full w-full">
                   <img src={img} alt={place.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10" />
                 </div>
               </CarouselItem>
             ))}
@@ -152,22 +158,20 @@ const AdventurePlaceDetail = () => {
 
         <div className="absolute bottom-10 left-0 z-40 w-full p-8 pointer-events-none">
           <div className="relative z-10 space-y-4 pointer-events-auto">
-            <Button className="bg-[#FF7F50] border-none px-4 py-1 text-[10px] font-black uppercase tracking-widest rounded-full text-white shadow-lg">
+            <Badge className="bg-[#FF7F50] text-white border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
               Adventure Place
-            </Button>
+            </Badge>
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white drop-shadow-2xl leading-none">
               {place.name}
             </h1>
-            <div className="flex items-center gap-3 cursor-pointer w-fit" onClick={openInMaps}>
-              <div className="bg-white/20 backdrop-blur-md p-2 rounded-xl">
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={openInMaps}>
+              <div className="bg-white/20 backdrop-blur-md p-2 rounded-xl group-hover:bg-[#FF7F50] transition-all">
                 <MapPin className="h-5 w-5 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-black text-white uppercase tracking-wider">
-                  {place.location}, {place.country}
-                </span>
+                <span className="text-sm font-black text-white uppercase tracking-wider">{place.location}</span>
                 {distance && (
-                  <Badge className="bg-[#008080] text-white text-[9px] px-2 py-0 h-4 font-black border-none w-fit">
+                  <Badge className="bg-[#008080] text-white text-[9px] font-black border-none w-fit">
                     {(distance).toFixed(1)}KM AWAY
                   </Badge>
                 )}
@@ -180,42 +184,31 @@ const AdventurePlaceDetail = () => {
       <main className="container px-4 max-w-6xl mx-auto -mt-10 relative z-50">
         <div className="flex flex-col lg:grid lg:grid-cols-[1.7fr,1fr] gap-6">
           
-          {/* ORDER 1 (Mobile): DESCRIPTION */}
+          {/* 2. DESCRIPTION (Mobile Order 1) */}
           <div className="order-1 lg:order-none bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
             <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>Description</h2>
             <p className="text-slate-500 text-sm leading-relaxed">{place.description}</p>
           </div>
 
-          {/* ORDER 2 (Mobile): PRICING & SIDEBAR */}
+          {/* 3. PRICE & CONTACT CARD (Mobile Order 2 / Sidebar Desktop) */}
           <div className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
               <div className="flex justify-between items-end mb-8">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{priceLabel}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black" style={{ color: COLORS.RED }}>
+                    <span className="text-4xl font-black" style={{ color: COLORS.RED }}>
                       {displayPrice === 0 ? "FREE" : `KSh ${displayPrice}`}
                     </span>
                     {displayPrice > 0 && <span className="text-slate-400 text-[10px] font-bold uppercase">/ entry</span>}
                   </div>
                 </div>
                 {distance && (
-                  <div className="bg-slate-50 px-3 py-2 rounded-2xl border border-slate-100 flex flex-col items-center">
+                  <div className="bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-100 flex flex-col items-center">
                     <span className="text-[10px] font-black text-[#008080] uppercase">{distance.toFixed(1)} KM</span>
                     <span className="text-[8px] font-bold text-slate-400 uppercase">Away</span>
                   </div>
                 )}
-              </div>
-
-              <div className="space-y-4 mb-8 bg-slate-50/50 p-4 rounded-2xl border border-dashed border-slate-200">
-                <div className="flex justify-between text-[11px] font-black uppercase tracking-tight">
-                  <span className="text-slate-400">Hours</span>
-                  <span className="text-slate-700">{place.opening_hours} - {place.closing_hours}</span>
-                </div>
-                <div className="flex justify-between text-[11px] font-black uppercase tracking-tight">
-                  <span className="text-slate-400">Availability</span>
-                  <span className="text-slate-700">Mon - Sun</span>
-                </div>
               </div>
 
               <Button 
@@ -228,22 +221,36 @@ const AdventurePlaceDetail = () => {
 
               <div className="grid grid-cols-3 gap-3 mb-8">
                 <UtilityButton icon={<MapPin className="h-5 w-5" />} label="Map" onClick={openInMaps} />
-                <UtilityButton icon={<Copy className="h-5 w-5" />} label="Copy" onClick={() => {}} />
-                <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={() => {}} />
+                <UtilityButton icon={<Copy className="h-5 w-5" />} label="Copy" onClick={handleCopyLink} />
+                <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={handleShare} />
               </div>
 
-              <div className="space-y-4 pt-6 border-t border-slate-50">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inquiries</h3>
-                {place.phone_numbers?.map((phone: string, idx: number) => (
-                  <a key={idx} href={`tel:${phone}`} className="flex items-center gap-3 text-slate-600 font-bold text-xs uppercase">
-                    <Phone className="h-4 w-4 text-[#008080]" /> {phone}
-                  </a>
-                ))}
+              {/* ENHANCED CONTACT SECTION */}
+              <div className="space-y-4 pt-6 border-t border-slate-100">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Host Contact Information</h3>
+                <div className="space-y-3">
+                  {place.phone_numbers?.map((phone: string, idx: number) => (
+                    <a key={idx} href={`tel:${phone}`} className="flex items-center gap-3 text-slate-600 group">
+                      <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50 transition-colors">
+                        <Phone className="h-4 w-4 text-[#008080]" />
+                      </div>
+                      <span className="text-xs font-bold uppercase">{phone}</span>
+                    </a>
+                  ))}
+                  {place.email && (
+                    <a href={`mailto:${place.email}`} className="flex items-center gap-3 text-slate-600 group">
+                      <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50 transition-colors">
+                        <Mail className="h-4 w-4 text-[#008080]" />
+                      </div>
+                      <span className="text-xs font-bold lowercase break-all">{place.email}</span>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* ORDER 3 (Mobile): AMENITIES, FACILITIES, ACTIVITIES */}
+          {/* 4. FACILITIES, ACTIVITIES & AMENITIES (Mobile Order 3) */}
           <div className="order-3 lg:col-start-1 space-y-6">
             {place.facilities?.length > 0 && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
@@ -253,7 +260,7 @@ const AdventurePlaceDetail = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {place.facilities.map((f: any, i: number) => (
-                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center">
+                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center hover:border-teal-200 transition-colors">
                       <span className="text-sm font-black uppercase text-slate-700">{f.name}</span>
                       <Badge className="bg-white text-[#008080] text-[10px] font-black">KSH {f.price}</Badge>
                     </div>
@@ -271,7 +278,7 @@ const AdventurePlaceDetail = () => {
                 <div className="flex flex-wrap gap-3">
                   {place.activities.map((act: any, i: number) => (
                     <div key={i} className="px-5 py-3 rounded-2xl bg-orange-50/50 border border-orange-100 flex items-center gap-3">
-                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wide">{act.name}</span>
+                      <span className="text-[11px] font-black text-slate-700 uppercase">{act.name}</span>
                       <span className="text-[10px] font-bold text-[#FF9800]">KSh {act.price}</span>
                     </div>
                   ))}
@@ -296,16 +303,19 @@ const AdventurePlaceDetail = () => {
               </div>
             )}
           </div>
-
         </div>
 
         <div className="mt-12 bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
            <ReviewSection itemId={place.id} itemType="adventure_place" />
         </div>
+        
+        <div className="mt-16">
+           <SimilarItems currentItemId={place.id} itemType="adventure" country={place.country} />
+        </div>
       </main>
 
       <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
-        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[40px] border-none">
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[40px] border-none shadow-2xl">
           <MultiStepBooking 
             onSubmit={handleBookingSubmit} 
             facilities={place.facilities || []} 
@@ -329,7 +339,7 @@ const AdventurePlaceDetail = () => {
 };
 
 const UtilityButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
-  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F8F9FA] text-slate-500 rounded-2xl border border-slate-100 flex-1">
+  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F8F9FA] text-slate-500 rounded-2xl border border-slate-100 flex-1 hover:bg-slate-100 transition-colors">
     <div className="mb-1">{icon}</div>
     <span className="text-[10px] font-black uppercase tracking-tighter">{label}</span>
   </Button>
