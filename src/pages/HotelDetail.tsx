@@ -166,37 +166,13 @@ const HotelDetail = () => {
       <main className="container px-4 max-w-6xl mx-auto -mt-10 relative z-50">
         <div className="flex flex-col lg:grid lg:grid-cols-[1.7fr,1fr] gap-6">
           
-          {/* DESCRIPTION & HOURS */}
-          <div className="order-1 lg:order-none space-y-6">
-            <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-              <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>Description</h2>
-              <p className="text-slate-500 text-sm leading-relaxed">{hotel.description}</p>
-            </div>
-
-            {/* OPENING HOURS SECTION */}
-            <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-              <div className="flex items-center gap-3 mb-6">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <h2 className="text-xl font-black uppercase tracking-tight text-blue-600">Operating Hours</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Working Days</p>
-                  <p className="text-sm font-bold text-slate-700 uppercase">
-                    {hotel.working_days || "Monday - Sunday"}
-                  </p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Daily Schedule</p>
-                  <p className="text-sm font-bold text-slate-700 uppercase">
-                    {hotel.opening_time || "08:00 AM"} — {hotel.closing_time || "10:00 PM"}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* DESCRIPTION */}
+          <div className="order-1 lg:order-none bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+            <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>Description</h2>
+            <p className="text-slate-500 text-sm leading-relaxed">{hotel.description}</p>
           </div>
 
-          {/* PRICE & CONTACT CARD (SIDEBAR) */}
+          {/* PRICE, AVAILABILITY & CONTACT CARD (SIDEBAR) */}
           <div className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
               <div className="flex justify-between items-start mb-6">
@@ -215,9 +191,31 @@ const HotelDetail = () => {
                 )}
               </div>
 
+              {/* NEW: OPENING HOURS & WORKING DAYS SECTION */}
+              <div className="space-y-3 mb-6 bg-slate-50/50 p-4 rounded-2xl border border-dashed border-slate-200">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 text-[#008080]" />
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Hours</span>
+                   </div>
+                   <span className="text-[11px] font-black text-slate-700">
+                     {hotel.opening_hours || "08:00 AM"} - {hotel.closing_hours || "06:00 PM"}
+                   </span>
+                </div>
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                      <Calendar className="h-3.5 w-3.5 text-[#008080]" />
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Working Days</span>
+                   </div>
+                   <span className="text-[10px] font-bold text-slate-700 text-right uppercase">
+                     {hotel.days_opened ? (Array.isArray(hotel.days_opened) ? hotel.days_opened.join(", ") : hotel.days_opened) : "Mon - Sun"}
+                   </span>
+                </div>
+              </div>
+
               <Button 
                 onClick={() => setBookingOpen(true)}
-                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl border-none mb-6"
+                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl border-none mb-6 active:scale-95 transition-transform"
                 style={{ background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)` }}
               >
                 Reserve Now
@@ -231,23 +229,23 @@ const HotelDetail = () => {
 
               {/* CONTACT SECTION */}
               <div className="space-y-4 pt-6 border-t border-slate-100">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Information</h3>
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Direct Contacts</h3>
                 
                 {hotel.email && (
                   <a href={`mailto:${hotel.email}`} className="flex items-center gap-3 text-slate-600 hover:text-[#008080] transition-colors group">
-                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50 transition-colors">
                       <Mail className="h-4 w-4 text-[#008080]" />
                     </div>
-                    <span className="text-xs font-bold truncate">{hotel.email}</span>
+                    <span className="text-xs font-bold truncate tracking-tight">{hotel.email}</span>
                   </a>
                 )}
 
                 {hotel.phone_numbers?.map((p: string, i: number) => (
                   <a key={i} href={`tel:${p}`} className="flex items-center gap-3 text-slate-600 hover:text-[#008080] transition-colors group">
-                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50 transition-colors">
                       <Phone className="h-4 w-4 text-[#008080]" />
                     </div>
-                    <span className="text-xs font-bold">{p}</span>
+                    <span className="text-xs font-bold tracking-tight">{p}</span>
                   </a>
                 ))}
               </div>
@@ -264,7 +262,7 @@ const HotelDetail = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {hotel.facilities.map((f: any, i: number) => (
-                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center hover:border-teal-200 transition-colors">
+                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center">
                       <span className="text-sm font-black uppercase text-slate-700">{f.name}</span>
                       <Badge className="bg-white text-[#008080] text-[10px] font-black shadow-sm">KSH {f.price}</Badge>
                     </div>
@@ -303,7 +301,7 @@ const HotelDetail = () => {
 };
 
 const UtilityButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
-  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F8F9FA] text-slate-500 rounded-2xl border border-slate-100 flex-1 hover:bg-slate-100 transition-all">
+  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F8F9FA] text-slate-500 rounded-2xl border border-slate-100 flex-1 hover:bg-slate-100 transition-colors">
     <div className="mb-1">{icon}</div>
     <span className="text-[10px] font-black uppercase tracking-tighter">{label}</span>
   </Button>
