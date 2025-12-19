@@ -16,9 +16,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import Autoplay from "embla-carousel-autoplay";
 import { ReviewSection } from "@/components/ReviewSection";
 import { useSavedItems } from "@/hooks/useSavedItems";
-import { useAuth } from "@/contexts/AuthContext";
 import { MultiStepBooking, BookingFormData } from "@/components/booking/MultiStepBooking";
-import { generateReferralLink } from "@/lib/referralUtils";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
@@ -45,6 +43,7 @@ const HotelDetail = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isOpenNow, setIsOpenNow] = useState(false);
+  const [liveRating, setLiveRating] = useState({ avg: 0, count: 0 });
   const { savedItems, handleSave: handleSaveItem } = useSavedItems();
   const isSaved = savedItems.has(id || "");
 
@@ -53,17 +52,20 @@ const HotelDetail = () => {
     : null;
 
   useEffect(() => {
-    if (id) fetchHotel();
+    if (id) {
+        fetchHotel();
+        fetchLiveRating();
+    }
     requestLocation();
   }, [id]);
 
+  // Real-time Status Calculation
   useEffect(() => {
     if (!hotel) return;
     const checkOpenStatus = () => {
       const now = new Date();
       const currentDay = now.toLocaleString('en-us', { weekday: 'long' });
       const currentTime = now.getHours() * 60 + now.getMinutes();
-
       const parseTime = (timeStr: string) => {
         if (!timeStr) return 0;
         const [time, modifier] = timeStr.split(' ');
@@ -72,13 +74,10 @@ const HotelDetail = () => {
         if (modifier === 'AM' && hours === 12) hours = 0;
         return hours * 60 + minutes;
       };
-
       const openTime = parseTime(hotel.opening_hours || "08:00 AM");
       const closeTime = parseTime(hotel.closing_hours || "06:00 PM");
       const days = Array.isArray(hotel.days_opened) ? hotel.days_opened : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-      const isDayOpen = days.includes(currentDay);
-      const isTimeOpen = currentTime >= openTime && currentTime <= closeTime;
-      setIsOpenNow(isDayOpen && isTimeOpen);
+      setIsOpenNow(days.includes(currentDay) && currentTime >= openTime && currentTime <= closeTime);
     };
     checkOpenStatus();
     const interval = setInterval(checkOpenStatus, 60000);
@@ -96,6 +95,20 @@ const HotelDetail = () => {
     } finally { setLoading(false); }
   };
 
+  const fetchLiveRating = async () => {
+    if (!id) return;
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("item_id", id)
+      .eq("item_type", "hotel");
+
+    if (data && data.length > 0) {
+      const avg = data.reduce((acc, curr) => acc + curr.rating, 0) / data.length;
+      setLiveRating({ avg: parseFloat(avg.toFixed(1)), count: data.length });
+    }
+  };
+
   const getDisplayPrice = () => {
     if (!hotel) return { price: 0, label: "Starting Price" };
     const allItems = [...(hotel.facilities || []), ...(hotel.activities || [])];
@@ -105,7 +118,6 @@ const HotelDetail = () => {
     return { price: prices.length > 0 ? Math.min(...prices) : 0, label: "Starting Price" };
   };
 
-  const handleSave = () => id && handleSaveItem(id, "hotel");
   const openInMaps = () => window.open(hotel?.map_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel?.name + " " + hotel?.location)}`, "_blank");
 
   const { submitBooking } = useBookingSubmit();
@@ -137,13 +149,13 @@ const HotelDetail = () => {
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header className="hidden md:block" />
 
-      {/* Hero Image Section */}
+      {/* Hero Section */}
       <div className="relative w-full overflow-hidden h-[50vh] md:h-[65vh]">
         <div className="absolute top-4 left-4 right-4 z-50 flex justify-between">
           <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30"}`}>
+          <Button onClick={() => id && handleSaveItem(id, "hotel")} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30"}`}>
             <Heart className={`h-5 w-5 text-white ${isSaved ? "fill-white" : ""}`} />
           </Button>
         </div>
@@ -164,6 +176,11 @@ const HotelDetail = () => {
         <div className="absolute bottom-10 left-0 z-40 w-full p-8 pointer-events-none">
           <div className="relative z-10 space-y-3 pointer-events-auto">
             <div className="flex items-center gap-2">
+               {/* LIVE RATING BADGE */}
+               <Badge className="bg-amber-400 text-black border-none px-3 py-1 text-[9px] font-black uppercase rounded-full flex items-center gap-1 shadow-xl">
+                 <Star className="h-3 w-3 fill-current" />
+                 {liveRating.avg > 0 ? liveRating.avg : "New"}
+               </Badge>
                <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-3 py-1 text-[9px] font-black uppercase rounded-full flex items-center gap-1.5`}>
                  <Circle className={`h-2 w-2 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />
                  {isOpenNow ? "open now" : "closed"}
@@ -175,10 +192,6 @@ const HotelDetail = () => {
                )}
             </div>
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">{hotel.name}</h1>
-            <div className="flex items-center gap-2 text-white/90" onClick={openInMaps}>
-              <MapPin className="h-4 w-4 text-[#FF7F50]" />
-              <span className="text-sm font-black uppercase tracking-widest">{hotel.location}</span>
-            </div>
           </div>
         </div>
       </div>
@@ -194,15 +207,24 @@ const HotelDetail = () => {
           {/* SIDEBAR CARD */}
           <div className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
-              <div className="mb-6">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{priceLabel}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black" style={{ color: COLORS.RED }}>KSh {displayPrice}</span>
-                  <span className="text-slate-400 text-[10px] font-bold uppercase">/ entry</span>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{priceLabel}</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black" style={{ color: COLORS.RED }}>KSh {displayPrice}</span>
+                  </div>
+                </div>
+                {/* LIVE RATING SUMMARY */}
+                <div className="text-right">
+                  <div className="flex items-center gap-1 justify-end text-amber-500 font-black text-lg">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span>{liveRating.avg}</span>
+                  </div>
+                  <p className="text-[8px] font-black text-slate-400 uppercase">{liveRating.count} reviews</p>
                 </div>
               </div>
 
-              {/* OPERATING HOURS & WORKING DAYS */}
+              {/* OPERATING INFO */}
               <div className="space-y-3 mb-6 bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-slate-400">
@@ -214,23 +236,20 @@ const HotelDetail = () => {
                   </span>
                 </div>
                 
-                {/* Updated Working Days Section */}
                 <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100">
                   <div className="flex items-center gap-2 text-slate-400">
                     <Calendar className="h-4 w-4 text-[#008080]" />
                     <span className="text-[10px] font-black uppercase tracking-tight">working days</span>
                   </div>
                   <p className="text-[9px] font-normal leading-tight text-slate-500 lowercase italic">
-                    {Array.isArray(hotel.days_opened) 
-                      ? hotel.days_opened.join(", ") 
-                      : "monday, tuesday, wednesday, thursday, friday, saturday, sunday"}
+                    {Array.isArray(hotel.days_opened) ? hotel.days_opened.join(", ") : "mon to sun"}
                   </p>
                 </div>
               </div>
 
               <Button 
                 onClick={() => setBookingOpen(true)}
-                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl border-none mb-6 transition-all active:scale-95"
+                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl border-none mb-6"
                 style={{ background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)` }}
               >
                 Reserve Now
@@ -242,22 +261,18 @@ const HotelDetail = () => {
                 <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={() => {}} />
               </div>
 
-              {/* CONTACT DETAILS */}
+              {/* CONTACTS */}
               <div className="space-y-4 pt-6 border-t border-slate-100">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Direct Contact</h3>
                 {hotel.email && (
-                  <a href={`mailto:${hotel.email}`} className="flex items-center gap-3 text-slate-600 hover:text-teal-600 transition-colors group">
-                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50">
-                      <Mail className="h-4 w-4 text-[#008080]" />
-                    </div>
+                  <a href={`mailto:${hotel.email}`} className="flex items-center gap-3 text-slate-600 group">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50"><Mail className="h-4 w-4 text-[#008080]" /></div>
                     <span className="text-xs font-bold truncate lowercase">{hotel.email}</span>
                   </a>
                 )}
                 {hotel.phone_numbers?.map((p: string, i: number) => (
-                  <a key={i} href={`tel:${p}`} className="flex items-center gap-3 text-slate-600 hover:text-teal-600 transition-colors group">
-                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50">
-                      <Phone className="h-4 w-4 text-[#008080]" />
-                    </div>
+                  <a key={i} href={`tel:${p}`} className="flex items-center gap-3 text-slate-600 group">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50"><Phone className="h-4 w-4 text-[#008080]" /></div>
                     <span className="text-xs font-bold">{p}</span>
                   </a>
                 ))}
@@ -266,22 +281,7 @@ const HotelDetail = () => {
           </div>
 
           <div className="order-3 lg:col-start-1">
-            {hotel.facilities?.length > 0 && (
-              <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <BedDouble className="h-5 w-5 text-[#008080]" />
-                  <h2 className="text-xl font-black uppercase tracking-tight text-[#008080]">Facilities</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {hotel.facilities.map((f: any, i: number) => (
-                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center">
-                      <span className="text-sm font-black uppercase text-slate-700">{f.name}</span>
-                      <Badge className="bg-white text-[#008080] text-[10px] font-black shadow-sm">KSH {f.price}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+             <ReviewSection itemId={hotel.id} itemType="hotel" />
           </div>
         </div>
       </main>
@@ -292,7 +292,7 @@ const HotelDetail = () => {
 };
 
 const UtilityButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
-  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F8F9FA] text-slate-500 rounded-2xl border border-slate-100 flex-1 hover:bg-slate-100">
+  <Button variant="ghost" onClick={onClick} className="flex-col h-auto py-3 bg-[#F8F9FA] text-slate-500 rounded-2xl border border-slate-100 flex-1">
     <div className="mb-1">{icon}</div>
     <span className="text-[10px] font-black uppercase tracking-tighter">{label}</span>
   </Button>
