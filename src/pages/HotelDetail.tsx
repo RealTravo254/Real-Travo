@@ -18,7 +18,7 @@ import { ReviewSection } from "@/components/ReviewSection";
 import { useSavedItems } from "@/hooks/useSavedItems";
 import { useAuth } from "@/contexts/AuthContext";
 import { MultiStepBooking, BookingFormData } from "@/components/booking/MultiStepBooking";
-import { generateReferralLink, trackReferralClick } from "@/lib/referralUtils";
+import { generateReferralLink } from "@/lib/referralUtils";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
@@ -98,7 +98,6 @@ const HotelDetail = () => {
     if (!hotel) return;
     setIsProcessing(true);
     try {
-      // Calculation logic remains same as your original
       await submitBooking({
         itemId: hotel.id, itemName: hotel.name, bookingType: 'hotel', totalAmount: 0, 
         slotsBooked: data.num_adults + data.num_children, visitDate: data.visit_date,
@@ -121,7 +120,7 @@ const HotelDetail = () => {
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header className="hidden md:block" />
 
-      {/* Hero Image Section (Adventure Place Style) */}
+      {/* Hero Image Section */}
       <div className="relative w-full overflow-hidden h-[50vh] md:h-[60vh]">
         <div className="absolute top-4 left-4 right-4 z-50 flex justify-between">
           <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0 hover:bg-black/50">
@@ -145,7 +144,6 @@ const HotelDetail = () => {
           </CarouselContent>
         </Carousel>
 
-        {/* Floating Hotel Info Section */}
         <div className="absolute bottom-10 left-0 z-40 w-full md:w-3/4 lg:w-1/2 p-8 pointer-events-none">
           <div className="absolute inset-0 z-0 opacity-80" style={{ background: `radial-gradient(circle at 20% 50%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 85%)`, filter: 'blur(15px)', marginLeft: '-20px' }} />
           
@@ -186,13 +184,11 @@ const HotelDetail = () => {
         <div className="grid lg:grid-cols-[1.7fr,1fr] gap-6">
           
           <div className="space-y-6">
-            {/* Description Card */}
             <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
               <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>Description</h2>
               <p className="text-slate-500 text-sm leading-relaxed">{hotel.description}</p>
             </div>
 
-            {/* FACILITIES (ROOMS) SECTION */}
             {hotel.facilities?.length > 0 && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
@@ -223,7 +219,6 @@ const HotelDetail = () => {
               </div>
             )}
 
-            {/* ACTIVITIES SECTION */}
             {hotel.activities?.length > 0 && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
@@ -249,7 +244,6 @@ const HotelDetail = () => {
               </div>
             )}
 
-            {/* AMENITIES SECTION */}
             {hotel.amenities?.length > 0 && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
@@ -273,7 +267,6 @@ const HotelDetail = () => {
             )}
           </div>
 
-          {/* Booking Sidebar (Adventure Style) */}
           <div className="space-y-4">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
               <div className="flex justify-between items-end mb-8">
@@ -281,7 +274,7 @@ const HotelDetail = () => {
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Starting Price</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black" style={{ color: COLORS.RED }}>
-                      KSh {hotel.facilities?.[0]?.price ||}
+                      KSh {hotel.facilities?.[0]?.price || 0}
                     </span>
                     <span className="text-slate-400 text-[10px] font-bold uppercase">/ night</span>
                   </div>
@@ -292,20 +285,34 @@ const HotelDetail = () => {
                 </div>
               </div>
 
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-tight">
-                  <span className="text-slate-400">Check-In</span>
+              {/* SCHEDULE SECTION */}
+              <div className="space-y-4 mb-8 bg-slate-50/50 p-4 rounded-2xl border border-dashed border-slate-200">
+                <div className="flex justify-between text-[11px] font-black uppercase tracking-tight">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Calendar className="h-3 w-3" />
+                    <span>Working Days</span>
+                  </div>
+                  <span className="text-slate-700">{hotel.working_days || 'Mon - Sun'}</span>
+                </div>
+                <div className="flex justify-between text-[11px] font-black uppercase tracking-tight">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Clock className="h-3 w-3" />
+                    <span>Check-In / Opens</span>
+                  </div>
                   <span className="text-slate-700">{hotel.opening_hours || '12:00 PM'}</span>
                 </div>
-                <div className="flex justify-between text-xs font-bold uppercase tracking-tight">
-                  <span className="text-slate-400">Check-Out</span>
+                <div className="flex justify-between text-[11px] font-black uppercase tracking-tight">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Clock className="h-3 w-3" />
+                    <span>Check-Out / Closes</span>
+                  </div>
                   <span className="text-slate-700">{hotel.closing_hours || '10:00 AM'}</span>
                 </div>
               </div>
 
               <Button 
                 onClick={() => setBookingOpen(true)}
-                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl border-none mb-6"
+                className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl border-none mb-6 transition-transform active:scale-[0.98]"
                 style={{ background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`,
                 boxShadow: `0 12px 24px -8px ${COLORS.TEAL}88` }}
               >
@@ -318,11 +325,10 @@ const HotelDetail = () => {
                 <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={handleShare} />
               </div>
 
-              {/* Contact Footer */}
               <div className="space-y-4 pt-6 border-t border-slate-50">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inquiries</h3>
                 {hotel.phone_numbers?.map((phone: string, idx: number) => (
-                  <a key={idx} href={`tel:${phone}`} className="flex items-center gap-3 text-slate-600 hover:text-[#008080]">
+                  <a key={idx} href={`tel:${phone}`} className="flex items-center gap-3 text-slate-600 hover:text-[#008080] transition-colors">
                     <Phone className="h-4 w-4 text-[#008080]" />
                     <span className="text-xs font-bold uppercase tracking-tight">{phone}</span>
                   </a>
@@ -332,7 +338,6 @@ const HotelDetail = () => {
           </div>
         </div>
 
-        {/* Guest Ratings Section */}
         <div className="mt-12 bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
            <div className="flex justify-between items-center mb-8">
              <div>
