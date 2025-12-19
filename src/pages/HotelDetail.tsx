@@ -76,12 +76,10 @@ const HotelDetail = () => {
       const openTime = parseTime(hotel.opening_hours || "08:00 AM");
       const closeTime = parseTime(hotel.closing_hours || "06:00 PM");
       const days = Array.isArray(hotel.days_opened) ? hotel.days_opened : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
       const isDayOpen = days.includes(currentDay);
       const isTimeOpen = currentTime >= openTime && currentTime <= closeTime;
       setIsOpenNow(isDayOpen && isTimeOpen);
     };
-
     checkOpenStatus();
     const interval = setInterval(checkOpenStatus, 60000);
     return () => clearInterval(interval);
@@ -142,10 +140,10 @@ const HotelDetail = () => {
       {/* Hero Image Section */}
       <div className="relative w-full overflow-hidden h-[50vh] md:h-[65vh]">
         <div className="absolute top-4 left-4 right-4 z-50 flex justify-between">
-          <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0 hover:bg-black/50">
+          <Button onClick={() => navigate(-1)} className="rounded-full bg-black/30 backdrop-blur-md text-white border-none w-10 h-10 p-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30 hover:bg-black/50"}`}>
+          <Button onClick={handleSave} className={`rounded-full backdrop-blur-md border-none w-10 h-10 p-0 shadow-lg ${isSaved ? "bg-red-500" : "bg-black/30"}`}>
             <Heart className={`h-5 w-5 text-white ${isSaved ? "fill-white" : ""}`} />
           </Button>
         </div>
@@ -166,13 +164,13 @@ const HotelDetail = () => {
         <div className="absolute bottom-10 left-0 z-40 w-full p-8 pointer-events-none">
           <div className="relative z-10 space-y-3 pointer-events-auto">
             <div className="flex items-center gap-2">
-               <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-3 py-1 text-[9px] font-black uppercase rounded-full flex items-center gap-1.5 shadow-lg`}>
+               <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-3 py-1 text-[9px] font-black uppercase rounded-full flex items-center gap-1.5`}>
                  <Circle className={`h-2 w-2 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />
-                 {isOpenNow ? "Open Now" : "Closed"}
+                 {isOpenNow ? "open now" : "closed"}
                </Badge>
                {distance && (
-                 <Badge className="bg-[#008080] text-white border-none px-3 py-1 text-[9px] font-black uppercase rounded-full shadow-lg">
-                   {distance.toFixed(1)} KM AWAY
+                 <Badge className="bg-[#008080] text-white border-none px-3 py-1 text-[9px] font-black uppercase rounded-full">
+                   {distance.toFixed(1)} km away
                  </Badge>
                )}
             </div>
@@ -204,30 +202,29 @@ const HotelDetail = () => {
                 </div>
               </div>
 
-              {/* UPDATED WORKING HOURS SECTION WITH SMALLER FONTS */}
-              <div className="space-y-4 mb-6 bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-200">
+              {/* OPERATING HOURS & WORKING DAYS */}
+              <div className="space-y-3 mb-6 bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-slate-400">
-                    <Clock className="h-3.5 w-3.5 text-[#008080]" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Hours</span>
+                    <Clock className="h-4 w-4 text-[#008080]" />
+                    <span className="text-[10px] font-black uppercase tracking-tight">hours</span>
                   </div>
-                  <span className={`text-[11px] font-black uppercase ${isOpenNow ? "text-emerald-600" : "text-red-500"}`}>
+                  <span className={`text-[10px] font-black uppercase ${isOpenNow ? "text-emerald-600" : "text-red-500"}`}>
                     {hotel.opening_hours || "08:00 AM"} - {hotel.closing_hours || "06:00 PM"}
                   </span>
                 </div>
                 
-                <div className="space-y-2">
+                {/* Updated Working Days Section */}
+                <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100">
                   <div className="flex items-center gap-2 text-slate-400">
-                    <Calendar className="h-3.5 w-3.5 text-[#008080]" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Working Days</span>
+                    <Calendar className="h-4 w-4 text-[#008080]" />
+                    <span className="text-[10px] font-black uppercase tracking-tight">working days</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(Array.isArray(hotel.days_opened) ? hotel.days_opened : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]).map((day, idx) => (
-                      <span key={idx} className="text-[10px] font-bold px-2 py-0.5 bg-white rounded-md text-slate-600 border border-slate-100 uppercase tracking-tighter">
-                        {day.substring(0, 3)}
-                      </span>
-                    ))}
-                  </div>
+                  <p className="text-[9px] font-normal leading-tight text-slate-500 lowercase italic">
+                    {Array.isArray(hotel.days_opened) 
+                      ? hotel.days_opened.join(", ") 
+                      : "monday, tuesday, wednesday, thursday, friday, saturday, sunday"}
+                  </p>
                 </div>
               </div>
 
@@ -253,7 +250,7 @@ const HotelDetail = () => {
                     <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-teal-50">
                       <Mail className="h-4 w-4 text-[#008080]" />
                     </div>
-                    <span className="text-xs font-bold truncate">{hotel.email}</span>
+                    <span className="text-xs font-bold truncate lowercase">{hotel.email}</span>
                   </a>
                 )}
                 {hotel.phone_numbers?.map((p: string, i: number) => (
@@ -277,7 +274,7 @@ const HotelDetail = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {hotel.facilities.map((f: any, i: number) => (
-                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center hover:bg-slate-100 transition-colors">
+                    <div key={i} className="p-5 rounded-[22px] bg-slate-50 border border-slate-100 flex justify-between items-center">
                       <span className="text-sm font-black uppercase text-slate-700">{f.name}</span>
                       <Badge className="bg-white text-[#008080] text-[10px] font-black shadow-sm">KSH {f.price}</Badge>
                     </div>
