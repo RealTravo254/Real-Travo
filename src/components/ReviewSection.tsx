@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+// Added Link for navigation
+import { Link } from "react-router-dom";
 
 interface ReviewSectionProps {
   itemId: string;
@@ -171,7 +173,14 @@ export function ReviewSection({ itemId, itemType }: ReviewSectionProps) {
             ) : (
               <div className="bg-muted/50 rounded-lg p-4 text-center border border-dashed">
                 <p className="text-sm text-muted-foreground">
-                  Please <span className="font-semibold text-primary underline cursor-pointer">log in</span> to provide a rating.
+                  Please{" "}
+                  <Link 
+                    to="/auth" 
+                    className="font-semibold text-primary underline hover:text-primary/80 transition-colors"
+                  >
+                    log in
+                  </Link>{" "}
+                  to provide a rating.
                 </p>
               </div>
             )}
