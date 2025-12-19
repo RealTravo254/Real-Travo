@@ -41,7 +41,7 @@ const HotelDetail = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [isOpenNow, setIsOpenNow] = useState(false);
+  const [isOpenNow, setIsOpenNow] = useState(false); // Added status state
   const [liveRating, setLiveRating] = useState({ avg: 0, count: 0 });
   const { savedItems, handleSave: handleSaveItem } = useSavedItems();
   const isSaved = savedItems.has(id || "");
@@ -59,7 +59,7 @@ const HotelDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Real-time Status Calculation
+  // Real-time Status Logic (Matches previous 2 codes)
   useEffect(() => {
     if (!hotel) return;
     const checkOpenStatus = () => {
@@ -77,7 +77,7 @@ const HotelDetail = () => {
       };
 
       const openTime = parseTime(hotel.opening_hours || "08:00 AM");
-      const closeTime = parseTime(hotel.closing_hours || "11:00 PM");
+      const closeTime = parseTime(hotel.closing_hours || "11:59 PM");
       const days = Array.isArray(hotel.days_opened) ? hotel.days_opened : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
       
       setIsOpenNow(days.includes(currentDay) && currentTime >= openTime && currentTime <= closeTime);
@@ -155,10 +155,7 @@ const HotelDetail = () => {
         <div className="absolute bottom-10 left-0 w-full p-5 z-20">
           <div className="flex flex-wrap gap-2 mb-3">
             <Badge className="bg-amber-400 text-black border-none px-2 py-0.5 text-[10px] font-black uppercase rounded-full"><Star className="h-3 w-3 fill-current mr-1" />{liveRating.avg || hotel.star_rating || "New"}</Badge>
-            <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-2 py-0.5 text-[10px] font-black uppercase rounded-full flex items-center gap-1`}>
-                <Circle className={`h-2 w-2 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />
-                {isOpenNow ? "Open Now" : "Closed"}
-            </Badge>
+            <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-3 py-1 text-[10px] font-black uppercase rounded-full flex items-center gap-1.5`}><Circle className={`h-2 w-2 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />{isOpenNow ? "open now" : "closed"}</Badge>
           </div>
           <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">{hotel.name}</h1>
           <div className="flex items-center gap-1 text-white/90">
@@ -174,46 +171,38 @@ const HotelDetail = () => {
           <div className="space-y-4">
             {/* Price Card (Mobile) */}
             <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 lg:hidden">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-6">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nightly Rate</p>
                   <span className="text-3xl font-black text-red-600">KSh {hotel.price_per_night}</span>
                 </div>
                 {distance && <Badge className="bg-slate-100 text-slate-600 border-none font-black">{distance.toFixed(1)}KM AWAY</Badge>}
               </div>
-              <Button onClick={() => setBookingOpen(true)} className="w-full py-7 rounded-2xl text-md font-black uppercase tracking-widest bg-gradient-to-r from-[#FF7F50] to-[#FF4E50] border-none">Reserve Room</Button>
-            </div>
 
-            {/* DESCRIPTION SECTION */}
-            <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-              <h2 className="text-sm font-black uppercase tracking-widest mb-3 text-[#008080]">Description</h2>
-              <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">{hotel.description}</p>
-            </section>
-
-            {/* OPERATING HOURS SECTION */}
-            <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-              <h2 className="text-sm font-black uppercase tracking-widest mb-4 text-[#008080]">Schedule & Access</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <Clock className="h-5 w-5 text-teal-600" />
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase">Hours</p>
-                    <p className="text-xs font-bold text-slate-700">{hotel.opening_hours || "24 Hours"} - {hotel.closing_hours || "Check-out 11:00 AM"}</p>
-                  </div>
+              {/* Added Opening Hours section to Price Card */}
+              <div className="space-y-3 mb-6 bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-400"><Clock className="h-4 w-4 text-[#008080]" /><span className="text-[10px] font-black uppercase tracking-tight">reception hours</span></div>
+                  <span className={`text-[10px] font-black uppercase ${isOpenNow ? "text-emerald-600" : "text-red-500"}`}>{hotel.opening_hours || "08:00 AM"} - {hotel.closing_hours || "11:59 PM"}</span>
                 </div>
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <Calendar className="h-5 w-5 text-teal-600" />
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase">Working Days</p>
-                    <p className="text-xs font-bold text-slate-700">
-                        {Array.isArray(hotel.days_opened) ? hotel.days_opened.join(", ") : "All Week"}
-                    </p>
-                  </div>
+                <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400"><Calendar className="h-4 w-4 text-[#008080]" /><span className="text-[10px] font-black uppercase tracking-tight">working days</span></div>
+                  <p className="text-[9px] font-normal leading-tight text-slate-500 lowercase italic">
+                    {Array.isArray(hotel.days_opened) ? hotel.days_opened.join(", ") : "mon to sun"}
+                  </p>
                 </div>
               </div>
+
+              <Button onClick={() => setBookingOpen(true)} className="w-full py-7 rounded-2xl text-md font-black uppercase tracking-widest bg-gradient-to-r from-[#FF7F50] to-[#FF4E50] border-none shadow-lg">Reserve Room</Button>
+            </div>
+
+            {/* Description */}
+            <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+              <h2 className="text-sm font-black uppercase tracking-widest mb-3 text-[#008080]">About this hotel</h2>
+              <p className="text-slate-500 text-sm leading-relaxed">{hotel.description}</p>
             </section>
 
-            {/* Amenities - SHOW ALL */}
+            {/* Amenities */}
             <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
               <h2 className="text-sm font-black uppercase tracking-widest mb-4 text-[#008080]">Amenities</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -226,7 +215,7 @@ const HotelDetail = () => {
               </div>
             </section>
 
-            {/* Room Types - SHOW ALL */}
+            {/* Room Types */}
             {hotel.room_types && (
               <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                 <h2 className="text-sm font-black uppercase tracking-widest mb-4 text-[#008080]">Available Rooms</h2>
@@ -248,7 +237,7 @@ const HotelDetail = () => {
             )}
           </div>
 
-          {/* Sidebar (Desktop Only) */}
+          {/* Sidebar (Desktop) */}
           <div className="hidden lg:block">
             <div className="sticky top-24 bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Nightly Price</p>
@@ -256,6 +245,21 @@ const HotelDetail = () => {
                 <span className="text-5xl font-black text-red-600">KSh {hotel.price_per_night}</span>
                 <span className="text-slate-400 text-xs font-bold">/ night</span>
               </div>
+
+              {/* Added Hours to Desktop Sidebar */}
+              <div className="space-y-3 mb-6 bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-400"><Clock className="h-4 w-4 text-[#008080]" /><span className="text-[10px] font-black uppercase tracking-tight">reception</span></div>
+                  <span className={`text-[10px] font-black uppercase ${isOpenNow ? "text-emerald-600" : "text-red-500"}`}>{hotel.opening_hours || "08:00 AM"} - {hotel.closing_hours || "11:59 PM"}</span>
+                </div>
+                <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400"><Calendar className="h-4 w-4 text-[#008080]" /><span className="text-[10px] font-black uppercase tracking-tight">working days</span></div>
+                  <p className="text-[9px] font-normal leading-tight text-slate-500 lowercase italic">
+                    {Array.isArray(hotel.days_opened) ? hotel.days_opened.join(", ") : "mon to sun"}
+                  </p>
+                </div>
+              </div>
+
               <Button onClick={() => setBookingOpen(true)} className="w-full py-8 rounded-3xl text-lg font-black uppercase tracking-widest bg-gradient-to-r from-[#FF7F50] to-[#FF4E50] border-none shadow-lg">Reserve Now</Button>
             </div>
           </div>
