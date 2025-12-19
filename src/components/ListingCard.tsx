@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { createDetailPath } from "@/lib/slugUtils";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
-// Syncing with EventDetail colors
 const COLORS = {
   TEAL: "#008080",
   CORAL: "#FF7F50",
@@ -20,7 +19,7 @@ const COLORS = {
 
 interface ListingCardProps {
   id: string;
-  type: 'TRIP' | 'EVENT' | 'HOTEL' | 'ADVENTURE PLACE' | 'ACCOMMODATION' | 'ATTRACTION';
+  type: 'TRIP' | 'EVENT' | 'SPORT' | 'HOTEL' | 'ADVENTURE PLACE' | 'ACCOMMODATION' | 'ATTRACTION';
   name: string;
   imageUrl: string;
   location: string;
@@ -53,7 +52,6 @@ export const ListingCard = ({
   compact = false, avgRating, reviewCount
 }: ListingCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
 
   const { ref: imageContainerRef, isIntersecting } = useIntersectionObserver({
@@ -61,25 +59,30 @@ export const ListingCard = ({
   });
 
   const shouldLoadImage = priority || isIntersecting;
+  
   const handleCardClick = () => {
     const typeMap: Record<string, string> = {
-      "TRIP": "trip", "EVENT": "event", "HOTEL": "hotel",
+      "TRIP": "trip", "EVENT": "event", "SPORT": "event", "HOTEL": "hotel",
       "ADVENTURE PLACE": "adventure", "ACCOMMODATION": "accommodation", "ATTRACTION": "attraction"
     };
     navigate(createDetailPath(typeMap[type], id, name, location));
   };
 
   const remainingTickets = availableTickets !== undefined ? availableTickets - (bookedTickets || 0) : undefined;
-  const fewSlotsRemaining = (type === "TRIP" || type === "EVENT") && remainingTickets !== undefined && remainingTickets > 0 && remainingTickets <= 10;
+  const fewSlotsRemaining = (type === "TRIP" || type === "EVENT" || type === "SPORT") && remainingTickets !== undefined && remainingTickets > 0 && remainingTickets <= 10;
 
   const optimizedImageUrl = optimizeSupabaseImage(imageUrl, { width: 400, height: 300, quality: 80 });
+
+  // Handle "Event & Sports" combined label
+  const isEventOrSport = type === "EVENT" || type === "SPORT";
+  const displayType = isEventOrSport ? "Event & Sports" : type.replace('_', ' ');
 
   return (
     <Card 
       onClick={handleCardClick} 
       className={cn(
         "group overflow-hidden transition-all duration-300 hover:shadow-2xl cursor-pointer border-slate-100 bg-white flex flex-col",
-        "rounded-[24px]", // Matches the rounded-heavy aesthetic
+        "rounded-[24px]",
         compact ? "h-auto" : "h-full"
       )}
     >
@@ -94,12 +97,12 @@ export const ListingCard = ({
           />
         )}
         
-        {/* Floating Category Badge */}
+        {/* Floating Category Badge - Made Very Small */}
         <Badge 
-          className="absolute top-3 left-3 z-10 px-3 py-1 border-none shadow-lg text-[10px] font-black uppercase tracking-widest"
+          className="absolute top-3 left-3 z-10 px-1.5 py-0.5 border-none shadow-md text-[7.5px] font-black uppercase tracking-tight leading-none"
           style={{ background: COLORS.TEAL, color: 'white' }}
         >
-          {type.replace('_', ' ')}
+          {displayType}
         </Badge>
 
         {onSave && (
@@ -107,9 +110,9 @@ export const ListingCard = ({
             variant="ghost" 
             size="icon" 
             onClick={(e) => { e.stopPropagation(); onSave(id, type); }} 
-            className={cn("absolute top-3 right-3 z-20 h-9 w-9 rounded-full backdrop-blur-md transition-all", isSaved ? "bg-red-500 hover:bg-red-600" : "bg-black/20 hover:bg-black/40")}
+            className={cn("absolute top-3 right-3 z-20 h-8 w-8 rounded-full backdrop-blur-md transition-all", isSaved ? "bg-red-500 hover:bg-red-600" : "bg-black/20 hover:bg-black/40")}
           >
-            <Heart className={cn("h-4 w-4", isSaved ? "text-white fill-white" : "text-white")} />
+            <Heart className={cn("h-3.5 w-3.5", isSaved ? "text-white fill-white" : "text-white")} />
           </Button>
         )}
       </div>
@@ -135,7 +138,6 @@ export const ListingCard = ({
             </p>
         </div>
 
-        {/* Highlights/Activities as Horizontal List */}
         {activities && activities.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-4">
             {activities.slice(0, 3).map((act, i) => (
@@ -146,7 +148,6 @@ export const ListingCard = ({
           </div>
         )}
         
-        {/* Footer: Price & Date */}
         <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
             <div className="flex flex-col">
                 {!hidePrice && price !== undefined && (
