@@ -14,9 +14,9 @@ import { PageLayout } from "@/components/PageLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import CategoryDetail from "./pages/CategoryDetail";
 
 // Lazy load non-critical pages to reduce initial bundle size
+const CategoryDetail = lazy(() => import("./pages/CategoryDetail"));
 const Saved = lazy(() => import("./pages/Saved"));
 const Bookings = lazy(() => import("./pages/Bookings"));
 const Contact = lazy(() => import("./pages/Contact"));

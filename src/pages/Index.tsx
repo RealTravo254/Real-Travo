@@ -194,33 +194,41 @@ const Index = () => {
     try {
       const [tripsData, hotelsData, campsitesData, eventsData] = await Promise.all([
         // Fetch ALL trips (including expired ones)
-        supabase.from("trips")
-          .select("*")
+        supabase
+          .from("trips")
+          .select(
+            "id,name,location,place,country,image_url,date,is_custom_date,is_flexible_date,available_tickets,activities,latitude,longitude,type,created_at,price,price_child"
+          )
           .eq("approval_status", "approved")
           .eq("is_hidden", false)
           .eq("type", "trip")
-          .order('date', { ascending: true })
+          .order("date", { ascending: true })
           .limit(12),
-        supabase.from("hotels")
-          .select("*")
+        supabase
+          .from("hotels")
+          .select("id,name,location,place,country,image_url,activities,latitude,longitude,created_at")
           .eq("approval_status", "approved")
           .eq("is_hidden", false)
-          .order('created_at', { ascending: false })
+          .order("created_at", { ascending: false })
           .limit(8),
-        supabase.from("adventure_places")
-          .select("*")
+        supabase
+          .from("adventure_places")
+          .select("id,name,location,place,country,image_url,entry_fee,activities,latitude,longitude,created_at")
           .eq("approval_status", "approved")
           .eq("is_hidden", false)
-          .order('created_at', { ascending: false })
+          .order("created_at", { ascending: false })
           .limit(8),
         // Fetch ALL events (including expired ones)
-        supabase.from("trips")
-          .select("*")
+        supabase
+          .from("trips")
+          .select(
+            "id,name,location,place,country,image_url,date,is_custom_date,is_flexible_date,available_tickets,activities,latitude,longitude,type,created_at,price,price_child"
+          )
           .eq("approval_status", "approved")
           .eq("is_hidden", false)
           .eq("type", "event")
-          .order('date', { ascending: true })
-          .limit(12)
+          .order("date", { ascending: true })
+          .limit(12),
       ]);
       
       setScrollableRows({
@@ -261,7 +269,20 @@ const Index = () => {
       // Keep loading true if position is not available yet
       return;
     }
-    const [placesData, hotelsData] = await Promise.all([supabase.from("adventure_places").select("*").eq("approval_status", "approved").eq("is_hidden", false).limit(12), supabase.from("hotels").select("*").eq("approval_status", "approved").eq("is_hidden", false).limit(12)]);
+    const [placesData, hotelsData] = await Promise.all([
+      supabase
+        .from("adventure_places")
+        .select("id,name,location,place,country,image_url,entry_fee,activities,latitude,longitude,created_at")
+        .eq("approval_status", "approved")
+        .eq("is_hidden", false)
+        .limit(12),
+      supabase
+        .from("hotels")
+        .select("id,name,location,place,country,image_url,activities,latitude,longitude,created_at")
+        .eq("approval_status", "approved")
+        .eq("is_hidden", false)
+        .limit(12),
+    ]);
     const combined = [...(placesData.data || []).map(item => ({
       ...item,
       type: "ADVENTURE PLACE",
@@ -308,8 +329,11 @@ const Index = () => {
     const today = new Date().toISOString().split('T')[0];
     
     const fetchEvents = async () => {
-      let dbQuery = supabase.from("trips")
-        .select("*")
+      let dbQuery = supabase
+        .from("trips")
+        .select(
+          "id,name,location,place,country,image_url,date,is_custom_date,is_flexible_date,available_tickets,activities,latitude,longitude,type,created_at,price,price_child"
+        )
         .eq("approval_status", "approved")
         .eq("is_hidden", false)
         .eq("type", "event")
@@ -328,8 +352,13 @@ const Index = () => {
     };
     
     const fetchTable = async (table: "hotels" | "adventure_places", type: string) => {
-      let dbQuery = supabase.from(table)
-        .select("*")
+      let dbQuery = supabase
+        .from(table)
+        .select(
+          table === "hotels"
+            ? "id,name,location,place,country,image_url,activities,latitude,longitude,created_at"
+            : "id,name,location,place,country,image_url,entry_fee,activities,latitude,longitude,created_at"
+        )
         .eq("approval_status", "approved")
         .eq("is_hidden", false);
         
