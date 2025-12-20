@@ -86,7 +86,15 @@ const CategoryDetail = () => {
     for (const table of config.tables) {
       let query = supabase
         .from(table as any)
-        .select("*")
+        .select(
+          table === "trips"
+            ? "id,name,location,place,country,image_url,date,is_custom_date,is_flexible_date,available_tickets,activities,latitude,longitude,type,created_at,price,price_child"
+            : table === "hotels"
+              ? "id,name,location,place,country,image_url,activities,latitude,longitude,created_at"
+              : table === "adventure_places"
+                ? "id,name,location,place,country,image_url,entry_fee,available_slots,activities,latitude,longitude,created_at"
+                : "*"
+        )
         .eq("approval_status", "approved")
         .eq("is_hidden", false);
       
