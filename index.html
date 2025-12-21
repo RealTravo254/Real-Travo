@@ -3,12 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TripTrac" />
+    
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+
     <meta name="theme-color" content="#008080" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#006666" media="(prefers-color-scheme: dark)" />
+    
     <title>TripTrac - Explore Amazing Travel Experiences</title>
     <meta name="description" content="Discover and book exciting trips, events, hotels, and adventure places around the world. Your gateway to unforgettable travel experiences." />
     <meta name="author" content="Lovable" />
@@ -22,18 +29,14 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- Preconnect to critical origins to reduce network dependency chain -->
     <link rel="preconnect" href="https://lmkxpzemfvmffxppxzky.supabase.co" />
     <link rel="dns-prefetch" href="https://lmkxpzemfvmffxppxzky.supabase.co" />
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     
-    <!-- Preload hero image for faster LCP -->
     <link rel="preload" as="image" href="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&h=800&fit=crop&auto=format&q=80" fetchpriority="high" type="image/jpeg" />
-    <!-- Preconnect to Supabase storage for faster image loading -->
     <link rel="preconnect" href="https://lmkxpzemfvmffxppxzky.supabase.co" crossorigin />
     
-    <!-- Inline critical CSS for faster FCP -->
     <style>
       body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
       #root { min-height: 100vh; }
@@ -45,5 +48,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.error('Service Worker registration failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
