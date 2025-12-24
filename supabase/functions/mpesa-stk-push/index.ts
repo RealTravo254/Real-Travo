@@ -1,16 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const jsonResponse = (payload: unknown) =>
+  new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 // Input validation schemas
 const bookingDataSchema = z.object({
   item_id: z.string().uuid("Invalid item ID"),
-  booking_type: z.enum(['trip', 'event', 'hotel', 'adventure_place', 'adventure', 'attraction']),
+  booking_type: z.enum(["trip", "event", "hotel", "adventure_place", "adventure", "attraction"]),
   total_amount: z.number().positive().max(10000000, "Amount too large"),
   booking_details: z.any(),
   user_id: z.string().uuid().optional().nullable(),
@@ -25,146 +31,198 @@ const bookingDataSchema = z.object({
   emailData: z.any().optional(),
 });
 
-const stkPushRequestSchema = z.object({
-  phoneNumber: z.string()
+const phoneSchema = z.preprocess(
+  (v) => (typeof v === "string" ? v.replace(/\s+/g, "") : v),
+  z
+    .string()
     .min(9, "Phone number too short")
     .max(15, "Phone number too long")
-    .regex(/^(\+?254|0)?[17]\d{8}$/, "Invalid Kenyan phone number format"),
-  amount: z.number()
+    // Accept: 07XXXXXXXX, 01XXXXXXXX, 2547XXXXXXXX, +2547XXXXXXXX, +25407XXXXXXXX
+    .regex(/^(\+?254|0)?0?[17]\d{8}$/, "Invalid Kenyan phone number format")
+);
+
+const stkPushRequestSchema = z.object({
+  phoneNumber: phoneSchema,
+  amount: z
+    .number()
     .positive("Amount must be positive")
     .min(1, "Minimum amount is 1")
-    .max(150000, "Maximum M-Pesa transaction is 150,000"), // M-Pesa transaction limit
+    .max(150000, "Maximum M-Pesa transaction is 150,000"),
   accountReference: z.string().min(1).max(12),
   transactionDesc: z.string().min(1).max(13),
   bookingData: bookingDataSchema,
 });
 
+const safeJsonParse = (text: string) => {
+  try {
+    return { ok: true as const, json: JSON.parse(text) };
+  } catch {
+    return { ok: false as const, text };
+  }
+};
+
+async function getOAuthToken(consumerKey: string, consumerSecret: string) {
+  const auth = btoa(`${consumerKey}:${consumerSecret}`);
+
+  const candidates = [
+    Deno.env.get("MPESA_BASE_URL"),
+    "https://api.safaricom.co.ke",
+    "https://sandbox.safaricom.co.ke",
+  ].filter(Boolean) as string[];
+
+  let last: { baseUrl: string; status?: number; body?: string } | null = null;
+
+  for (const baseUrl of candidates) {
+    try {
+      const tokenResponse = await fetch(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      });
+
+      const bodyText = await tokenResponse.text();
+      last = { baseUrl, status: tokenResponse.status, body: bodyText.slice(0, 800) };
+
+      if (!tokenResponse.ok) {
+        console.error("OAuth token fetch failed:", last);
+        continue;
+      }
+
+      const parsed = safeJsonParse(bodyText);
+      if (!parsed.ok || !parsed.json?.access_token) {
+        console.error("OAuth token response missing access_token:", { baseUrl, body: bodyText.slice(0, 800) });
+        continue;
+      }
+
+      return { ok: true as const, baseUrl, accessToken: parsed.json.access_token as string };
+    } catch (e) {
+      console.error("OAuth token fetch exception:", baseUrl, e);
+      last = { baseUrl, body: String(e).slice(0, 800) };
+    }
+  }
+
+  return { ok: false as const, last };
+}
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse and validate input
     const rawData = await req.json();
-    
-    let validatedData;
+
+    let validatedData: z.infer<typeof stkPushRequestSchema>;
     try {
       validatedData = stkPushRequestSchema.parse(rawData);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         console.error("Validation error:", validationError.errors);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Invalid input", 
-            details: validationError.errors 
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonResponse({
+          success: false,
+          error: "Invalid input",
+          details: validationError.errors,
+        });
       }
       throw validationError;
     }
 
     const { phoneNumber, amount, accountReference, transactionDesc, bookingData } = validatedData;
 
-    console.log('STK Push request received:', { phoneNumber, amount, accountReference });
+    console.log("STK Push request received:", {
+      phoneNumber,
+      amount,
+      accountReference,
+      booking_type: bookingData.booking_type,
+      item_id: bookingData.item_id,
+    });
 
-    const consumerKey = Deno.env.get('MPESA_CONSUMER_KEY');
-    const consumerSecret = Deno.env.get('MPESA_CONSUMER_SECRET');
-    const passkey = Deno.env.get('MPESA_PASSKEY');
-    const shortcode = Deno.env.get('MPESA_SHORTCODE');
+    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
+    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET");
+    const passkey = Deno.env.get("MPESA_PASSKEY");
+    const shortcode = Deno.env.get("MPESA_SHORTCODE");
 
     if (!consumerKey || !consumerSecret || !passkey || !shortcode) {
-      throw new Error('M-Pesa credentials not configured');
+      console.error("Missing M-Pesa credentials", {
+        hasKey: !!consumerKey,
+        hasSecret: !!consumerSecret,
+        hasPasskey: !!passkey,
+        hasShortcode: !!shortcode,
+      });
+      return jsonResponse({ success: false, error: "M-Pesa credentials not configured" });
     }
 
-    // Initialize Supabase client
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     // Verify item exists before proceeding
-    let tableName = 'trips';
-    if (bookingData.booking_type === 'hotel') {
-      tableName = 'hotels';
-    } else if (bookingData.booking_type === 'adventure' || bookingData.booking_type === 'adventure_place') {
-      tableName = 'adventure_places';
+    let tableName = "trips";
+    if (bookingData.booking_type === "hotel") {
+      tableName = "hotels";
+    } else if (bookingData.booking_type === "adventure" || bookingData.booking_type === "adventure_place") {
+      tableName = "adventure_places";
     }
 
     const { data: item, error: itemError } = await supabaseClient
       .from(tableName)
-      .select('id, created_by, approval_status')
-      .eq('id', bookingData.item_id)
-      .single();
+      .select("id, created_by, approval_status")
+      .eq("id", bookingData.item_id)
+      .maybeSingle();
 
     if (itemError || !item) {
       console.error("Item not found:", bookingData.item_id, itemError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Item not found or does not exist" 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({
+        success: false,
+        error: "Item not found or does not exist",
+      });
     }
 
-    // Verify item is approved
-    if (item.approval_status !== 'approved') {
-      console.error("Item not approved:", bookingData.item_id, item.approval_status);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Item is not available for booking" 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if ((item as any).approval_status !== "approved") {
+      console.error("Item not approved:", bookingData.item_id, (item as any).approval_status);
+      return jsonResponse({
+        success: false,
+        error: "Item is not available for booking",
+      });
     }
 
-    // Step 1: Get OAuth token
-    const auth = btoa(`${consumerKey}:${consumerSecret}`);
-    const tokenResponse = await fetch(
-      'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
-      {
-        headers: {
-          'Authorization': `Basic ${auth}`,
-        },
-      }
-    );
-
-    if (!tokenResponse.ok) {
-      throw new Error('Failed to get OAuth token');
+    // OAuth token (try production then sandbox)
+    const tokenResult = await getOAuthToken(consumerKey, consumerSecret);
+    if (!tokenResult.ok) {
+      return jsonResponse({
+        success: false,
+        error: "Failed to get OAuth token",
+        details: tokenResult.last,
+      });
     }
 
-    const { access_token } = await tokenResponse.json();
-    console.log('OAuth token obtained successfully');
+    const { baseUrl, accessToken } = tokenResult;
+    console.log("OAuth token obtained successfully", { baseUrl });
 
-    // Step 2: Generate timestamp
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-    
-    // Step 3: Generate password
+    // Timestamp + password
+    const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
     // Format phone number (remove leading 0 or +254, ensure starts with 254)
-    let formattedPhone = phoneNumber.replace(/\s/g, '');
-    if (formattedPhone.startsWith('0')) {
-      formattedPhone = '254' + formattedPhone.substring(1);
-    } else if (formattedPhone.startsWith('+254')) {
+    let formattedPhone = phoneNumber.replace(/\s/g, "");
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = "254" + formattedPhone.substring(1);
+    } else if (formattedPhone.startsWith("+254")) {
       formattedPhone = formattedPhone.substring(1);
-    } else if (!formattedPhone.startsWith('254')) {
-      formattedPhone = '254' + formattedPhone;
+    } else if (formattedPhone.startsWith("2540")) {
+      formattedPhone = "254" + formattedPhone.substring(4);
+    } else if (!formattedPhone.startsWith("254")) {
+      formattedPhone = "254" + formattedPhone;
     }
 
-    // Step 4: Initiate STK Push
-    const callbackURL = `${Deno.env.get('SUPABASE_URL')}/functions/v1/mpesa-callback`;
-    console.log('🔗 Callback URL being used:', callbackURL);
-    
+    const callbackURL = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mpesa-callback`;
+
     const stkPushPayload = {
       BusinessShortCode: shortcode,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
+      TransactionType: "CustomerPayBillOnline",
       Amount: Math.round(amount),
       PartyA: formattedPhone,
       PartyB: shortcode,
@@ -174,60 +232,68 @@ serve(async (req) => {
       TransactionDesc: transactionDesc,
     };
 
-    console.log('Initiating STK Push:', { ...stkPushPayload, Password: '[REDACTED]', CallBackURL: callbackURL });
+    console.log("Initiating STK Push:", {
+      ...stkPushPayload,
+      Password: "[REDACTED]",
+      CallBackURL: callbackURL,
+      baseUrl,
+    });
 
-    const stkResponse = await fetch(
-      'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(stkPushPayload),
-      }
-    );
+    const stkResponse = await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(stkPushPayload),
+    });
 
-    const stkData = await stkResponse.json();
-    console.log('STK Push response:', stkData);
+    const stkText = await stkResponse.text();
+    const parsedStk = safeJsonParse(stkText);
+    const stkData = parsedStk.ok ? parsedStk.json : { raw: stkText.slice(0, 1200) };
 
-    // Handle non-zero ResponseCode - FAILED immediately
-    if (!stkResponse.ok || stkData.ResponseCode !== '0') {
-      console.error('❌ STK Push failed with ResponseCode:', stkData.ResponseCode);
-      
-      // Save failed payment record to database for tracking
-      await supabaseClient.from('payments').insert({
-        checkout_request_id: stkData.CheckoutRequestID || `FAILED-${Date.now()}`,
-        merchant_request_id: stkData.MerchantRequestID || null,
+    console.log("STK Push response:", stkData);
+
+    const responseCode = (stkData as any)?.ResponseCode;
+
+    if (!stkResponse.ok || responseCode !== "0") {
+      console.error("❌ STK Push failed", {
+        httpStatus: stkResponse.status,
+        ResponseCode: responseCode,
+        ResponseDescription: (stkData as any)?.ResponseDescription,
+        errorMessage: (stkData as any)?.errorMessage,
+      });
+
+      // Save failed payment record (best-effort)
+      await supabaseClient.from("payments").insert({
+        checkout_request_id: (stkData as any)?.CheckoutRequestID || `FAILED-${Date.now()}`,
+        merchant_request_id: (stkData as any)?.MerchantRequestID || null,
         phone_number: formattedPhone,
         amount: Math.round(amount),
         account_reference: accountReference,
         transaction_desc: transactionDesc,
         booking_data: bookingData,
-        payment_status: 'failed',
-        result_code: stkData.ResponseCode || 'HTTP_ERROR',
-        result_desc: stkData.ResponseDescription || stkData.errorMessage || 'STK Push request failed',
+        payment_status: "failed",
+        result_code: String(responseCode || stkResponse.status),
+        result_desc:
+          (stkData as any)?.ResponseDescription || (stkData as any)?.errorMessage || "STK Push request failed",
       });
 
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: stkData.ResponseDescription || stkData.errorMessage || 'STK Push failed',
-          responseCode: stkData.ResponseCode,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      );
+      return jsonResponse({
+        success: false,
+        error: (stkData as any)?.ResponseDescription || (stkData as any)?.errorMessage || "STK Push failed",
+        details: {
+          httpStatus: stkResponse.status,
+          responseCode,
+          baseUrl,
+        },
+      });
     }
 
-    // ResponseCode = 0: Success - Create booking with PENDING status and save to payments
-    console.log('✅ STK Push successful, creating pending booking');
-    
-    // Create booking with pending payment status
+    console.log("✅ STK Push successful, creating pending booking");
+
     const { data: booking, error: bookingError } = await supabaseClient
-      .from('bookings')
+      .from("bookings")
       .insert({
         item_id: bookingData.item_id,
         booking_type: bookingData.booking_type,
@@ -240,25 +306,24 @@ serve(async (req) => {
         guest_phone: bookingData.guest_phone || null,
         visit_date: bookingData.visit_date || null,
         slots_booked: bookingData.slots_booked || 1,
-        payment_status: 'pending',
-        payment_method: 'mpesa',
+        payment_status: "pending",
+        payment_method: "mpesa",
         payment_phone: formattedPhone,
-        status: 'pending',
+        status: "pending",
         referral_tracking_id: bookingData.referral_tracking_id || null,
       })
       .select()
       .single();
 
     if (bookingError) {
-      console.error('Error creating pending booking:', bookingError);
+      console.error("Error creating pending booking:", bookingError);
     } else {
-      console.log('✅ Pending booking created:', booking.id);
+      console.log("✅ Pending booking created:", booking?.id);
     }
 
-    // Save to payments table for callback tracking (include booking_id and host_id)
-    const { error: dbError } = await supabaseClient.from('payments').insert({
-      checkout_request_id: stkData.CheckoutRequestID,
-      merchant_request_id: stkData.MerchantRequestID,
+    const { error: dbError } = await supabaseClient.from("payments").insert({
+      checkout_request_id: (stkData as any).CheckoutRequestID,
+      merchant_request_id: (stkData as any).MerchantRequestID,
       phone_number: formattedPhone,
       amount: Math.round(amount),
       account_reference: accountReference,
@@ -266,48 +331,36 @@ serve(async (req) => {
       booking_data: {
         ...bookingData,
         booking_id: booking?.id,
-        host_id: item.created_by, // Add host_id from the item
+        host_id: (item as any).created_by,
       },
-      payment_status: 'pending',
+      payment_status: "pending",
       user_id: bookingData.user_id || null,
-      host_id: item.created_by, // Store host_id directly
+      host_id: (item as any).created_by,
     });
 
     if (dbError) {
-      console.error('Error saving payment:', dbError);
+      console.error("Error saving payment:", dbError);
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'STK Push initiated successfully',
-        checkoutRequestId: stkData.CheckoutRequestID,
-        merchantRequestId: stkData.MerchantRequestID,
-        bookingId: booking?.id,
-        data: {
-          MerchantRequestID: stkData.MerchantRequestID,
-          CheckoutRequestID: stkData.CheckoutRequestID,
-          ResponseCode: stkData.ResponseCode,
-          ResponseDescription: stkData.ResponseDescription,
-          CustomerMessage: stkData.CustomerMessage,
-        },
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+    return jsonResponse({
+      success: true,
+      message: "STK Push initiated successfully",
+      checkoutRequestId: (stkData as any).CheckoutRequestID,
+      merchantRequestId: (stkData as any).MerchantRequestID,
+      bookingId: booking?.id,
+      data: {
+        MerchantRequestID: (stkData as any).MerchantRequestID,
+        CheckoutRequestID: (stkData as any).CheckoutRequestID,
+        ResponseCode: (stkData as any).ResponseCode,
+        ResponseDescription: (stkData as any).ResponseDescription,
+        CustomerMessage: (stkData as any).CustomerMessage,
+      },
+    });
   } catch (error) {
-    console.error('Error in mpesa-stk-push function:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'An error occurred',
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    console.error("Error in mpesa-stk-push function:", error);
+    return jsonResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "An error occurred",
+    });
   }
 });
