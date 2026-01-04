@@ -19,6 +19,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
+      // Keeping database fetch code as requested
       const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).single();
       if (profile?.name) setUserName(profile.name);
     };
@@ -58,7 +59,8 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           <img 
             src="/fulllogo.png" 
             alt="Realtravo Logo"
-            className="h-10 w-10 rounded-xl shadow-lg object-contain bg-white"
+            /* Changed rounded-xl to rounded-full and added p-1 */
+            className="h-10 w-10 rounded-full shadow-lg object-contain bg-white p-1"
           />
           <div>
             <span className="font-black text-lg uppercase tracking-tighter leading-none block">

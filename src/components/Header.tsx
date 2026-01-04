@@ -78,8 +78,8 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
             <img 
               src="/fulllogo.png" 
               alt="Realtravo Logo"
-              /* Removed group-hover:rotate-12 as requested */
-              className="h-10 w-10 rounded-xl shadow-lg object-contain bg-white"
+              /* Updated rounded-xl to rounded-full and added p-1 for better circular fit */
+              className="h-10 w-10 rounded-full shadow-lg object-contain bg-white p-1"
             />
             <div className="hidden sm:block">
               <span className="font-black text-lg uppercase tracking-tighter text-white block leading-none">
