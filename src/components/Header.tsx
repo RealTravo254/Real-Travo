@@ -39,15 +39,15 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
     fetchUserProfile();
   }, [user]);
 
+  // Mobile/Desktop background logic updated for white theme
   const mobileHeaderClasses = isIndexPage 
     ? "fixed top-0 left-0 right-0 bg-transparent flex" 
-    : "hidden md:flex sticky top-0 left-0 right-0 border-b border-white/10 shadow-lg";
+    : "hidden md:flex sticky top-0 left-0 right-0 border-b border-slate-100 shadow-sm";
 
   const headerIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
-    active:scale-90 shadow-md md:shadow-none text-white
-    bg-black/50 hover:bg-black/60 
-    md:bg-white/15 md:hover:bg-white/25
+    active:scale-90 shadow-md md:shadow-none
+    ${isIndexPage ? 'text-white bg-black/50 hover:bg-black/60 md:bg-white/15' : 'text-slate-600 bg-slate-100 hover:bg-slate-200'}
   `;
 
   return (
@@ -55,13 +55,13 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
       className={`z-[100] transition-all duration-300 md:h-20 items-center ${mobileHeaderClasses} ${className || ''}`}
       style={{ 
         backgroundColor: isIndexPage 
-          ? (window.innerWidth >= 768 ? COLORS.TEAL : 'transparent') 
-          : COLORS.TEAL 
+          ? (window.innerWidth >= 768 ? 'white' : 'transparent') 
+          : 'white' 
       }}
     >
       <div className="container mx-auto px-4 flex items-center justify-between h-full">
         
-        {/* Left Section: Menu */}
+        {/* Left Section: Menu & Logo */}
         <div className={`flex items-center gap-4 ${isIndexPage && 'mt-4 md:mt-0'}`}>
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <SheetTrigger asChild>
@@ -78,21 +78,27 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
             <img 
               src="/fulllogo.png" 
               alt="Realtravo Logo"
-              /* Updated rounded-xl to rounded-full and added p-1 for better circular fit */
-              className="h-10 w-10 rounded-full shadow-lg object-contain bg-white p-1"
+              className="h-10 w-10 rounded-full shadow-md object-contain bg-slate-50 p-1 border border-slate-100"
             />
             <div className="hidden sm:block">
-              <span className="font-black text-lg uppercase tracking-tighter text-white block leading-none">
+              <span 
+                className="font-bold text-2xl tracking-tight block italic leading-none"
+                style={{
+                  background: "linear-gradient(to right, #1a365d, #2b6cb0, #4fd1c5)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
                 Realtravo
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/70">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">
                 Click.Pack.Go!.
               </span>
             </div>
           </Link>
         </div>
 
-        {/* Desktop Nav */}
+        {/* Desktop Nav - Colors updated for white background */}
         <nav className="hidden lg:flex items-center gap-8">
           {[
             { to: "/", icon: <Home className="h-4 w-4" />, label: "Home" },
@@ -102,7 +108,7 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
             <Link 
               key={item.label}
               to={item.to} 
-              className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-white/90 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors"
             >
               {item.icon}
               <span>{item.label}</span>

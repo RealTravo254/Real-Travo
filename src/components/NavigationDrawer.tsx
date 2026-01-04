@@ -41,7 +41,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           <div className="p-2 rounded-lg bg-slate-100 dark:bg-gray-800 group-hover:bg-[#008080] transition-colors">
             <Icon className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-white" />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-600 dark:text-slate-300">
+          <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white">
             {label}
           </span>
         </div>
@@ -53,20 +53,27 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950">
-      {/* Brand Header */}
-      <div className="p-6 bg-[#008080] text-white">
+      {/* Brand Header - Now White with Gradient Text Styling */}
+      <div className="p-6 bg-white dark:bg-gray-950 border-b border-slate-100 dark:border-gray-800">
         <div className="flex items-center gap-4">
           <img 
             src="/fulllogo.png" 
             alt="Realtravo Logo"
-            /* Changed rounded-xl to rounded-full and added p-1 */
-            className="h-10 w-10 rounded-full shadow-lg object-contain bg-white p-1"
+            className="h-10 w-10 rounded-full shadow-md object-contain bg-slate-50 p-1 border border-slate-100"
           />
           <div>
-            <span className="font-black text-lg uppercase tracking-tighter leading-none block">
+            <span 
+              className="font-bold text-2xl tracking-tight leading-none block italic"
+              style={{
+                background: "linear-gradient(to right, #1a365d, #2b6cb0, #4fd1c5)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0px 2px 2px rgba(0,0,0,0.1))"
+              }}
+            >
               Realtravo
             </span>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-white/60 mt-1">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-1">
               Click.Pack.Go!.
             </p>
           </div>
@@ -84,7 +91,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Welcome back</span>
-                  <span className="text-sm font-black uppercase tracking-tight truncate dark:text-white">
+                  <span className="text-sm font-black uppercase tracking-tight truncate dark:text-white text-slate-900">
                     {userName || "Explorer"}
                   </span>
                 </div>
@@ -92,7 +99,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
               <div className="grid grid-cols-2 gap-2">
                 <Link 
                   to="/profile" onClick={onClose}
-                  className="flex items-center justify-center gap-2 py-2 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-[9px] font-black uppercase tracking-widest hover:border-[#008080] transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-[9px] font-black uppercase tracking-widest hover:border-[#008080] transition-colors text-slate-600"
                 >
                   <User className="h-3 w-3" /> Profile
                 </Link>
