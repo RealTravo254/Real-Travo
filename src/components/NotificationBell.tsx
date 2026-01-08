@@ -70,9 +70,10 @@ export const NotificationBell = () => {
 
   const isIndexPage = location.pathname === '/';
 
+  // FIX: Changed overflow to visible and adjusted z-index
   const headerIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
-    active:scale-90 shadow-sm border border-slate-200 relative group
+    active:scale-90 shadow-sm border border-slate-200 relative group overflow-visible
     ${isIndexPage ? 'text-slate-800 bg-white/90 hover:bg-white' : 'text-slate-700 bg-slate-50 hover:bg-slate-100'}
   `;
 
@@ -119,9 +120,7 @@ export const NotificationBell = () => {
   }, []);
 
   const showInAppNotification = useCallback((notification: Notification) => {
-    // Show toast notification
     toast({ title: notification.title, description: notification.message });
-    // Also briefly show the popover
     setIsPopoverOpen(true);
     setTimeout(() => setIsPopoverOpen(false), 5000);
   }, []);
@@ -175,10 +174,9 @@ export const NotificationBell = () => {
 
   return (
     <>
-      {/* Popover for quick preview on hover/new notification */}
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
         <PopoverTrigger asChild>
-          <div className="relative">
+          <div className="relative overflow-visible">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <button 
@@ -190,8 +188,12 @@ export const NotificationBell = () => {
                   <Bell className="h-5 w-5 stroke-[2.5px] transition-transform group-hover:rotate-12" />
                   {unreadCount > 0 && (
                     <Badge
-                      className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white text-[10px] font-black"
-                      style={{ backgroundColor: COLORS.RED, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                      className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white text-[10px] font-black z-[50]"
+                      style={{ 
+                        backgroundColor: COLORS.RED, 
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        pointerEvents: 'none'
+                      }}
                     >
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </Badge>
@@ -300,9 +302,8 @@ export const NotificationBell = () => {
           </div>
         </PopoverTrigger>
 
-        {/* Quick Preview Popover */}
         <PopoverContent 
-          className="w-80 p-0 rounded-2xl border-slate-100 shadow-xl" 
+          className="w-80 p-0 rounded-2xl border-slate-100 shadow-xl z-[120]" 
           align="end"
           onMouseEnter={() => setIsPopoverOpen(true)}
           onMouseLeave={() => setIsPopoverOpen(false)}

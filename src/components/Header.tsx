@@ -32,7 +32,6 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
     const fetchUserProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Keeping database fetch code as requested
         await supabase.from('profiles').select('name').eq('id', session.user.id).single();
       }
     };
@@ -43,10 +42,10 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
     ? "fixed top-0 left-0 right-0 bg-transparent flex" 
     : "hidden md:flex sticky top-0 left-0 right-0 border-b border-slate-100 shadow-sm";
 
-  // Updated icon styles for high visibility on white background
+  // Updated to ensure overflow is visible so badges aren't cut off
   const headerIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
-    active:scale-90 shadow-sm border border-slate-200
+    active:scale-90 shadow-sm border border-slate-200 relative overflow-visible
     ${isIndexPage ? 'text-slate-800 bg-white/90 hover:bg-white' : 'text-slate-700 bg-slate-50 hover:bg-slate-100'}
   `;
 
@@ -61,11 +60,9 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
     >
       <div className="container mx-auto px-4 flex items-center justify-between h-full">
         
-        {/* Left Section: Menu & Logo */}
         <div className={`flex items-center gap-4 ${isIndexPage && 'mt-4 md:mt-0'}`}>
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <SheetTrigger asChild>
-              {/* Menu Icon Button - Now clearly visible */}
               <button className={headerIconStyles} aria-label="Open Menu">
                 <Menu className="h-5 w-5" />
               </button>
@@ -99,7 +96,6 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
           </Link>
         </div>
 
-        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-8">
           {[
             { to: "/", icon: <Home className="h-4 w-4" />, label: "Home" },
@@ -117,7 +113,6 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
           ))}
         </nav>
 
-        {/* Right Section: Actions */}
         <div className={`flex items-center gap-3 ${isIndexPage && 'mt-4 md:mt-0'}`}>
           {showSearchIcon && (
             <button 
@@ -129,8 +124,8 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
             </button>
           )}
           
-          {/* Notification Bell Container - Wrapper to ensure visibility */}
-          <div className={`${headerIconStyles} p-0 overflow-hidden`}>
+          {/* FIX: Set overflow-visible and relative z-index here */}
+          <div className="relative overflow-visible z-20">
             <NotificationBell />
           </div>
 
