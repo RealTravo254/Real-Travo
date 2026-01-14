@@ -108,7 +108,7 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, hideIc
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                Realtravo
+                RealTravo
               </span>
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600">
                 Click.Pack.Go!.
