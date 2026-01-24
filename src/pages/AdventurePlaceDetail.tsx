@@ -205,45 +205,49 @@ const AdventurePlaceDetail = () => {
         </Button>
       </div>
 
-      {/* HERO SECTION - Starts from the very top */}
-      <div className="relative w-full h-[55vh] md:h-[70vh] bg-slate-900 overflow-hidden">
-        <Carousel plugins={[Autoplay({ delay: 4000 })]} className="w-full h-full">
-          <CarouselContent className="h-full ml-0">
-            {allImages.map((img, idx) => (
-              <CarouselItem key={idx} className="h-full pl-0 basis-full">
-                <div className="relative h-full w-full">
-                  <img src={img} alt={place.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-10" />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+      <main className="container px-4 max-w-6xl mx-auto pt-0 relative z-50">
+        
+        {/* HERO GALLERY - Top corners sharp, Bottom rounded */}
+        <div className="relative w-full h-[50vh] md:h-[65vh] bg-slate-900 overflow-hidden rounded-b-[32px] rounded-t-none mb-8 shadow-xl">
+          <Carousel plugins={[Autoplay({ delay: 4000 })]} className="w-full h-full">
+            <CarouselContent className="h-full ml-0">
+              {allImages.map((img, idx) => (
+                <CarouselItem key={idx} className="h-full pl-0 basis-full">
+                  <div className="relative h-full w-full">
+                    {/* object-center ensures the crop starts from the middle */}
+                    <img src={img} alt={place.name} className="w-full h-full object-cover object-center" />
+                    {/* Restored the stronger original gradient for visibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-10" />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
 
-        <div className="absolute bottom-6 left-0 z-40 w-full px-4 md:px-8 pointer-events-none">
-          <div className="space-y-2 pointer-events-auto bg-gradient-to-r from-black/70 via-black/50 to-transparent rounded-2xl p-4 max-w-xl">
-            <div className="flex flex-wrap gap-2">
-              <Badge className="bg-amber-400 text-black border-none px-2 py-0.5 text-[9px] font-black uppercase rounded-full flex items-center gap-1 shadow-lg">
-                <Star className="h-3 w-3 fill-current" />
-                {liveRating.avg > 0 ? liveRating.avg : "New"}
-              </Badge>
-              <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-2 py-0.5 text-[9px] font-black uppercase rounded-full flex items-center gap-1`}>
-                <Circle className={`h-2 w-2 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />
-                {isOpenNow ? "open" : "closed"}
-              </Badge>
-            </div>
-            <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">{place.name}</h1>
-            <div className="flex items-center gap-2" onClick={openInMaps}>
-              <MapPin className="h-4 w-4 text-white" />
-              <span className="text-xs font-bold text-white uppercase tracking-wide cursor-pointer">
-                {[place.place, place.location, place.country].filter(Boolean).join(', ')}
-              </span>
+          <div className="absolute bottom-6 left-0 z-40 w-full px-6 pointer-events-none">
+            {/* Restored previous name overlay style */}
+            <div className="space-y-2 pointer-events-auto bg-gradient-to-r from-black/70 via-black/50 to-transparent rounded-2xl p-4 max-w-xl">
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-amber-400 text-black border-none px-2 py-0.5 text-[9px] font-black uppercase rounded-full flex items-center gap-1 shadow-lg">
+                  <Star className="h-3 w-3 fill-current" />
+                  {liveRating.avg > 0 ? liveRating.avg : "New"}
+                </Badge>
+                <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-2 py-0.5 text-[9px] font-black uppercase rounded-full flex items-center gap-1`}>
+                  <Circle className={`h-2 w-2 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />
+                  {isOpenNow ? "open" : "closed"}
+                </Badge>
+              </div>
+              <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">{place.name}</h1>
+              <div className="flex items-center gap-2" onClick={openInMaps}>
+                <MapPin className="h-4 w-4 text-white" />
+                <span className="text-xs font-bold text-white uppercase tracking-wide cursor-pointer">
+                  {[place.place, place.location, place.country].filter(Boolean).join(', ')}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <main className="container px-4 max-w-6xl mx-auto -mt-10 relative z-50">
         <div className="flex flex-col lg:grid lg:grid-cols-[1.7fr,1fr] gap-6">
           <div className="flex flex-col gap-6">
             <section className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100 order-1">
@@ -311,13 +315,13 @@ const AdventurePlaceDetail = () => {
         </div>
 
         <div className="hidden lg:block">
-           <div className="mt-12 bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-             <ReviewSection itemId={place.id} itemType="adventure_place" />
-           </div>
-           <div className="mt-16">
-             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 text-slate-800">Explore Similar Adventures</h2>
-             <SimilarItems currentItemId={place.id} itemType="adventure" country={place.country} />
-           </div>
+            <div className="mt-12 bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
+              <ReviewSection itemId={place.id} itemType="adventure_place" />
+            </div>
+            <div className="mt-16">
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 text-slate-800">Explore Similar Adventures</h2>
+              <SimilarItems currentItemId={place.id} itemType="adventure" country={place.country} />
+            </div>
         </div>
       </main>
 
