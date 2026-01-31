@@ -232,10 +232,10 @@ const Saved = () => {
         </div>
         
         {isLoading || authLoading ? (
-          /* UPDATED SKELETON GRID: Adjusted to match real grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          /* RESPONSIVE SKELETON GRID */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 justify-items-center">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="space-y-4">
+              <div key={i} className="space-y-4 w-full max-w-[380px]">
                 <Skeleton className="h-64 w-full rounded-[28px]" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
@@ -276,17 +276,17 @@ const Saved = () => {
           </div>
         ) : (
           <>
-            {/* UPDATED MAIN GRID: Added grid-cols-1 for mobile, gap-6, and centering */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {/* UPDATED RESPONSIVE GRID: Columns adjust from 1 to 5 based on screen size */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-center">
               {savedListings.map((item) => (
                 <div
                   key={item.id}
-                  className={`relative transition-all duration-300 flex justify-center ${isSelectionMode ? 'cursor-pointer' : ''}`}
+                  className={`relative transition-all duration-300 w-full max-w-[380px] flex flex-col items-center ${isSelectionMode ? 'cursor-pointer' : ''}`}
                   onClick={() => isSelectionMode && toggleItemSelection(item.id)}
                 >
                   {isSelectionMode && (
                     <div
-                      className={`absolute top-4 left-8 z-50 h-8 w-8 rounded-xl border-2 flex items-center justify-center backdrop-blur-md transition-all ${
+                      className={`absolute top-4 left-4 z-50 h-8 w-8 rounded-xl border-2 flex items-center justify-center backdrop-blur-md transition-all ${
                         selectedItems.has(item.id)
                           ? "bg-[#008080] border-[#008080]"
                           : "bg-black/20 border-white"
@@ -299,26 +299,29 @@ const Saved = () => {
                   )}
                   
                   {isSelectionMode && selectedItems.has(item.id) && (
-                      <div className="absolute inset-x-0 inset-y-0 bg-[#008080]/10 z-40 rounded-[32px] pointer-events-none border-2 border-[#008080] max-w-[380px] mx-auto w-full" />
+                      /* Highlight overlay - now matches card width perfectly */
+                      <div className="absolute inset-0 bg-[#008080]/10 z-40 rounded-[32px] pointer-events-none border-2 border-[#008080]" />
                   )}
 
-                  <ListingCard
-                    id={item.id}
-                    type={item.savedType.replace("_", " ").toUpperCase() as any}
-                    name={item.name || item.local_name || item.location_name}
-                    imageUrl={item.image_url || item.photo_urls?.[0] || ""}
-                    location={item.location || item.location_name}
-                    country={item.country}
-                    onSave={() => handleSave(item.id, item.savedType)}
-                    isSaved={true}
-                    showBadge={true}
-                  />
+                  <div className="w-full">
+                    <ListingCard
+                      id={item.id}
+                      type={item.savedType.replace("_", " ").toUpperCase() as any}
+                      name={item.name || item.local_name || item.location_name}
+                      imageUrl={item.image_url || item.photo_urls?.[0] || ""}
+                      location={item.location || item.location_name}
+                      country={item.country}
+                      onSave={() => handleSave(item.id, item.savedType)}
+                      isSaved={true}
+                      showBadge={true}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
             
             {hasMore && (
-              <div className="flex justify-center mt-10">
+              <div className="flex justify-center mt-12">
                 <Button
                   onClick={() => fetchSavedItems(userId!, offset)}
                   disabled={loadingMore}
@@ -340,7 +343,6 @@ const Saved = () => {
         )}
       </main>
 
-      {/* Alert Dialogs... */}
       <AlertDialog open={showClearAllDialog} onOpenChange={setShowClearAllDialog}>
         <AlertDialogContent className="rounded-[32px] border-none p-8">
           <AlertDialogHeader>
