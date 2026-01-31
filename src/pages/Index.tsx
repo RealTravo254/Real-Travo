@@ -627,7 +627,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-0 md:pb-0">
-      <Header onSearchClick={handleSearchIconClick} showSearchIcon={showSearchIcon} hideIcons={isSearchFocused} />
+      {/* Header - Hidden when search is focused */}
+      {!isSearchFocused && (
+        <Header onSearchClick={handleSearchIconClick} showSearchIcon={showSearchIcon} hideIcons={isSearchFocused} />
+      )}
             
       {/* Hero Section with Search Bar, Background Image, and Category Icons - Hidden when search focused */}
       {!isSearchFocused && (
@@ -733,9 +736,9 @@ const Index = () => {
         </div>
       )}
             
-      {/* Search Bar - Appears below header when focused on all screens */}
+      {/* Search Bar - Appears at top when focused on all screens */}
       {isSearchFocused && (
-        <div className="sticky top-0 md:top-[64px] z-40 bg-background p-4 border-b shadow-md">
+        <div className="sticky top-0 z-50 bg-background p-4 border-b shadow-md">
           <div className="container md:px-4 px-4 mx-auto">
             <SearchBarWithSuggestions 
               value={searchQuery} 
@@ -797,12 +800,12 @@ const Index = () => {
 
         {/* Search Results - Show when search is focused */}
         {isSearchFocused && (
-          <div className="w-full px-4 md:px-6 lg:px-8 mt-4 relative z-10">
+          <div className="w-full px-4 md:px-6 lg:px-8 mt-4 pb-8">
             <h2 className="text-xl md:text-2xl font-bold mb-4">
               {searchQuery ? 'Search Results' : 'All Listings'}
             </h2>
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="w-full">
                     <ListingSkeleton />
@@ -810,12 +813,12 @@ const Index = () => {
                 ))}
               </div>
             ) : sortedListings.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 {sortedListings.map((listing, index) => {
                   const itemDistance = position && listing.latitude && listing.longitude ? calculateDistance(position.latitude, position.longitude, listing.latitude, listing.longitude) : undefined;
                   const ratingData = ratings.get(listing.id);
                   return (
-                    <div key={listing.id} className="w-full relative">
+                    <div key={listing.id} className="w-full min-h-0">
                       <ListingCard 
                         id={listing.id} 
                         type={listing.type} 
