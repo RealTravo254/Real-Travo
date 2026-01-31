@@ -4,20 +4,24 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 
 const COLORS = {
   TEAL: "#008080",
 };
 
+// Mock data for the "Popular Destinations" look
+const POPULAR_DESTINATIONS = [
+  { name: "nairobi", country: "Kenya" },
+  { name: "mombasa", country: "Kenya" },
+  { name: "kisumu", country: "Kenya" },
+  { name: "embu", country: "Kenya" },
+  { name: "naivasha", country: "Kenya" },
+];
+
 export const FilterBar = () => {
-  // Set initial state to today's date
   const [dateFrom, setDateFrom] = useState<Date | undefined>(new Date());
   const [dateTo, setDateTo] = useState<Date | undefined>(new Date());
-  
   const [locationQuery, setLocationQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +38,11 @@ export const FilterBar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleSelectLocation = (name: string) => {
+    setLocationQuery(name);
+    setShowSuggestions(false);
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4" ref={containerRef}>
@@ -52,7 +61,39 @@ export const FilterBar = () => {
             onChange={(e) => setLocationQuery(e.target.value)}
             className="bg-transparent border-none p-0 text-sm md:text-base focus:ring-0 placeholder:text-slate-300 font-bold outline-none text-slate-700 w-full"
           />
-          {/* Suggestions mapping logic here... */}
+
+          {/* SUGGESTIONS DROPDOWN (Matches Image) */}
+          {showSuggestions && (
+            <div className="absolute top-[120%] left-0 w-full md:w-[380px] bg-white rounded-3xl shadow-2xl border border-slate-100 z-50 py-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="px-6">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                  Popular Destinations
+                </h3>
+                
+                <div className="flex flex-col max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                  {POPULAR_DESTINATIONS.map((dest, index) => (
+                    <div 
+                      key={index}
+                      onClick={() => handleSelectLocation(dest.name)}
+                      className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl cursor-pointer transition-all group"
+                    >
+                      <div className="bg-slate-100 p-2.5 rounded-2xl group-hover:bg-white transition-colors">
+                        <MapPin className="h-5 w-5 text-slate-400" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-700 leading-tight">
+                          {dest.name}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {dest.country}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="w-[1px] h-8 bg-slate-100 self-center" />
@@ -60,7 +101,7 @@ export const FilterBar = () => {
         {/* FROM SECTION */}
         <Popover>
           <PopoverTrigger asChild>
-            <div className="flex flex-col px-4 md:px-6 py-1 cursor-pointer hover:bg-slate-50 min-w-[100px]">
+            <div className="flex flex-col px-4 md:px-6 py-1 cursor-pointer hover:bg-slate-50 min-w-[100px] transition-colors">
               <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                 <CalendarIcon className="h-2.5 w-2.5" /> From
               </span>
@@ -85,7 +126,7 @@ export const FilterBar = () => {
         {/* TO SECTION */}
         <Popover>
           <PopoverTrigger asChild>
-            <div className="flex flex-col px-4 md:px-6 py-1 cursor-pointer hover:bg-slate-50 min-w-[100px]">
+            <div className="flex flex-col px-4 md:px-6 py-1 cursor-pointer hover:bg-slate-50 min-w-[100px] transition-colors">
               <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                 <CalendarIcon className="h-2.5 w-2.5" /> To
               </span>
@@ -113,6 +154,23 @@ export const FilterBar = () => {
           <Search className="w-5 h-5 stroke-[3px]" />
         </button>
       </div>
+
+      {/* Tailwind Style Extension for the scrollbar */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #cbd5e1;
+        }
+      `}</style>
     </div>
   );
 };
