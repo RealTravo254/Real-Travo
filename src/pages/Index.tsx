@@ -800,12 +800,12 @@ const Index = () => {
 
         {/* Search Results - Show when search is focused */}
         {isSearchFocused && (
-          <div className="w-full px-4 md:px-6 lg:px-8 mt-4 pb-8">
-            <h2 className="text-xl md:text-2xl font-bold mb-4">
+          <div className="w-full px-4 md:px-6 lg:px-8 mt-6 pb-8">
+            <h2 className="text-xl md:text-2xl font-bold mb-6">
               {searchQuery ? 'Search Results' : 'All Listings'}
             </h2>
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 auto-rows-max">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="w-full">
                     <ListingSkeleton />
@@ -813,12 +813,12 @@ const Index = () => {
                 ))}
               </div>
             ) : sortedListings.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 auto-rows-max">
                 {sortedListings.map((listing, index) => {
                   const itemDistance = position && listing.latitude && listing.longitude ? calculateDistance(position.latitude, position.longitude, listing.latitude, listing.longitude) : undefined;
                   const ratingData = ratings.get(listing.id);
                   return (
-                    <div key={listing.id} className="w-full min-h-0">
+                    <div key={listing.id} className="w-full h-full flex flex-col">
                       <ListingCard 
                         id={listing.id} 
                         type={listing.type} 
