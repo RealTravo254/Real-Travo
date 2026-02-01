@@ -239,7 +239,7 @@ const ListingCardComponent = ({
                 {!hidePrice && price !== undefined && (
                   <>
                     <span className="text-[9px] font-normal text-slate-400 uppercase tracking-widest">Starts at</span>
-                    <span className={cn("text-lg font-normal", isUnavailable ? "text-slate-300 line-through" : "text-[#FF0000]")}>
+                    <span className={cn("text-sm font-bold", isUnavailable ? "text-slate-300 line-through" : "text-[#FF0000]")}>
                         KSh {price.toLocaleString()}
                     </span>
                   </>
@@ -278,4 +278,5 @@ const ListingCardComponent = ({
     </Card>
   );
 };
+
 export const ListingCard = memo(ListingCardComponent);
