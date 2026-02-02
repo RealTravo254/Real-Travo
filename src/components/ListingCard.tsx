@@ -280,5 +280,4 @@ const ListingCardComponent = ({
     </Card>
   );
 };
-
 export const ListingCard = memo(ListingCardComponent);
