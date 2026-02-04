@@ -135,9 +135,9 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           <p className="px-4 text-[9px] font-black text-[#008080] uppercase tracking-[0.2em] mb-2">Explore Categories</p>
           <NavItem icon={Trophy} label="Events & Sports" path="/category/events" />
           <NavItem icon={Map} label="Trips & Tours" path="/category/trips" />
-          <NavItem icon={Mountain} label="Campsite & Experience" path="/category/campsite" />
-          <NavItem icon={Building2} label="Accommodation" path="/category/accommodation" />
-          <NavItem icon={Bed} label="Hotels & Stays" path="/category/hotels" />
+          <NavItem icon={Mountain} label="Adventure Places" path="/category/campsite" />
+          <NavItem icon={Building2} label="Accommodation Only" path="/category/accommodation" />
+          <NavItem icon={Bed} label="Hotel" path="/category/hotels" />
 
           <div className="h-4" />
           <p className="px-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Support & Legal</p>
@@ -150,7 +150,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
       
       <div className="p-6 border-t border-slate-50 dark:border-gray-900 text-center">
         <span className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-          RealTravo v2.0
+          RealTravo v1.0
         </span>
       </div>
     </div>

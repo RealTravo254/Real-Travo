@@ -66,7 +66,7 @@ export const Footer = ({
             <div className="flex items-center gap-2">
               {/* NOTE: Compass color changed to match new link hover color */}
               <Compass className="h-6 w-6 text-[#008080]" /> 
-              <span className="font-bold text-lg">TripTrac</span>
+              <span className="font-bold text-lg">RealTravo</span>
               </div>
             <p className="text-sm text-gray-600"> 
               Discover amazing destinations and create unforgettable memories.
@@ -172,7 +172,7 @@ export const Footer = ({
               Privacy Policy
             </Link>
           </div>
-          <p>© 2025 TripTrac. All rights reserved.</p>
+          <p>© 2026 RealTravo. All rights reserved.</p>
         </div>
       </div>
     </footer>
