@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { ReviewSection } from "@/components/ReviewSection";
+import { FacilitiesGrid, ActivitiesGrid } from "@/components/detail/FacilityActivityCards";
 import { useSavedItems } from "@/hooks/useSavedItems";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
@@ -405,40 +406,24 @@ const HotelDetail = () => {
               </div>
             </section>
 
-            {/* Facilities & Pricing */}
+            {/* Facilities & Pricing with Images */}
             {hotel.facilities?.length > 0 && (
-              <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <Tent className="h-5 w-5 text-[#008080]" />
-                  <h2 className="text-sm font-black uppercase tracking-widest text-[#008080]">Facilities & Pricing</h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {hotel.facilities.map((f: any, i: number) => (
-                    <div key={i} className="p-3 rounded-xl bg-teal-50/50 border border-teal-100 flex justify-between items-center">
-                      <span className="text-[10px] font-black uppercase text-[#008080]">{f.name || f}</span>
-                      {f.price && <span className="text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-lg">KSh {f.price.toLocaleString()}</span>}
-                    </div>
-                  ))}
-                </div>
-              </section>
+              <FacilitiesGrid 
+                facilities={hotel.facilities} 
+                itemId={hotel.id} 
+                itemType="hotel"
+                accentColor="#008080"
+              />
             )}
 
-            {/* Activities */}
+            {/* Activities with Images */}
             {hotel.activities?.length > 0 && (
-              <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <Zap className="h-5 w-5 text-orange-500" />
-                  <h2 className="text-sm font-black uppercase tracking-widest text-orange-500">Activities</h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {hotel.activities.map((act: any, i: number) => (
-                    <Badge key={i} className="bg-orange-50 text-orange-600 border-orange-100 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase flex items-center gap-2">
-                      {act.name || act}
-                      {act.price && <span className="text-orange-400">| KSh {act.price.toLocaleString()}</span>}
-                    </Badge>
-                  ))}
-                </div>
-              </section>
+              <ActivitiesGrid 
+                activities={hotel.activities} 
+                itemId={hotel.id} 
+                itemType="hotel"
+                accentColor="#FF7F50"
+              />
             )}
           </div>
 

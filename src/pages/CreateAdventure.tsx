@@ -16,6 +16,7 @@ import { CountrySelector } from "@/components/creation/CountrySelector";
 import { PhoneInput } from "@/components/creation/PhoneInput";
 import { compressImages } from "@/lib/imageCompression";
 import { DynamicItemList, DynamicItem } from "@/components/creation/DynamicItemList";
+import { DynamicItemListWithImages, DynamicItemWithImages, uploadItemImages, formatItemsWithImagesForDB } from "@/components/creation/DynamicItemListWithImages";
 import { OperatingHoursSection } from "@/components/creation/OperatingHoursSection";
 import { ReviewStep } from "@/components/creation/ReviewStep";
 import { cn } from "@/lib/utils";
@@ -63,8 +64,8 @@ const CreateAdventure = () => {
   });
   
   const [amenities, setAmenities] = useState<DynamicItem[]>([]);
-  const [facilities, setFacilities] = useState<DynamicItem[]>([]);
-  const [activities, setActivities] = useState<DynamicItem[]>([]);
+  const [facilities, setFacilities] = useState<DynamicItemWithImages[]>([]);
+  const [activities, setActivities] = useState<DynamicItemWithImages[]>([]);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
 
   useEffect(() => {
@@ -188,6 +189,10 @@ const CreateAdventure = () => {
 
       const selectedDays = Object.entries(workingDays).filter(([_, s]) => s).map(([d]) => d);
 
+      // Upload facility and activity images
+      const uploadedFacilities = await uploadItemImages(facilities, user.id);
+      const uploadedActivities = await uploadItemImages(activities, user.id);
+
       const { error } = await supabase.from("adventure_places").insert([{
         name: formData.registrationName,
         registration_number: formData.registrationNumber,
@@ -209,8 +214,8 @@ const CreateAdventure = () => {
         entry_fee: formData.entranceFeeType === "paid" ? parseFloat(formData.adultPrice) : 0,
         child_entry_fee: formData.entranceFeeType === "paid" ? parseFloat(formData.childPrice) : 0,
         amenities: amenities.map(a => a.name),
-        facilities: formatItemsForDB(facilities),
-        activities: formatItemsForDB(activities),
+        facilities: formatItemsWithImagesForDB(uploadedFacilities),
+        activities: formatItemsWithImagesForDB(uploadedActivities),
         created_by: user.id,
         approval_status: "pending"
       }]);
@@ -462,25 +467,28 @@ const CreateAdventure = () => {
                 accentColor={COLORS.TEAL}
               />
 
-              <DynamicItemList
+              <DynamicItemListWithImages
                 items={facilities}
                 onChange={setFacilities}
-                label="Facilities"
+                label="Facilities (with photos)"
                 placeholder="e.g. Campsite"
                 showCapacity={true}
                 showPrice={true}
-                highlightErrors={showErrors}
                 accentColor={COLORS.CORAL}
+                maxImages={5}
+                userId={user?.id}
               />
 
-              <DynamicItemList
+              <DynamicItemListWithImages
                 items={activities}
                 onChange={setActivities}
-                label="Activities"
+                label="Activities (with photos)"
                 placeholder="e.g. Hiking"
                 showCapacity={false}
                 showPrice={false}
                 accentColor="#6366f1"
+                maxImages={5}
+                userId={user?.id}
               />
             </div>
           </Card>

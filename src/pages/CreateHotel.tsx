@@ -16,6 +16,7 @@ import { CountrySelector } from "@/components/creation/CountrySelector";
 import { PhoneInput } from "@/components/creation/PhoneInput";
 import { compressImages } from "@/lib/imageCompression";
 import { DynamicItemList, DynamicItem } from "@/components/creation/DynamicItemList";
+import { DynamicItemListWithImages, DynamicItemWithImages, uploadItemImages, formatItemsWithImagesForDB } from "@/components/creation/DynamicItemListWithImages";
 import { OperatingHoursSection } from "@/components/creation/OperatingHoursSection";
 import { ReviewStep } from "@/components/creation/ReviewStep";
 
@@ -56,8 +57,8 @@ const CreateHotel = () => {
   });
 
   const [amenities, setAmenities] = useState<DynamicItem[]>([]);
-  const [facilities, setFacilities] = useState<DynamicItem[]>([]);
-  const [activities, setActivities] = useState<DynamicItem[]>([]);
+  const [facilities, setFacilities] = useState<DynamicItemWithImages[]>([]);
+  const [activities, setActivities] = useState<DynamicItemWithImages[]>([]);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [creatorProfile, setCreatorProfile] = useState({ name: "", email: "", phone: "" });
@@ -207,6 +208,10 @@ const CreateHotel = () => {
         .filter(([_, isSelected]) => isSelected)
         .map(([day]) => day);
 
+      // Upload facility and activity images
+      const uploadedFacilities = await uploadItemImages(facilities, user.id);
+      const uploadedActivities = await uploadItemImages(activities, user.id);
+
       // Prepare data for submission
       const hotelData = {
         created_by: user.id,
@@ -224,8 +229,8 @@ const CreateHotel = () => {
         closing_hours: formData.closingHours,
         days_opened: selectedDays,
         amenities: amenities.filter(a => a.name.trim() !== "").map(a => a.name),
-        facilities: facilities.filter(f => f.name.trim() !== "").map(f => ({ name: f.name, price: f.price || 0 })),
-        activities: activities.filter(a => a.name.trim() !== "").map(a => ({ name: a.name, price: a.price || 0 })),
+        facilities: formatItemsWithImagesForDB(uploadedFacilities),
+        activities: formatItemsWithImagesForDB(uploadedActivities),
         image_url: imageUrls[0] || '',
         gallery_images: imageUrls,
         registration_number: formData.registrationNumber,
@@ -428,17 +433,26 @@ const CreateHotel = () => {
               <DynamicItemList items={amenities} onChange={setAmenities} label="Amenities (Optional)" showPrice={false} accentColor={COLORS.TEAL} />
 
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <p className="text-[10px] font-bold text-orange-500 uppercase mb-4 underline">Note: Capacity is required for every facility added.</p>
-                <DynamicItemList 
+                <p className="text-[10px] font-bold text-orange-500 uppercase mb-4 underline">Note: Capacity is required for every facility added. Add photos to showcase facilities.</p>
+                <DynamicItemListWithImages 
                   items={facilities} 
                   onChange={setFacilities} 
-                  label="Facilities" 
+                  label="Facilities (with photos)" 
                   showCapacity={true} 
-                  accentColor={COLORS.CORAL} 
+                  accentColor={COLORS.CORAL}
+                  maxImages={5}
+                  userId={user?.id}
                 />
               </div>
 
-              <DynamicItemList items={activities} onChange={setActivities} label="Activities (Optional)" accentColor="#6366f1" />
+              <DynamicItemListWithImages 
+                items={activities} 
+                onChange={setActivities} 
+                label="Activities (with photos)" 
+                accentColor="#6366f1"
+                maxImages={5}
+                userId={user?.id}
+              />
             </div>
           </Card>
         )}
