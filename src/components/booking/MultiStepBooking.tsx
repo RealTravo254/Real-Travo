@@ -1,4 +1,5 @@
  import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
@@ -76,6 +77,7 @@
    accentColor = "#FF7F50",
  }: MultiStepBookingProps) => {
    const { user } = useAuth();
+  const [searchParams] = useSearchParams();
    const [currentStep, setCurrentStep] = useState(0);
    const [visitDate, setVisitDate] = useState<Date | undefined>(
      fixedDate ? parseISO(fixedDate) : undefined
@@ -91,6 +93,7 @@
    const [selectedFacilities, setSelectedFacilities] = useState<
      { name: string; price: number; startDate?: string; endDate?: string }[]
    >([]);
+  const [isFacilityOnlyMode, setIsFacilityOnlyMode] = useState(false);
  
    // Prefill user data if logged in
    useEffect(() => {
@@ -110,188 +113,406 @@
        fetchProfile();
      }
    }, [user]);
+
+  // Handle facility-only booking mode from query params
+  useEffect(() => {
+    const facilityName = searchParams.get("facility");
+    const skipToFacility = searchParams.get("skipToFacility");
+    
+    if (facilityName && skipToFacility === "true") {
+      setIsFacilityOnlyMode(true);
+      
+      // Find the facility and pre-select it
+      const targetFacility = facilities.find(
+        f => f.name.toLowerCase() === decodeURIComponent(facilityName).toLowerCase()
+      );
+      
+      if (targetFacility) {
+        setSelectedFacilities([{
+          name: targetFacility.name,
+          price: targetFacility.price,
+        }]);
+      }
+    }
+  }, [searchParams, facilities]);
  
    const steps = [];
-   
-   // Step 1: Date selection (if not skipped)
-   if (!skipDateSelection) {
-     steps.push({ id: "date", title: "Select Date" });
-   }
-   
-   // Step 2: Travelers
-   steps.push({ id: "travelers", title: "Travelers" });
-   
-   // Step 3: Activities & Facilities (always show if available)
-   if (!skipFacilitiesAndActivities && (activities.length > 0 || facilities.length > 0)) {
-     steps.push({ id: "extras", title: "Extras" });
-   }
-   
-   // Step 4: Guest details (if not logged in)
-   if (!user) {
-     steps.push({ id: "details", title: "Your Details" });
-   }
-   
-   // Step 5: Review
-   steps.push({ id: "review", title: "Review" });
- 
-   const calculateTotal = () => {
-     let total = numAdults * priceAdult + numChildren * priceChild;
-     selectedActivities.forEach((a) => (total += a.price * a.numberOfPeople));
-     selectedFacilities.forEach((f) => {
-       if (f.startDate && f.endDate) {
-         const days = Math.max(
-           1,
-           Math.ceil(
-             (new Date(f.endDate).getTime() - new Date(f.startDate).getTime()) /
-               (1000 * 60 * 60 * 24)
-           )
-         );
-         total += f.price * days;
-       }
-     });
-     return total;
-   };
- 
-   const handleNext = () => {
-     if (currentStep < steps.length - 1) {
-       setCurrentStep(currentStep + 1);
-     }
-   };
- 
-   const handleBack = () => {
-     if (currentStep > 0) {
-       setCurrentStep(currentStep - 1);
-     }
-   };
- 
-   const handleSubmit = async () => {
-     const formData: BookingFormData = {
-       visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : fixedDate,
-       num_adults: numAdults,
-       num_children: numChildren,
-       guest_name: guestName,
-       guest_email: guestEmail,
-       guest_phone: guestPhone,
-       selectedActivities,
-       selectedFacilities,
-     };
-     await onSubmit(formData);
-   };
- 
-   const toggleActivity = (activity: Activity) => {
-     const existing = selectedActivities.find((a) => a.name === activity.name);
-     if (existing) {
-       setSelectedActivities(selectedActivities.filter((a) => a.name !== activity.name));
-     } else {
-       setSelectedActivities([
-         ...selectedActivities,
-         { name: activity.name, price: activity.price, numberOfPeople: 1 },
-       ]);
-     }
-   };
- 
-   const updateActivityPeople = (name: string, count: number) => {
-     setSelectedActivities(
-       selectedActivities.map((a) =>
-         a.name === name ? { ...a, numberOfPeople: Math.max(1, count) } : a
-       )
-     );
-   };
- 
-   const toggleFacility = (facility: Facility) => {
-     const existing = selectedFacilities.find((f) => f.name === facility.name);
-     if (existing) {
-       setSelectedFacilities(selectedFacilities.filter((f) => f.name !== facility.name));
-     } else {
-       setSelectedFacilities([
-         ...selectedFacilities,
-         { name: facility.name, price: facility.price },
-       ]);
-     }
-   };
- 
-   const updateFacilityDates = (name: string, startDate?: string, endDate?: string) => {
-     setSelectedFacilities(
-       selectedFacilities.map((f) =>
-         f.name === name ? { ...f, startDate, endDate } : f
-       )
-     );
-   };
- 
-   const currentStepId = steps[currentStep]?.id;
- 
-   const isStepValid = () => {
-     switch (currentStepId) {
-       case "date":
-         return !!visitDate;
-       case "travelers":
-         return numAdults > 0;
-       case "extras":
-         return true;
-       case "details":
-         return guestName.trim() && guestEmail.trim() && guestPhone.trim();
-       case "review":
-         return true;
-       default:
-         return true;
-     }
-   };
- 
-   if (isCompleted) {
-     return (
-       <div className="p-8 text-center">
-         <div
-           className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-           style={{ backgroundColor: primaryColor }}
-         >
-           <Check className="h-8 w-8 text-white" />
-         </div>
-         <h3 className="text-xl font-bold mb-2">Booking Confirmed!</h3>
-         <p className="text-muted-foreground">Thank you for booking {itemName}</p>
-       </div>
-     );
-   }
- 
-   return (
-     <div className="p-6">
-       {/* Progress indicator */}
-       <div className="flex items-center justify-between mb-8">
-         {steps.map((step, index) => (
-           <div key={step.id} className="flex items-center">
-             <div
-               className={cn(
-                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                 index <= currentStep
-                   ? "text-white"
-                   : "bg-muted text-muted-foreground"
-               )}
-               style={{
-                 backgroundColor: index <= currentStep ? primaryColor : undefined,
-               }}
-             >
-               {index < currentStep ? <Check className="h-4 w-4" /> : index + 1}
-             </div>
-             {index < steps.length - 1 && (
-               <div
-                 className={cn(
-                   "h-1 w-8 mx-1",
-                   index < currentStep ? "" : "bg-muted"
-                 )}
-                 style={{
-                   backgroundColor: index < currentStep ? primaryColor : undefined,
-                 }}
-               />
-             )}
-           </div>
-         ))}
-       </div>
- 
-       <h2 className="text-lg font-bold mb-6">{steps[currentStep]?.title}</h2>
- 
-       {/* Date Selection Step */}
-       {currentStepId === "date" && (
-         <div className="space-y-4">
-           <Label>When would you like to visit?</Label>
+
+  // In facility-only mode, we go straight to facilities, then optional extras, then details, then review
+  if (isFacilityOnlyMode) {
+    // Step 1: Facilities (with date selection per facility)
+    steps.push({ id: "facilities", title: "Select Dates" });
+    
+    // Step 2: Optional - add more facilities or activities
+    if (activities.length > 0) {
+      steps.push({ id: "activities", title: "Add Activities" });
+    }
+    
+    // Step 3: Guest details (if not logged in)
+    if (!user) {
+      steps.push({ id: "details", title: "Your Details" });
+    }
+    
+    // Step 4: Review
+    steps.push({ id: "review", title: "Review" });
+  } else {
+    // Normal flow
+    // Step 1: Date selection (if not skipped)
+    if (!skipDateSelection) {
+      steps.push({ id: "date", title: "Select Date" });
+    }
+    
+    // Step 2: Travelers
+    steps.push({ id: "travelers", title: "Travelers" });
+    
+    // Step 3: Activities & Facilities (always show if available)
+    if (!skipFacilitiesAndActivities && (activities.length > 0 || facilities.length > 0)) {
+      steps.push({ id: "extras", title: "Extras" });
+    }
+    
+    // Step 4: Guest details (if not logged in)
+    if (!user) {
+      steps.push({ id: "details", title: "Your Details" });
+    }
+    
+    // Step 5: Review
+    steps.push({ id: "review", title: "Review" });
+  }
+
+  const calculateTotal = () => {
+    let total = 0;
+    
+    // In facility-only mode, we don't charge base admission
+    if (!isFacilityOnlyMode) {
+      total = numAdults * priceAdult + numChildren * priceChild;
+    }
+    
+    selectedActivities.forEach((a) => (total += a.price * a.numberOfPeople));
+    selectedFacilities.forEach((f) => {
+      if (f.startDate && f.endDate) {
+        const days = Math.max(
+          1,
+          Math.ceil(
+            (new Date(f.endDate).getTime() - new Date(f.startDate).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        );
+        total += f.price * days;
+      }
+    });
+    return total;
+  };
+
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const formData: BookingFormData = {
+      visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : fixedDate,
+      num_adults: isFacilityOnlyMode ? 0 : numAdults,
+      num_children: isFacilityOnlyMode ? 0 : numChildren,
+      guest_name: guestName,
+      guest_email: guestEmail,
+      guest_phone: guestPhone,
+      selectedActivities,
+      selectedFacilities,
+    };
+    await onSubmit(formData);
+  };
+
+  const toggleActivity = (activity: Activity) => {
+    const existing = selectedActivities.find((a) => a.name === activity.name);
+    if (existing) {
+      setSelectedActivities(selectedActivities.filter((a) => a.name !== activity.name));
+    } else {
+      setSelectedActivities([
+        ...selectedActivities,
+        { name: activity.name, price: activity.price, numberOfPeople: 1 },
+      ]);
+    }
+  };
+
+  const updateActivityPeople = (name: string, count: number) => {
+    setSelectedActivities(
+      selectedActivities.map((a) =>
+        a.name === name ? { ...a, numberOfPeople: Math.max(1, count) } : a
+      )
+    );
+  };
+
+  const toggleFacility = (facility: Facility) => {
+    const existing = selectedFacilities.find((f) => f.name === facility.name);
+    if (existing) {
+      setSelectedFacilities(selectedFacilities.filter((f) => f.name !== facility.name));
+    } else {
+      setSelectedFacilities([
+        ...selectedFacilities,
+        { name: facility.name, price: facility.price },
+      ]);
+    }
+  };
+
+  const updateFacilityDates = (name: string, startDate?: string, endDate?: string) => {
+    setSelectedFacilities(
+      selectedFacilities.map((f) =>
+        f.name === name ? { ...f, startDate, endDate } : f
+      )
+    );
+  };
+
+  const currentStepId = steps[currentStep]?.id;
+
+  const isStepValid = () => {
+    switch (currentStepId) {
+      case "date":
+        return !!visitDate;
+      case "travelers":
+        return numAdults > 0;
+      case "facilities":
+        // At least one facility must have dates set
+        return selectedFacilities.length > 0 && 
+               selectedFacilities.some(f => f.startDate && f.endDate);
+      case "activities":
+        return true; // Optional
+      case "extras":
+        return true;
+      case "details":
+        return guestName.trim() && guestEmail.trim() && guestPhone.trim();
+      case "review":
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  if (isCompleted) {
+    return (
+      <div className="p-8 text-center">
+        <div
+          className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+          style={{ backgroundColor: primaryColor }}
+        >
+          <Check className="h-8 w-8 text-white" />
+        </div>
+        <h3 className="text-xl font-bold mb-2">Booking Confirmed!</h3>
+        <p className="text-muted-foreground">Thank you for booking {itemName}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      {/* Progress indicator */}
+      <div className="flex items-center justify-between mb-8">
+        {steps.map((step, index) => (
+          <div key={step.id} className="flex items-center">
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
+                index <= currentStep
+                  ? "text-white"
+                  : "bg-muted text-muted-foreground"
+              )}
+              style={{
+                backgroundColor: index <= currentStep ? primaryColor : undefined,
+              }}
+            >
+              {index < currentStep ? <Check className="h-4 w-4" /> : index + 1}
+            </div>
+            {index < steps.length - 1 && (
+              <div
+                className={cn(
+                  "h-1 w-8 mx-1",
+                  index < currentStep ? "" : "bg-muted"
+                )}
+                style={{
+                  backgroundColor: index < currentStep ? primaryColor : undefined,
+                }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <h2 className="text-lg font-bold mb-6">{steps[currentStep]?.title}</h2>
+
+      {/* Facility-only mode: Facilities with dates */}
+      {currentStepId === "facilities" && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Select check-in and check-out dates for your selected facility. You can also add more facilities.
+          </p>
+          
+          {facilities.map((facility) => {
+            const isSelected = selectedFacilities.some(f => f.name === facility.name);
+            const selected = selectedFacilities.find(f => f.name === facility.name);
+            
+            return (
+              <div
+                key={facility.name}
+                className={cn(
+                  "p-4 border rounded-xl transition-all",
+                  isSelected && "border-2"
+                )}
+                style={{
+                  borderColor: isSelected ? primaryColor : undefined,
+                }}
+              >
+                <div 
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => toggleFacility(facility)}
+                >
+                  <div>
+                    <p className="font-medium">{facility.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      KES {facility.price.toLocaleString()} per night
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-full border-2 flex items-center justify-center",
+                      isSelected ? "border-none" : "border-muted-foreground"
+                    )}
+                    style={{
+                      backgroundColor: isSelected ? primaryColor : undefined,
+                    }}
+                  >
+                    {isSelected && <Check className="h-4 w-4 text-white" />}
+                  </div>
+                </div>
+                
+                {isSelected && (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Check-in Date</Label>
+                      <Input
+                        type="date"
+                        value={selected?.startDate || ""}
+                        min={format(new Date(), "yyyy-MM-dd")}
+                        onChange={(e) =>
+                          updateFacilityDates(
+                            facility.name,
+                            e.target.value,
+                            selected?.endDate
+                          )
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Check-out Date</Label>
+                      <Input
+                        type="date"
+                        value={selected?.endDate || ""}
+                        min={selected?.startDate || format(new Date(), "yyyy-MM-dd")}
+                        onChange={(e) =>
+                          updateFacilityDates(
+                            facility.name,
+                            selected?.startDate,
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                    {selected?.startDate && selected?.endDate && (
+                      <div className="col-span-2 text-sm font-medium" style={{ color: primaryColor }}>
+                        {Math.max(1, Math.ceil((new Date(selected.endDate).getTime() - new Date(selected.startDate).getTime()) / (1000 * 60 * 60 * 24)))} nights - 
+                        KES {(facility.price * Math.max(1, Math.ceil((new Date(selected.endDate).getTime() - new Date(selected.startDate).getTime()) / (1000 * 60 * 60 * 24)))).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Facility-only mode: Activities step */}
+      {currentStepId === "activities" && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Would you like to add any activities to your booking? (Optional)
+          </p>
+          
+          {activities.map((activity) => {
+            const isSelected = selectedActivities.some(a => a.name === activity.name);
+            const selected = selectedActivities.find(a => a.name === activity.name);
+            
+            return (
+              <div
+                key={activity.name}
+                className={cn(
+                  "p-4 border rounded-xl cursor-pointer transition-all",
+                  isSelected && "border-2"
+                )}
+                style={{
+                  borderColor: isSelected ? accentColor : undefined,
+                }}
+                onClick={() => toggleActivity(activity)}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">{activity.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      KES {activity.price.toLocaleString()} per person
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <div
+                      className="flex items-center gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          updateActivityPeople(
+                            activity.name,
+                            (selected?.numberOfPeople || 1) - 1
+                          )
+                        }
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-6 text-center">
+                        {selected?.numberOfPeople || 1}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          updateActivityPeople(
+                            activity.name,
+                            (selected?.numberOfPeople || 1) + 1
+                          )
+                        }
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Date Selection Step */}
+      {currentStepId === "date" && (
+        <div className="space-y-4">
+          <Label>When would you like to visit?</Label>
            <Popover>
              <PopoverTrigger asChild>
                <Button
@@ -565,51 +786,60 @@
        {currentStepId === "review" && (
          <div className="space-y-4">
            <div className="p-4 bg-muted rounded-xl space-y-2">
-             <div className="flex justify-between">
-               <span>Date</span>
-               <span className="font-medium">
-                 {visitDate ? format(visitDate, "PPP") : fixedDate || "Flexible"}
-               </span>
-             </div>
-             <div className="flex justify-between">
-               <span>Adults × {numAdults}</span>
-               <span>KES {(numAdults * priceAdult).toLocaleString()}</span>
-             </div>
-             {numChildren > 0 && (
+            {!isFacilityOnlyMode && (
+              <>
+                <div className="flex justify-between">
+                  <span>Date</span>
+                  <span className="font-medium">
+                    {visitDate ? format(visitDate, "PPP") : fixedDate || "Flexible"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Adults × {numAdults}</span>
+                  <span>KES {(numAdults * priceAdult).toLocaleString()}</span>
+                </div>
+                {numChildren > 0 && (
+                  <div className="flex justify-between">
+                    <span>Children × {numChildren}</span>
+                    <span>KES {(numChildren * priceChild).toLocaleString()}</span>
+                  </div>
+                )}
+              </>
+            )}
+            {selectedFacilities.map((f) => {
+              const days =
+                f.startDate && f.endDate
+                  ? Math.max(
+                      1,
+                      Math.ceil(
+                        (new Date(f.endDate).getTime() -
+                          new Date(f.startDate).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )
+                    )
+                  : 1;
+              return (
+                <div key={f.name} className="flex justify-between">
+                  <span>
+                    {f.name} ({days} nights)
+                    {f.startDate && f.endDate && (
+                      <span className="text-xs text-muted-foreground block">
+                        {format(new Date(f.startDate), "MMM d")} - {format(new Date(f.endDate), "MMM d")}
+                      </span>
+                    )}
+                  </span>
+                  <span>KES {(f.price * days).toLocaleString()}</span>
+                </div>
+              );
+            })}
+            {selectedActivities.map((a) => (
                <div className="flex justify-between">
-                 <span>Children × {numChildren}</span>
-                 <span>KES {(numChildren * priceChild).toLocaleString()}</span>
+                <span>
+                  {a.name} × {a.numberOfPeople}
+                </span>
+                <span>KES {(a.price * a.numberOfPeople).toLocaleString()}</span>
                </div>
-             )}
-             {selectedActivities.map((a) => (
-               <div key={a.name} className="flex justify-between">
-                 <span>
-                   {a.name} × {a.numberOfPeople}
-                 </span>
-                 <span>KES {(a.price * a.numberOfPeople).toLocaleString()}</span>
-               </div>
-             ))}
-             {selectedFacilities.map((f) => {
-               const days =
-                 f.startDate && f.endDate
-                   ? Math.max(
-                       1,
-                       Math.ceil(
-                         (new Date(f.endDate).getTime() -
-                           new Date(f.startDate).getTime()) /
-                           (1000 * 60 * 60 * 24)
-                       )
-                     )
-                   : 1;
-               return (
-                 <div key={f.name} className="flex justify-between">
-                   <span>
-                     {f.name} ({days} days)
-                   </span>
-                   <span>KES {(f.price * days).toLocaleString()}</span>
-                 </div>
-               );
-             })}
+            ))}
              <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
                <span>Total</span>
                <span style={{ color: primaryColor }}>

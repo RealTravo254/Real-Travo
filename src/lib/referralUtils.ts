@@ -118,6 +118,8 @@ export const trackReferralClick = async (
   referralType: "booking" | "host" = "booking"
 ) => {
   try {
+    console.log('[ReferralUtils] trackReferralClick called with:', { refSlug, itemId, itemType, referralType });
+    
     const { data: { user } } = await supabase.auth.getUser();
     
     // Look up referrer by slugified email name
@@ -145,9 +147,18 @@ export const trackReferralClick = async (
       console.log("No valid referrer found for slug:", refSlug);
       return null;
     }
+
+    console.log('[ReferralUtils] Found referrer:', referrerProfile.id);
     
     // Don't track if the referrer is clicking their own link
     if (user?.id === referrerProfile.id) {
+      console.log('[ReferralUtils] Skipping - user is clicking their own link');
+      return null;
+    }
+
+    // Check if item_id is provided
+    if (!itemId) {
+      console.log('[ReferralUtils] Skipping - no item_id provided');
       return null;
     }
 
@@ -164,12 +175,16 @@ export const trackReferralClick = async (
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[ReferralUtils] Error inserting tracking:', error);
+      throw error;
+    }
     
     // Store tracking ID and internal digit ID in session storage
     if (data) {
       sessionStorage.setItem("referral_tracking_id", data.id);
       sessionStorage.setItem("referral_internal_id", referrerProfile.internal_referral_id_digits);
+      console.log('[ReferralUtils] Stored tracking ID in session:', data.id);
     }
     
     return data;
@@ -180,7 +195,9 @@ export const trackReferralClick = async (
 };
 
 export const getReferralTrackingId = (): string | null => {
-  return sessionStorage.getItem("referral_tracking_id");
+  const trackingId = sessionStorage.getItem("referral_tracking_id");
+  console.log('[ReferralUtils] getReferralTrackingId:', trackingId);
+  return trackingId;
 };
 
 export const clearReferralTracking = () => {
