@@ -29,6 +29,11 @@ export const useBookingSubmit = () => {
   const { user } = useAuth();
 
   const submitBooking = async (data: BookingData) => {
+    // Get referral tracking ID from session storage
+    const referralTrackingId = getReferralTrackingId();
+    
+    console.log('[BookingSubmit] Referral tracking ID:', referralTrackingId);
+    
     // 1. Insert booking into bookings table
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
@@ -45,7 +50,7 @@ export const useBookingSubmit = () => {
         guest_phone: data.guestPhone || null, // Handle empty string as null
         slots_booked: data.slotsBooked,
         visit_date: data.visitDate,
-        referral_tracking_id: getReferralTrackingId(),
+        referral_tracking_id: referralTrackingId,
         booking_details: data.bookingDetails,
         payment_phone: data.guestPhone || null, // Handle empty string as null
       }])
@@ -53,6 +58,8 @@ export const useBookingSubmit = () => {
       .single();
 
     if (bookingError) throw bookingError;
+
+    console.log('[BookingSubmit] Booking created:', booking.id, 'with referral:', booking.referral_tracking_id);
 
     // 2. Create notification for user (if logged in)
     if (user?.id) {

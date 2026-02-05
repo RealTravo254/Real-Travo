@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MultiStepBooking, BookingFormData } from "@/components/booking/MultiStepBooking";
@@ -23,6 +23,7 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [searchParams] = useSearchParams();
   
   const { submitBooking } = useBookingSubmit();
 
@@ -89,12 +90,16 @@ const BookingPage = () => {
     try {
       let totalAmount = 0;
       const bookingType = getBookingType();
+      const isFacilityOnly = searchParams.get("skipToFacility") === "true";
       
       if (type === "trip" || type === "event") {
         totalAmount = (formData.num_adults * item.price) + (formData.num_children * (item.price_child || 0));
       } else if (type === "adventure_place" || type === "adventure") {
-        const entryFee = item.entry_fee || 0;
-        totalAmount = (formData.num_adults + formData.num_children) * entryFee;
+        // In facility-only mode, don't charge entry fee
+        if (!isFacilityOnly) {
+          const entryFee = item.entry_fee || 0;
+          totalAmount = (formData.num_adults + formData.num_children) * entryFee;
+        }
         formData.selectedActivities?.forEach(a => totalAmount += a.price * a.numberOfPeople);
         formData.selectedFacilities?.forEach(f => {
           if (f.startDate && f.endDate) {
@@ -103,6 +108,7 @@ const BookingPage = () => {
           }
         });
       } else if (type === "hotel") {
+        // Hotels are always facility-based (rooms)
         formData.selectedActivities?.forEach(a => totalAmount += a.price * a.numberOfPeople);
         formData.selectedFacilities?.forEach(f => {
           if (f.startDate && f.endDate) {
@@ -111,19 +117,34 @@ const BookingPage = () => {
           }
         });
       }
+
+      // Calculate slots booked - for facility-only mode, use facility count
+      const slotsBooked = isFacilityOnly 
+        ? formData.selectedFacilities?.length || 1
+        : formData.num_adults + formData.num_children;
+
+      // Get visit date - for facility bookings, use the first facility's start date
+      let visitDate = formData.visit_date || item.date;
+      if (isFacilityOnly && formData.selectedFacilities?.length && formData.selectedFacilities[0].startDate) {
+        visitDate = formData.selectedFacilities[0].startDate;
+      }
       
       await submitBooking({
         itemId: item.id,
         itemName: item.name,
         bookingType,
         totalAmount,
-        slotsBooked: formData.num_adults + formData.num_children,
-        visitDate: formData.visit_date || item.date,
+        slotsBooked,
+        visitDate,
         guestName: formData.guest_name,
         guestEmail: formData.guest_email,
         guestPhone: formData.guest_phone,
         hostId: item.created_by,
-        bookingDetails: { ...formData, item_name: item.name }
+        bookingDetails: { 
+          ...formData, 
+          item_name: item.name,
+          is_facility_only: isFacilityOnly 
+        }
       });
       
       setIsCompleted(true);
