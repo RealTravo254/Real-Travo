@@ -213,8 +213,9 @@ export const calculateAndAwardCommission = async (
     if (settingsError || !settings) return;
 
     // Determine service fee and commission rate based on item type
-    let serviceFeeRate = 20.0; // default fallback
-    let commissionRate = 5.0; // default fallback
+    // Both are calculated from the total booking amount
+    let serviceFeeRate = 20.0; // default fallback percentage
+    let commissionRate = 5.0; // default fallback percentage
     
     if (tracking.item_type === 'trip') {
       serviceFeeRate = Number(settings.trip_service_fee);
@@ -225,21 +226,19 @@ export const calculateAndAwardCommission = async (
     } else if (tracking.item_type === 'hotel') {
       serviceFeeRate = Number(settings.hotel_service_fee);
       commissionRate = Number(settings.hotel_commission_rate);
-    } else if (tracking.item_type === 'attraction') {
-      serviceFeeRate = Number(settings.attraction_service_fee);
-      commissionRate = Number(settings.attraction_commission_rate);
     } else if (tracking.item_type === 'adventure' || tracking.item_type === 'adventure_place') {
+      // Campsites (adventure_places)
       serviceFeeRate = Number(settings.adventure_place_service_fee);
       commissionRate = Number(settings.adventure_place_commission_rate);
     }
     
     const commissionType = "booking";
 
-    // Calculate service fee from gross booking amount
+    // Calculate service fee from total booking amount
     const serviceFeeAmount = (bookingAmount * serviceFeeRate) / 100;
     
-    // Calculate commission from service fee using category-specific commission rate
-    const commissionAmount = (serviceFeeAmount * commissionRate) / 100;
+    // Calculate commission from total booking amount (not from service fee)
+    const commissionAmount = (bookingAmount * commissionRate) / 100;
 
     // Create commission record
     const { error: commissionError } = await supabase

@@ -179,24 +179,25 @@ serve(async (req) => {
       );
     }
 
-    // Manual withdrawal request
+    // Manual withdrawal request with M-Pesa or Bank
     if (action === 'withdraw') {
-      const { user_id, amount, payout_type } = body;
+      const { user_id, amount, payout_type, payment_method, mpesa_number, bank_code, account_number, account_name } = body;
 
       if (!user_id || !amount) {
         throw new Error("user_id and amount are required");
       }
 
-      // Get user's bank details
-      const { data: bankDetails, error: bankError } = await supabase
-        .from('bank_details')
-        .select('*')
-        .eq('user_id', user_id)
-        .eq('verification_status', 'verified')
-        .single();
+      if (!payment_method || !['mpesa', 'bank'].includes(payment_method)) {
+        throw new Error("payment_method must be 'mpesa' or 'bank'");
+      }
 
-      if (bankError || !bankDetails) {
-        throw new Error("No verified bank details found. Please add and verify your bank details first.");
+      // Validate payment details based on method
+      if (payment_method === 'mpesa' && !mpesa_number) {
+        throw new Error("M-Pesa phone number is required");
+      }
+
+      if (payment_method === 'bank' && (!bank_code || !account_number || !account_name)) {
+        throw new Error("Bank code, account number, and account name are required");
       }
 
       // Check available balance based on payout type
@@ -222,7 +223,6 @@ serve(async (req) => {
 
         // Filter bookings where user is the host
         for (const booking of bookings || []) {
-          // Check if user owns this item
           const { data: trips } = await supabase.from('trips').select('id').eq('id', booking.item_id).eq('created_by', user_id);
           const { data: hotels } = await supabase.from('hotels').select('id').eq('id', booking.item_id).eq('created_by', user_id);
           const { data: adventures } = await supabase.from('adventure_places').select('id').eq('id', booking.item_id).eq('created_by', user_id);
@@ -237,6 +237,11 @@ serve(async (req) => {
         throw new Error(`Insufficient balance. Available: KES ${availableBalance.toFixed(2)}`);
       }
 
+      // Determine account details based on payment method
+      const payoutAccountNumber = payment_method === 'mpesa' ? mpesa_number : account_number;
+      const payoutAccountName = payment_method === 'mpesa' ? 'M-Pesa Withdrawal' : account_name;
+      const payoutBankCode = payment_method === 'mpesa' ? '063' : getBankCode(bank_code);
+
       // Create payout record
       const { data: payout, error: payoutError } = await supabase
         .from('payouts')
@@ -245,9 +250,9 @@ serve(async (req) => {
           recipient_type: payout_type,
           amount: amount,
           status: 'pending',
-          bank_code: bankDetails.bank_name,
-          account_number: bankDetails.account_number,
-          account_name: bankDetails.account_holder_name,
+          bank_code: payment_method === 'mpesa' ? 'mpesa' : bank_code,
+          account_number: payoutAccountNumber,
+          account_name: payoutAccountName,
           scheduled_for: new Date().toISOString(),
         })
         .select()
@@ -257,7 +262,7 @@ serve(async (req) => {
         throw new Error(`Error creating payout: ${payoutError.message}`);
       }
 
-      // Process the withdrawal immediately
+      // Process the withdrawal immediately via Paystack
       try {
         // Create transfer recipient
         const recipientResponse = await fetch("https://api.paystack.co/transferrecipient", {
@@ -268,9 +273,9 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             type: "mobile_money",
-            name: bankDetails.account_holder_name,
-            account_number: bankDetails.account_number,
-            bank_code: getBankCode(bankDetails.bank_name),
+            name: payoutAccountName,
+            account_number: payoutAccountNumber,
+            bank_code: payoutBankCode,
             currency: "KES",
           }),
         });
@@ -292,7 +297,7 @@ serve(async (req) => {
             source: "balance",
             amount: Math.round(amount * 100),
             recipient: recipientData.data.recipient_code,
-            reason: `${payout_type} withdrawal`,
+            reason: `${payout_type} withdrawal via ${payment_method}`,
             reference: `WITHDRAW_${payout.id}_${Date.now()}`,
           }),
         });
@@ -332,6 +337,7 @@ serve(async (req) => {
             success: true, 
             message: 'Withdrawal initiated successfully',
             reference: transferData.data.reference,
+            method: payment_method,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

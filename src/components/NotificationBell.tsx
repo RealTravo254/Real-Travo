@@ -75,6 +75,9 @@ export const NotificationBell = () => {
     switch (type) {
       case 'host_verification': return '/verification-status';
       case 'payment_verification': return '/account';
+      case 'withdrawal_success':
+      case 'withdrawal_failed':
+        return '/my-referrals';
       case 'new_booking':
         if (data?.item_id && data?.booking_type) return `/host-bookings/${data.booking_type}/${data.item_id}`;
         return '/host-bookings';
