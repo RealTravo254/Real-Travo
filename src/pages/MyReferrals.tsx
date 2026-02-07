@@ -6,11 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Users, DollarSign, Wallet, TrendingUp, Award, Percent, ShieldX, ShieldCheck, Clock, Loader2, BanknoteIcon, AlertCircle } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Wallet, TrendingUp, Award, Percent, ShieldX, ShieldCheck, Clock } from "lucide-react";
 import { useHostVerificationStatus } from "@/hooks/useHostVerificationStatus";
-import { toast } from "sonner";
+import { WithdrawalDialog } from "@/components/referral/WithdrawalDialog";
 
 const COLORS = {
   TEAL: "#008080",
@@ -27,10 +25,7 @@ export default function MyReferrals() {
   const { user } = useAuth();
   const { isVerifiedHost, status: verificationStatus, loading: verificationLoading } = useHostVerificationStatus();
   const [loading, setLoading] = useState(true);
-  const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [hasBankDetails, setHasBankDetails] = useState(false);
   const [stats, setStats] = useState({
     totalReferred: 0,
     totalBookings: 0,
@@ -58,18 +53,15 @@ export default function MyReferrals() {
     const fetchStats = async () => {
       try {
         // Fetch all data in parallel
-        const [referralsRes, commissionsRes, settingsRes, bankRes] = await Promise.all([
+        const [referralsRes, commissionsRes, settingsRes] = await Promise.all([
           supabase.from("referral_tracking").select("referred_user_id").eq("referrer_id", user.id),
           supabase.from("referral_commissions").select("commission_type,commission_amount,booking_amount,status,withdrawn_at").eq("referrer_id", user.id),
           supabase.from("referral_settings").select("platform_referral_commission_rate").single(),
-          supabase.from("bank_details").select("id").eq("user_id", user.id).eq("verification_status", "verified").maybeSingle()
         ]);
 
         const referrals = referralsRes.data || [];
         const commissions = commissionsRes.data || [];
         const settings = settingsRes.data;
-
-        setHasBankDetails(!!bankRes.data);
 
         const uniqueReferred = new Set(referrals.map((r) => r.referred_user_id).filter(Boolean));
 
@@ -119,54 +111,21 @@ export default function MyReferrals() {
     }
   }, [user, navigate, isVerifiedHost, verificationLoading]);
 
-  const handleWithdraw = async () => {
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    if (amount > stats.withdrawableBalance) {
-      toast.error(`Maximum withdrawable amount is KES ${stats.withdrawableBalance.toLocaleString()}`);
-      return;
-    }
-
-    if (!hasBankDetails) {
-      toast.error("Please add and verify your bank details first");
-      navigate("/account");
-      return;
-    }
-
-    setWithdrawing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('process-payouts', {
-        body: {
-          action: 'withdraw',
-          user_id: user?.id,
-          amount: amount,
-          payout_type: 'commission',
-        },
-      });
-
-      if (error || !data?.success) {
-        throw new Error(data?.error || error?.message || 'Withdrawal failed');
-      }
-
-      toast.success("Withdrawal initiated! Funds will be sent to your bank account.");
-      setShowWithdrawDialog(false);
-      setWithdrawAmount("");
-      
-      // Refresh stats
-      setStats(prev => ({
-        ...prev,
-        withdrawableBalance: prev.withdrawableBalance - amount,
-      }));
-
-    } catch (error: any) {
-      console.error("Withdrawal error:", error);
-      toast.error(error.message || "Failed to process withdrawal");
-    } finally {
-      setWithdrawing(false);
+  const handleWithdrawalSuccess = () => {
+    // Refresh the stats
+    if (user) {
+      setLoading(true);
+      // Re-fetch stats
+      supabase.from("referral_commissions")
+        .select("commission_type,commission_amount,booking_amount,status,withdrawn_at")
+        .eq("referrer_id", user.id)
+        .then(({ data: commissions }) => {
+          const withdrawableBalance = (commissions || [])
+            .filter(c => c.status === 'paid' && !c.withdrawn_at)
+            .reduce((sum, c) => sum + Number(c.commission_amount), 0);
+          setStats(prev => ({ ...prev, withdrawableBalance }));
+          setLoading(false);
+        });
     }
   };
 
@@ -297,33 +256,16 @@ export default function MyReferrals() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              {!hasBankDetails && (
-                <Button
-                  onClick={() => navigate("/account")}
-                  variant="outline"
-                  className="rounded-2xl px-6 py-6 h-auto font-black uppercase tracking-widest text-xs border-2"
-                >
-                  <BanknoteIcon className="h-4 w-4 mr-2" />
-                  Add Bank Details
-                </Button>
-              )}
               <Button
                 onClick={() => setShowWithdrawDialog(true)}
-                disabled={stats.withdrawableBalance <= 0 || !hasBankDetails}
+                disabled={stats.withdrawableBalance <= 0}
                 className="rounded-2xl px-8 py-6 h-auto font-black uppercase tracking-widest text-xs"
-                style={{ backgroundColor: stats.withdrawableBalance > 0 && hasBankDetails ? COLORS.TEAL : '#94a3b8' }}
+                style={{ backgroundColor: stats.withdrawableBalance > 0 ? COLORS.TEAL : '#94a3b8' }}
               >
                 Withdraw Funds
               </Button>
             </div>
           </div>
-          
-          {!hasBankDetails && (
-            <div className="mt-4 flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-xl">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <p className="text-xs font-medium">Add and verify your bank details to enable withdrawals</p>
-            </div>
-          )}
         </div>
 
         {/* Stats Cards Grid */}
@@ -377,65 +319,14 @@ export default function MyReferrals() {
         </div>
       </main>
 
-      {/* Withdraw Dialog */}
-      <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
-        <DialogContent className="sm:max-w-md rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black uppercase tracking-tight">Withdraw Funds</DialogTitle>
-            <DialogDescription>
-              Enter the amount you want to withdraw. Funds will be sent to your verified bank account.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="bg-slate-50 rounded-2xl p-4">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Available Balance</p>
-              <p className="text-2xl font-black" style={{ color: COLORS.RED }}>
-                KES {stats.withdrawableBalance.toLocaleString()}
-              </p>
-            </div>
-            
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">
-                Withdrawal Amount (KES)
-              </label>
-              <Input
-                type="number"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                placeholder="Enter amount"
-                className="rounded-xl h-12"
-                max={stats.withdrawableBalance}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowWithdrawDialog(false)}
-              className="rounded-xl"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleWithdraw}
-              disabled={withdrawing || !withdrawAmount}
-              className="rounded-xl"
-              style={{ backgroundColor: COLORS.TEAL }}
-            >
-              {withdrawing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                'Confirm Withdrawal'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Withdrawal Dialog */}
+      <WithdrawalDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+        availableBalance={stats.withdrawableBalance}
+        userId={user?.id || ""}
+        onSuccess={handleWithdrawalSuccess}
+      />
 
       <MobileBottomBar />
     </div>
