@@ -588,7 +588,6 @@ const StatCard = ({ icon, label, value, subLabel, color, isCash = false }: any) 
     </div>
   </div>
 );
-
 const DetailRow = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) => (
   <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
     <div className="flex items-center gap-3">
