@@ -49,7 +49,6 @@ const HostVerification = lazy(() => import("./pages/HostVerification"));
 const VerificationStatus = lazy(() => import("./pages/VerificationStatus"));
 
 const Payment = lazy(() => import("./pages/Payment"));
-const MyReferrals = lazy(() => import("./pages/MyReferrals"));
 const PendingApprovalItems = lazy(() => import("./pages/admin/PendingApprovalItems"));
 const ApprovedItems = lazy(() => import("./pages/admin/ApprovedItems"));
 const RejectedItems = lazy(() => import("./pages/admin/RejectedItems"));
