@@ -28,7 +28,7 @@ const COLORS = {
   SOFT_GRAY: "#F8F9FA"
 };
 
-const TOTAL_STEPS = 9; // Increased to separate amenities, facilities, and activities
+const TOTAL_STEPS = 9;
 const TOTAL_STEPS_ACCOMMODATION = 9;
 
 const CreateHotel = () => {
@@ -65,7 +65,7 @@ const CreateHotel = () => {
     Mon: false, Tue: false, Wed: false, Thu: false, Fri: false, Sat: false, Sun: false
   });
 
-  const [amenities, setAmenities] = useState<DynamicItem[]>([]);
+  const [amenities, setAmenities] = useState<DynamicItemWithImages[]>([]);
   const [facilities, setFacilities] = useState<DynamicItemWithImages[]>([]);
   const [activities, setActivities] = useState<DynamicItemWithImages[]>([]);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
@@ -123,7 +123,30 @@ const CreateHotel = () => {
       if (!hasDays) newErrors.workingDays = true;
     }
 
-    // Step 4: Amenities - optional, no validation needed
+    if (step === 4) {
+      // Amenities validation: if any field is filled, all required fields must be filled
+      const invalidAmenity = amenities.some(a => {
+        const hasName = a.name.trim() !== "";
+        const hasPrice = a.priceType === 'free' || (a.price && parseFloat(a.price.toString()) > 0);
+        const hasImages = a.tempImages && a.tempImages.length > 0;
+        const hasBookingLink = !isAccommodationOnly || (a.bookingLink && a.bookingLink.trim() !== "");
+        
+        // If name is filled, price, images, and (for accommodation) booking link must be filled
+        if (hasName) {
+          return !hasPrice || !hasImages || !hasBookingLink;
+        }
+        return false;
+      });
+
+      if (invalidAmenity) {
+        toast({ 
+          title: "Incomplete Amenity", 
+          description: `Each amenity must have: name, price, photos${isAccommodationOnly ? ', and booking link' : ''}.`, 
+          variant: "destructive" 
+        });
+        return false;
+      }
+    }
 
     if (step === 5) {
       // Facilities validation: if any field is filled, all required fields must be filled
@@ -157,10 +180,11 @@ const CreateHotel = () => {
         const hasName = a.name.trim() !== "";
         const hasPrice = a.priceType === 'free' || (a.price && parseFloat(a.price.toString()) > 0);
         const hasImages = a.tempImages && a.tempImages.length > 0;
+        const hasBookingLink = !isAccommodationOnly || (a.bookingLink && a.bookingLink.trim() !== "");
         
-        // If name is filled, price and images must be filled
+        // If name is filled, price, images, and (for accommodation) booking link must be filled
         if (hasName) {
-          return !hasPrice || !hasImages;
+          return !hasPrice || !hasImages || !hasBookingLink;
         }
         return false;
       });
@@ -168,7 +192,7 @@ const CreateHotel = () => {
       if (invalidActivity) {
         toast({ 
           title: "Incomplete Activity", 
-          description: "Each activity must have: name, price, and at least one photo.", 
+          description: `Each activity must have: name, price, photos${isAccommodationOnly ? ', and booking link' : ''}.`, 
           variant: "destructive" 
         });
         return false;
@@ -261,6 +285,7 @@ const CreateHotel = () => {
         .filter(([_, isSelected]) => isSelected)
         .map(([day]) => day);
 
+      const uploadedAmenities = await uploadItemImages(amenities, user.id);
       const uploadedFacilities = await uploadItemImages(facilities, user.id);
       const uploadedActivities = await uploadItemImages(activities, user.id);
 
@@ -279,7 +304,7 @@ const CreateHotel = () => {
         opening_hours: formData.openingHours,
         closing_hours: formData.closingHours,
         days_opened: selectedDays,
-        amenities: amenities.filter(a => a.name.trim() !== "").map(a => a.name),
+        amenities: formatItemsWithImagesForDB(uploadedAmenities),
         facilities: formatItemsWithImagesForDB(uploadedFacilities),
         activities: formatItemsWithImagesForDB(uploadedActivities),
         image_url: imageUrls[0] || '',
@@ -493,14 +518,24 @@ const CreateHotel = () => {
         {currentStep === 4 && (
           <Card className="bg-white rounded-[28px] p-8 shadow-sm border-none">
             <h2 className="text-xl font-black uppercase tracking-tight mb-6 flex items-center gap-2" style={{ color: COLORS.TEAL }}>
-              <CheckCircle2 className="h-5 w-5" /> Amenities (Optional)
+              <CheckCircle2 className="h-5 w-5" /> Amenities
             </h2>
-            <DynamicItemList 
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
+              <p className="text-[10px] font-bold text-orange-500 uppercase mb-2">
+                ⚠️ REQUIRED: Name, Price, and Photos must be filled for each amenity.
+                {isAccommodationOnly && " Booking link is also required."}
+              </p>
+            </div>
+            <DynamicItemListWithImages 
               items={amenities} 
               onChange={setAmenities} 
-              label="Add amenities like WiFi, Parking, Pool, etc." 
-              showPrice={false} 
-              accentColor={COLORS.TEAL} 
+              label="WiFi, Parking, Pool, Gym, etc." 
+              accentColor={COLORS.TEAL}
+              maxImages={5}
+              userId={user?.id}
+              showPrice={true}
+              showBookingLink={isAccommodationOnly}
+              defaultPriceType="paid"
             />
           </Card>
         )}
@@ -532,7 +567,7 @@ const CreateHotel = () => {
         )}
 
         {/* Step 6: Activities (Separate) */}
-        {currentStep === 6 && !isAccommodationOnly && (
+        {currentStep === 6 && (
           <Card className="bg-white rounded-[28px] p-8 shadow-sm border-none">
             <h2 className="text-xl font-black uppercase tracking-tight mb-6 flex items-center gap-2" style={{ color: "#6366f1" }}>
               <Camera className="h-5 w-5" /> Activities & Experiences
@@ -540,6 +575,7 @@ const CreateHotel = () => {
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
               <p className="text-[10px] font-bold text-orange-500 uppercase mb-2">
                 ⚠️ REQUIRED: Name, Price, and Photos must be filled for each activity.
+                {isAccommodationOnly && " Booking link is also required."}
               </p>
             </div>
             <DynamicItemListWithImages 
@@ -550,6 +586,7 @@ const CreateHotel = () => {
               maxImages={5}
               userId={user?.id}
               showPrice={true}
+              showBookingLink={isAccommodationOnly}
               defaultPriceType="paid"
             />
           </Card>
@@ -684,7 +721,13 @@ const CreateHotel = () => {
               openingHours: formData.openingHours,
               closingHours: formData.closingHours,
               workingDays: Object.entries(workingDays).filter(([_, v]) => v).map(([d]) => d),
-              amenities: amenities.filter(a => a.name.trim()).map(a => a.name),
+              amenities: amenities.filter(a => a.name.trim()).map(a => ({ 
+                name: a.name, 
+                price: typeof a.price === 'string' ? parseFloat(a.price) || 0 : (a.price || 0),
+                is_free: a.priceType === 'free',
+                images: a.tempImages ? a.tempImages.map(img => URL.createObjectURL(img)) : (a.images || []),
+                bookingLink: a.bookingLink || null
+              })),
               facilities: facilities.filter(f => f.name.trim()).map(f => ({ 
                 name: f.name, 
                 price: typeof f.price === 'string' ? parseFloat(f.price) || 0 : (f.price || 0),
@@ -697,7 +740,8 @@ const CreateHotel = () => {
                 name: a.name, 
                 price: typeof a.price === 'string' ? parseFloat(a.price) || 0 : (a.price || 0),
                 is_free: a.priceType === 'free',
-                images: a.tempImages ? a.tempImages.map(img => URL.createObjectURL(img)) : (a.images || [])
+                images: a.tempImages ? a.tempImages.map(img => URL.createObjectURL(img)) : (a.images || []),
+                bookingLink: a.bookingLink || null
               })),
               imageCount: galleryImages.length,
               ...(isAccommodationOnly && {
