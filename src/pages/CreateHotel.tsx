@@ -124,11 +124,45 @@ const CreateHotel = () => {
     }
 
     if (step === 4) {
-      // Facilities check: If name exists, capacity is mandatory
-      const invalidFacility = facilities.some(f => f.name.trim() !== "" && (!f.capacity || parseInt(f.capacity) <= 0));
-      if (invalidFacility) {
-        toast({ title: "Capacity Required", description: "Please provide capacity for all added facilities.", variant: "destructive" });
-        return false; 
+      // UPDATED: Validate that all filled facilities are complete
+      const incompleteFacilities = facilities.filter(f => {
+        const hasName = f.name.trim() !== "";
+        if (!hasName) return false; // Skip empty items
+        
+        // If name exists, check all required fields
+        const hasCapacity = f.capacity && parseInt(f.capacity) > 0;
+        const hasValidPrice = f.priceType === 'free' || (f.price && parseFloat(f.price as string) > 0);
+        
+        return !hasCapacity || !hasValidPrice;
+      });
+
+      if (incompleteFacilities.length > 0) {
+        toast({ 
+          title: "Incomplete Facilities", 
+          description: "Please fill capacity and price for all facilities with names.", 
+          variant: "destructive" 
+        });
+        return false;
+      }
+
+      // UPDATED: Validate that all filled activities are complete
+      const incompleteActivities = activities.filter(a => {
+        const hasName = a.name.trim() !== "";
+        if (!hasName) return false; // Skip empty items
+        
+        // If name exists, check required fields
+        const hasValidPrice = a.priceType === 'free' || (a.price && parseFloat(a.price as string) > 0);
+        
+        return !hasValidPrice;
+      });
+
+      if (incompleteActivities.length > 0) {
+        toast({ 
+          title: "Incomplete Activities", 
+          description: "Please fill price for all activities with names.", 
+          variant: "destructive" 
+        });
+        return false;
       }
     }
 
@@ -466,7 +500,7 @@ const CreateHotel = () => {
 
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                 <p className="text-[10px] font-bold text-orange-500 uppercase mb-4 underline">
-                  Note: Capacity is required for every facility added. Add photos to showcase facilities.
+                  Note: For each facility, you must fill name, capacity, price/free status, and optionally add photos before moving to the next facility.
                   {isAccommodationOnly && " Each facility can have its own external booking link."}
                 </p>
                 <DynamicItemListWithImages 
@@ -482,14 +516,21 @@ const CreateHotel = () => {
               </div>
 
               {!isAccommodationOnly && (
-                <DynamicItemListWithImages 
-                  items={activities} 
-                  onChange={setActivities} 
-                  label="Activities (with photos)" 
-                  accentColor="#6366f1"
-                  maxImages={5}
-                  userId={user?.id}
-                />
+                <>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <p className="text-[10px] font-bold text-orange-500 uppercase mb-4 underline">
+                      Note: For each activity, you must fill name, price/free status, and optionally add photos before moving to the next activity.
+                    </p>
+                    <DynamicItemListWithImages 
+                      items={activities} 
+                      onChange={setActivities} 
+                      label="Activities (with photos)" 
+                      accentColor="#6366f1"
+                      maxImages={5}
+                      userId={user?.id}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </Card>
@@ -606,8 +647,6 @@ const CreateHotel = () => {
             </div>
           </Card>
         )}
-
-        {/* General Booking Link (Accommodation Only - shown in Description step) */}
 
         {/* Review & Submit (last step) */}
         {currentStep === totalSteps && (
