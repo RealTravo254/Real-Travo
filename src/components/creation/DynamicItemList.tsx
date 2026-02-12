@@ -41,13 +41,16 @@ export const DynamicItemList = ({
 
   const addItem = () => {
     if (!newItem.name.trim()) return;
+    // For items with price, validate price is filled when paid
+    if (showPrice && newItem.priceType === "paid" && (!newItem.price || parseFloat(newItem.price) <= 0)) return;
     onChange([...items, { ...newItem }]);
     setNewItem({ name: "", priceType: "free", price: "0", capacity: "" });
   };
 
-  // Auto-save: when user has typed a name and blurs the name field, auto-add
-  const handleNameBlur = () => {
+  // Auto-save: when user blurs any field and name is filled, auto-add
+  const handleAutoSave = () => {
     if (newItem.name.trim()) {
+      if (showPrice && newItem.priceType === "paid" && (!newItem.price || parseFloat(newItem.price) <= 0)) return;
       onChange([...items, { ...newItem }]);
       setNewItem({ name: "", priceType: "free", price: "0", capacity: "" });
     }
@@ -110,7 +113,7 @@ export const DynamicItemList = ({
           <Input
             value={newItem.name}
             onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-            onBlur={handleNameBlur}
+            onBlur={handleAutoSave}
             placeholder={placeholder}
             className="rounded-xl border-slate-100 bg-white h-11 font-bold text-sm"
           />

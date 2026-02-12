@@ -151,8 +151,14 @@ export const ReviewStep = ({ type, data, creatorName, creatorEmail, creatorPhone
       {/* Operating Hours for Hotel/Adventure */}
       {isHotelOrAdventure && (
         <Section title="Operating Hours" icon={Clock}>
-          <InfoRow label="Opening Hours" value={data.openingHours} />
-          <InfoRow label="Closing Hours" value={data.closingHours} />
+          {data.openingHours === "00:00" && data.closingHours === "23:59" ? (
+            <InfoRow label="Hours" value="Open 24 Hours" fullWidth />
+          ) : (
+            <>
+              <InfoRow label="Opening Hours" value={data.openingHours} />
+              <InfoRow label="Closing Hours" value={data.closingHours} />
+            </>
+          )}
           <InfoRow label="Operating Days" value={formatDays(data.workingDays)} fullWidth />
         </Section>
       )}
