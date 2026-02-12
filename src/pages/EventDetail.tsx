@@ -34,8 +34,8 @@ const COLORS = {
 const ReviewHeader = ({ event }: { event: any }) => (
   <div className="flex justify-between items-center mb-8">
     <div>
-      <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Guest Ratings</h2>
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified Community Feedback</p>
+      <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Ratings</h2>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Community Feedback</p>
     </div>
     {event.average_rating > 0 && (
       <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
@@ -195,7 +195,7 @@ const EventDetail = () => {
 
           <div className="absolute bottom-6 left-0 z-40 w-full px-4 pointer-events-none">
             <div className="relative z-10 space-y-2 pointer-events-auto bg-gradient-to-r from-black/70 via-black/50 to-transparent rounded-2xl p-4 max-w-xl">
-              <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 h-auto uppercase font-black tracking-[0.1em] text-[9px] rounded-full shadow-lg">Experience</Button>
+              <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 h-auto uppercase font-black tracking-[0.1em] text-[9px] rounded-full shadow-lg">Event</Button>
               <h1 className="text-2xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-2xl">{event.name}</h1>
               <div className="flex items-center gap-2 cursor-pointer group w-fit" onClick={openInMaps}>
                   <MapPin className="h-4 w-4 text-white" />
@@ -308,7 +308,7 @@ const EventDetail = () => {
           <div className="space-y-6">
             {/* About */}
             <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-              <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>About</h2>
+              <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>About this Event</h2>
               <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">{event.description}</p>
             </div>
 
@@ -319,7 +319,7 @@ const EventDetail = () => {
                   <div className="p-2 rounded-xl bg-teal-50"><Clock className="h-5 w-5 text-[#008080]" /></div>
                   <div>
                     <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Event Hours</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">When this event runs</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Hours</p>
                   </div>
                 </div>
                 <div className="space-y-4">

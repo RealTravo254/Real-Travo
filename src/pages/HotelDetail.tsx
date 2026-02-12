@@ -222,7 +222,7 @@ const HotelDetail = () => {
               <div className="flex flex-wrap gap-2 mb-2">
                    {isAccommodationOnly && (
                      <Badge className="bg-purple-500 text-white border-none px-2 py-0.5 text-[9px] font-black uppercase rounded-full flex items-center gap-1 shadow-lg">
-                       Accommodation Only
+                       Accommodation Faciities.
                      </Badge>
                    )}
                    {!isAccommodationOnly && (
@@ -287,18 +287,18 @@ const HotelDetail = () => {
                       <div className="flex flex-wrap gap-2">
                         {isAccommodationOnly && (
                           <Badge className="bg-purple-500 text-white border-none px-3 py-1 text-[10px] font-black uppercase rounded-full shadow-lg">
-                            Accommodation Only
+                            Accommodation Facilities.
                           </Badge>
                         )}
                         {!isAccommodationOnly && (
                           <Badge className="bg-amber-400 text-black border-none px-3 py-1 text-[10px] font-black uppercase rounded-full flex items-center gap-1.5 shadow-lg">
                             <Star className="h-3.5 w-3.5 fill-current" />
-                            {liveRating.avg > 0 ? liveRating.avg : "New"}
+                            {liveRating.avg > 0 ? liveRating.avg : ""}
                           </Badge>
                         )}
                         <Badge className={`${isOpenNow ? "bg-emerald-500" : "bg-red-500"} text-white border-none px-3 py-1 text-[10px] font-black uppercase rounded-full flex items-center gap-1.5`}>
                           <Circle className={`h-2.5 w-2.5 fill-current ${isOpenNow ? "animate-pulse" : ""}`} />
-                          {isOpenNow ? "open now" : "closed"}
+                          {isOpenNow ? "open now" : ""}
                         </Badge>
                       </div>
                       <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{hotel.name}</h1>
@@ -363,7 +363,7 @@ const HotelDetail = () => {
           <div className="space-y-4">
             {/* Description */}
             <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-              <h2 className="text-[11px] font-black uppercase tracking-widest mb-3 text-slate-400">Description</h2>
+              <h2 className="text-[11px] font-black uppercase tracking-widest mb-3 text-slate-400">About this property</h2>
               <p className="text-slate-500 text-sm leading-relaxed">{hotel.description}</p>
             </section>
 
@@ -406,7 +406,7 @@ const HotelDetail = () => {
             <div className="bg-white rounded-[32px] p-6 shadow-xl border border-slate-100 lg:hidden">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Entrance Fee</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Starting From/Fee</p>
                   {startingPrice > 0 ? (
                     <div className="space-y-1">
                       <div className="flex items-baseline gap-2">
@@ -506,7 +506,7 @@ const HotelDetail = () => {
           <div className="hidden lg:block">
             <div className="sticky top-24 bg-white rounded-[40px] p-8 shadow-2xl border border-slate-100 space-y-6">
                 <div className="text-center">
-                  <p className="text-xs font-black uppercase text-slate-400 mb-1">Entrance Fee</p>
+                  <p className="text-xs font-black uppercase text-slate-400 mb-1">Starting from/Fee</p>
                   {startingPrice > 0 ? (
                     <div className="space-y-1">
                       <h3 className="text-4xl font-black text-red-600">KSh {startingPrice.toLocaleString()}</h3>
