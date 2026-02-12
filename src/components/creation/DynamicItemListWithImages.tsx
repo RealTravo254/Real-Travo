@@ -97,8 +97,25 @@ export const DynamicItemListWithImages = ({
     }));
   };
 
+  const isItemValid = () => {
+    if (!newItem.name.trim()) return false;
+    // Name is required; if showCapacity, capacity must be filled; if paid, price must be filled
+    if (showCapacity && (!newItem.capacity || parseInt(newItem.capacity) <= 0)) return false;
+    if (showPrice && newItem.priceType === "paid" && (!newItem.price || parseFloat(newItem.price) <= 0)) return false;
+    return true;
+  };
+
   const addItem = () => {
-    if (!newItem.name.trim()) return;
+    if (!isItemValid()) {
+      if (newItem.name.trim()) {
+        toast({
+          title: "Incomplete Item",
+          description: `Please fill all required fields (name${showCapacity ? ', capacity' : ''}${showPrice && newItem.priceType === 'paid' ? ', price' : ''}) before adding.`,
+          variant: "destructive"
+        });
+      }
+      return;
+    }
     onChange([...items, { ...newItem }]);
     setNewItem({ 
       name: "", 
@@ -111,9 +128,9 @@ export const DynamicItemListWithImages = ({
     });
   };
 
-  // Auto-save: when user has typed a name and blurs the name field, auto-add
-  const handleNameBlur = () => {
-    if (newItem.name.trim()) {
+  // Auto-save: when user blurs any field, auto-add if all required fields are filled
+  const handleAutoSave = () => {
+    if (newItem.name.trim() && isItemValid()) {
       onChange([...items, { ...newItem }]);
       setNewItem({ 
         name: "", 
@@ -292,7 +309,7 @@ export const DynamicItemListWithImages = ({
           <Input
             value={newItem.name}
             onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-            onBlur={handleNameBlur}
+            onBlur={handleAutoSave}
             placeholder={placeholder}
             className="rounded-xl border-border bg-background h-11 font-bold text-sm"
           />
@@ -318,7 +335,8 @@ export const DynamicItemListWithImages = ({
               type="number"
               value={newItem.price}
               onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-              placeholder="Price (KSh)"
+              onBlur={handleAutoSave}
+              placeholder="Price (KSh) *"
               className="rounded-xl border-border bg-background h-11 font-bold text-sm"
             />
           )}
@@ -327,7 +345,8 @@ export const DynamicItemListWithImages = ({
               type="number"
               value={newItem.capacity}
               onChange={(e) => setNewItem({ ...newItem, capacity: e.target.value })}
-              placeholder="Capacity (optional)"
+              onBlur={handleAutoSave}
+              placeholder="Capacity *"
               className="rounded-xl border-border bg-background h-11 font-bold text-sm"
             />
           )}
@@ -380,7 +399,7 @@ export const DynamicItemListWithImages = ({
         <Button
           type="button"
           onClick={addItem}
-          disabled={!newItem.name.trim()}
+          disabled={!isItemValid()}
           className="w-full rounded-xl h-11 font-black uppercase text-[10px] tracking-widest text-white"
           style={{ backgroundColor: accentColor }}
         >

@@ -84,6 +84,16 @@ const HotelDetail = () => {
     const checkOpenStatus = () => {
       const now = new Date();
       const currentDay = now.toLocaleString('en-us', { weekday: 'long' }).toLowerCase();
+      
+      // Check if open 24 hours
+      if (hotel.opening_hours === "00:00" && hotel.closing_hours === "23:59") {
+        const days = Array.isArray(hotel.days_opened) 
+          ? hotel.days_opened.map((d: string) => d.toLowerCase()) 
+          : ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+        setIsOpenNow(days.includes(currentDay));
+        return;
+      }
+
       const currentTime = now.getHours() * 60 + now.getMinutes();
       
       const parseTime = (timeStr: string) => {
@@ -137,7 +147,14 @@ const HotelDetail = () => {
 
   if (!hotel) return null;
 
-  const allImages = [hotel.image_url, ...(hotel.gallery_images || [])].filter(Boolean);
+  // Collect all images: gallery + facility images + activity images
+  const facilityImages = (Array.isArray(hotel.facilities) ? hotel.facilities : [])
+    .flatMap((f: any) => (Array.isArray(f.images) ? f.images : []));
+  const activityImages = (Array.isArray(hotel.activities) ? hotel.activities : [])
+    .flatMap((a: any) => (Array.isArray(a.images) ? a.images : []));
+  const allImages = [hotel.image_url, ...(hotel.gallery_images || []), ...facilityImages, ...activityImages].filter(Boolean);
+
+  const is24Hours = hotel.opening_hours === "00:00" && hotel.closing_hours === "23:59";
 
   const OperatingHoursInfo = () => (
     <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
@@ -147,7 +164,7 @@ const HotelDetail = () => {
           <span className="text-[10px] font-black uppercase tracking-tight">Working Hours</span>
         </div>
         <span className={`text-[10px] font-black uppercase ${isOpenNow ? "text-emerald-600" : "text-red-500"}`}>
-          {hotel.opening_hours || "08:00 AM"} - {hotel.closing_hours || "11:00 PM"}
+          {is24Hours ? "Open 24 Hours" : `${hotel.opening_hours || "08:00 AM"} - ${hotel.closing_hours || "11:00 PM"}`}
         </span>
       </div>
       <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100">
