@@ -1086,4 +1086,4 @@ export const CreateHotelForm: React.FC = () => {
   );
 };
 
-export default CreateHotelForm;
+export default CreateHotel;
