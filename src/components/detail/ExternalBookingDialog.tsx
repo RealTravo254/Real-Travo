@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { ExternalLink, CalendarCheck2, AlertCircle } from "lucide-react";
 
 interface ExternalBookingDialogProps {
   open: boolean;
@@ -10,78 +16,99 @@ interface ExternalBookingDialogProps {
   title?: string;
 }
 
-export const ExternalBookingDialog = ({ open, onOpenChange, url, title = "Reserve" }: ExternalBookingDialogProps) => {
-  const [loading, setLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+export const ExternalBookingDialog = ({
+  open,
+  onOpenChange,
+  url,
+  title = "Reserve Your Spot",
+}: ExternalBookingDialogProps) => {
+  const [isBlocked, setIsBlocked] = useState(false);
 
-  // Reset states when dialog opens/closes
-  useEffect(() => {
-    if (open) {
-      setLoading(true);
-      setHasError(false);
+  const openSecurePopup = () => {
+    // 1. Define popup dimensions
+    const width = 500;
+    const height = 750;
 
-      // Timeout: If iframe hasn't loaded in 5s, the provider likely blocks embedding
-      const timer = setTimeout(() => {
-        if (loading) setHasError(true);
-      }, 5000);
+    // 2. Calculate center position relative to the current screen
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
 
-      return () => clearTimeout(timer);
+    // 3. Window features (hides toolbars to look like a "dialog")
+    const features = `
+      width=${width},
+      height=${height},
+      top=${top},
+      left=${left},
+      menubar=no,
+      toolbar=no,
+      location=no,
+      status=no,
+      resizable=yes,
+      scrollbars=yes
+    `;
+
+    // 4. Attempt to open
+    const newWindow = window.open(url, "BookingPopup", features);
+
+    // 5. Check if browser blocked the popup
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+      setIsBlocked(true);
+    } else {
+      setIsBlocked(false);
+      onOpenChange(false); // Close the dialog if the window opened successfully
     }
-  }, [open]);
-
-  const handleOpenExternal = () => {
-    window.open(url, "_blank", "noopener,noreferrer");
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] p-0 overflow-hidden rounded-2xl flex flex-col">
-        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between shrink-0">
-          <DialogTitle className="font-black uppercase tracking-tight text-sm">
+      <DialogContent className="max-w-md p-8 rounded-3xl border-none shadow-2xl">
+        <div className="flex justify-center mb-6">
+          <div className="bg-primary/10 p-5 rounded-full ring-8 ring-primary/5">
+            <CalendarCheck2 className="h-10 w-10 text-primary" />
+          </div>
+        </div>
+
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-2xl font-black text-center uppercase tracking-tight">
             {title}
           </DialogTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleOpenExternal}
-            className="text-[10px] font-bold text-muted-foreground hover:text-primary gap-1"
-          >
-            <ExternalLink className="h-3 w-3" /> Open in New Tab
-          </Button>
+          <DialogDescription className="text-center text-balance text-muted-foreground">
+            We are opening a secure connection to the booking provider. 
+            This ensures your payment data stays encrypted and private.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 relative w-full bg-white">
-          {/* Loading Spinner */}
-          {loading && !hasError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-              <p className="text-xs text-muted-foreground animate-pulse">Connecting to booking system...</p>
+        <div className="mt-8 space-y-4">
+          <Button
+            size="lg"
+            onClick={openSecurePopup}
+            className="w-full font-bold h-14 text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            Go to Checkout <ExternalLink className="ml-2 h-5 w-5" />
+          </Button>
+
+          {isBlocked && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="h-4 w-4" />
+              <span>Pop-up blocked! Please allow pop-ups for this site.</span>
             </div>
           )}
 
-          {/* Error / Blocked State */}
-          {hasError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/20 z-20 p-6 text-center">
-              <AlertCircle className="h-10 w-10 text-destructive mb-4" />
-              <h3 className="font-bold text-lg">Connection Restricted</h3>
-              <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                For your security, this booking provider prefers to open in a dedicated window.
-              </p>
-              <Button onClick={handleOpenExternal} className="font-bold">
-                Continue to Booking
-              </Button>
-            </div>
-          )}
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="w-full text-muted-foreground font-semibold hover:bg-transparent hover:text-foreground"
+          >
+            Cancel
+          </Button>
+        </div>
 
-          <iframe
-            src={url}
-            className={`w-full h-full border-none transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}
-            onLoad={() => setLoading(false)}
-            // Added allow-modals and allow-storage-access
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-            title={title}
-          />
+        <div className="mt-6 flex items-center justify-center gap-2 opacity-50">
+          <div className="h-px w-8 bg-muted-foreground" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+            Secure Portal
+          </span>
+          <div className="h-px w-8 bg-muted-foreground" />
         </div>
       </DialogContent>
     </Dialog>
