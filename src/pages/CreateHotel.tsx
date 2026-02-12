@@ -485,6 +485,7 @@ const CreateHotel = () => {
               workingDays={workingDays}
               onOpeningChange={(v) => setFormData({...formData, openingHours: v})}
               onClosingChange={(v) => setFormData({...formData, closingHours: v})}
+              onBothHoursChange={(opening, closing) => setFormData({...formData, openingHours: opening, closingHours: closing})}
               onDaysChange={setWorkingDays}
               accentColor={COLORS.TEAL}
             />
