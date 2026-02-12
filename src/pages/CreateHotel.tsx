@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/useSafeBack";
 import { Header } from "@/components/Header";
@@ -71,6 +71,15 @@ const CreateHotel = () => {
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [creatorProfile, setCreatorProfile] = useState({ name: "", email: "", phone: "" });
+
+  // Combined hours change handler with useCallback for stability
+  const handleBothHoursChange = useCallback((opening: string, closing: string) => {
+    setFormData(prev => ({
+      ...prev,
+      openingHours: opening,
+      closingHours: closing
+    }));
+  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -485,7 +494,7 @@ const CreateHotel = () => {
               workingDays={workingDays}
               onOpeningChange={(v) => setFormData({...formData, openingHours: v})}
               onClosingChange={(v) => setFormData({...formData, closingHours: v})}
-              onBothHoursChange={(opening, closing) => setFormData({...formData, openingHours: opening, closingHours: closing})}
+              onBothHoursChange={handleBothHoursChange}
               onDaysChange={setWorkingDays}
               accentColor={COLORS.TEAL}
             />
