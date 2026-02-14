@@ -24,6 +24,27 @@ import { cn } from "@/lib/utils";
 
 const COLORS = { TEAL: "#008080", CORAL: "#FF7F50", CORAL_LIGHT: "#FF9E7A", KHAKI: "#F0E68C", KHAKI_DARK: "#857F3E", SOFT_GRAY: "#F8F9FA" };
 
+// Generate friendly ID from name + 4 random alphanumeric characters
+const generateFriendlyId = (name: string): string => {
+  // Clean the name: lowercase, remove special chars, replace spaces with hyphens
+  const cleanName = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Remove multiple hyphens
+    .substring(0, 30); // Limit length
+  
+  // Generate 4 random alphanumeric characters (mix of letters and numbers)
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return `${cleanName}-${code}`;
+};
+
 const CreateAdventure = () => {
   const navigate = useNavigate();
   const goBack = useSafeBack("/become-host");
@@ -38,14 +59,14 @@ const CreateAdventure = () => {
     entranceFeeType: "free", adultPrice: "0", childPrice: "0",
     latitude: null as number | null, longitude: null as number | null
   });
-
+  
   const [workingDays, setWorkingDays] = useState({ Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: true, Sun: true });
   const [amenities, setAmenities] = useState<DynamicItem[]>([]);
   const [generalFacilities, setGeneralFacilities] = useState<string[]>([]);
   const [facilities, setFacilities] = useState<DynamicItemWithImages[]>([]);
   const [activities, setActivities] = useState<DynamicItemWithImages[]>([]);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
-
+  
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
@@ -55,14 +76,14 @@ const CreateAdventure = () => {
     };
     fetchUserProfile();
   }, [user]);
-
+  
   const isFieldMissing = (value: any) => {
     if (!showErrors) return false;
     if (typeof value === "string") return !value.trim();
     if (value === null || value === undefined) return true;
     return false;
   };
-
+  
   const getCurrentLocation = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -74,7 +95,7 @@ const CreateAdventure = () => {
       );
     }
   };
-
+  
   const handleImageUpload = async (files: FileList | null) => {
     if (!files) return;
     const newFiles = Array.from(files).slice(0, 5 - galleryImages.length);
@@ -83,9 +104,9 @@ const CreateAdventure = () => {
       setGalleryImages(prev => [...prev, ...compressed.map(c => c.file)].slice(0, 5));
     } catch { setGalleryImages(prev => [...prev, ...newFiles].slice(0, 5)); }
   };
-
+  
   const removeImage = (index: number) => setGalleryImages(prev => prev.filter((_, i) => i !== index));
-
+  
   const handleSubmit = async () => {
     if (!user) { navigate("/auth"); return; }
     setShowErrors(true);
@@ -93,9 +114,22 @@ const CreateAdventure = () => {
       toast({ title: "Action Required", description: "Please fill in all mandatory fields.", variant: "destructive" });
       return;
     }
-
+    
     setLoading(true);
     try {
+      // Generate friendly ID based on registration name
+      const friendlyId = generateFriendlyId(formData.registrationName);
+      
+      // Check if ID already exists (rare collision case)
+      const { data: existing } = await supabase
+        .from("adventure_places")
+        .select("id")
+        .eq("id", friendlyId)
+        .single();
+      
+      // If collision, regenerate (very unlikely)
+      const finalId = existing ? generateFriendlyId(formData.registrationName) : friendlyId;
+      
       const uploadedUrls: string[] = [];
       for (const file of galleryImages) {
         const fileName = `${user.id}/${Math.random()}.${file.name.split('.').pop()}`;
@@ -104,12 +138,13 @@ const CreateAdventure = () => {
         const { data: { publicUrl } } = supabase.storage.from('listing-images').getPublicUrl(fileName);
         uploadedUrls.push(publicUrl);
       }
-
+      
       const selectedDays = Object.entries(workingDays).filter(([_, s]) => s).map(([d]) => d);
       const uploadedFacilities = await uploadItemImages(facilities, user.id);
       const uploadedActivities = await uploadItemImages(activities, user.id);
-
+      
       const { error } = await supabase.from("adventure_places").insert([{
+        id: finalId, // Use the friendly ID
         name: formData.registrationName, registration_number: formData.registrationNumber,
         location: formData.locationName, place: formData.place, country: formData.country,
         description: formData.description, email: formData.email,
@@ -126,13 +161,17 @@ const CreateAdventure = () => {
         created_by: user.id, approval_status: "pending"
       }]);
       if (error) throw error;
-      toast({ title: "Experience Submitted", description: "Pending admin review." });
+      toast({ 
+        title: "Experience Submitted", 
+        description: `ID: ${finalId} - Pending admin review.`,
+        duration: 5000
+      });
       navigate("/become-host");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally { setLoading(false); }
   };
-
+  
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header />
@@ -146,7 +185,7 @@ const CreateAdventure = () => {
           </h1>
         </div>
       </div>
-
+      
       <main className="container px-4 max-w-4xl mx-auto -mt-6 relative z-50 space-y-6">
         {/* Registration */}
         <Card className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
@@ -171,7 +210,7 @@ const CreateAdventure = () => {
             </div>
           </div>
         </Card>
-
+        
         {/* Location */}
         <Card className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-6">
@@ -196,7 +235,7 @@ const CreateAdventure = () => {
             </div>
           </div>
         </Card>
-
+        
         {/* Contact & Description */}
         <Card className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-6">
@@ -220,7 +259,7 @@ const CreateAdventure = () => {
             </div>
           </div>
         </Card>
-
+        
         {/* Access & Pricing */}
         <Card className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-6">
@@ -244,7 +283,7 @@ const CreateAdventure = () => {
             </div>
           </div>
         </Card>
-
+        
         {/* Amenities, Facilities & Activities */}
         <Card className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-6">
@@ -258,7 +297,7 @@ const CreateAdventure = () => {
             <DynamicItemListWithImages items={activities} onChange={setActivities} label="Activities (with photos)" placeholder="e.g. Hiking" showCapacity={false} showPrice={false} accentColor="#6366f1" maxImages={5} userId={user?.id} />
           </div>
         </Card>
-
+        
         {/* Photos */}
         <Card className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-6">
@@ -280,7 +319,7 @@ const CreateAdventure = () => {
             )}
           </div>
         </Card>
-
+        
         {/* Submit */}
         <div className="mb-8">
           <Button type="button" onClick={handleSubmit} disabled={loading} className="w-full py-6 rounded-2xl font-black uppercase tracking-widest text-sm text-white" style={{ background: `linear-gradient(135deg, ${COLORS.TEAL} 0%, #006666 100%)` }}>

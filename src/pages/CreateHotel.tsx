@@ -23,6 +23,27 @@ import { GeneralFacilitiesSelector } from "@/components/creation/GeneralFaciliti
 
 const COLORS = { TEAL: "#008080", CORAL: "#FF7F50", CORAL_LIGHT: "#FF9E7A", SOFT_GRAY: "#F8F9FA" };
 
+// Generate friendly ID from name + 4 random alphanumeric characters
+const generateFriendlyId = (name: string): string => {
+  // Clean the name: lowercase, remove special chars, replace spaces with hyphens
+  const cleanName = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Remove multiple hyphens
+    .substring(0, 30); // Limit length
+  
+  // Generate 4 random alphanumeric characters (mix of letters and numbers)
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return `${cleanName}-${code}`;
+};
+
 const CreateHotel = () => {
   const navigate = useNavigate();
   const goBack = useSafeBack("/become-host");
@@ -113,6 +134,19 @@ const CreateHotel = () => {
     if (!validateAll()) return;
     setLoading(true);
     try {
+      // Generate friendly ID based on registration name
+      const friendlyId = generateFriendlyId(formData.registrationName);
+      
+      // Check if ID already exists (rare collision case)
+      const { data: existing } = await supabase
+        .from("hotels")
+        .select("id")
+        .eq("id", friendlyId)
+        .single();
+      
+      // If collision, regenerate (very unlikely)
+      const finalId = existing ? generateFriendlyId(formData.registrationName) : friendlyId;
+      
       const compressedImages = await compressImages(galleryImages);
       const imageUrls: string[] = [];
       for (const image of compressedImages) {
@@ -128,6 +162,7 @@ const CreateHotel = () => {
       const uploadedActivities = await uploadItemImages(activities, user.id);
 
       const { error } = await supabase.from('hotels').insert([{
+        id: finalId, // Use the friendly ID
         created_by: user.id, name: formData.registrationName, location: formData.place, place: formData.place,
         country: formData.country, description: formData.description, email: formData.email,
         phone_numbers: formData.phoneNumber ? [formData.phoneNumber] : [], establishment_type: formData.establishmentType,
@@ -140,7 +175,13 @@ const CreateHotel = () => {
         general_booking_link: isAccommodationOnly ? formData.generalBookingLink : null,
       }]);
       if (error) throw error;
-      toast({ title: "Success!", description: isAccommodationOnly ? "Your accommodation listing is now live." : "Your hotel listing has been submitted for review." });
+      toast({ 
+        title: "Success!", 
+        description: isAccommodationOnly 
+          ? `Your accommodation listing (ID: ${finalId}) is now live.` 
+          : `Your hotel listing (ID: ${finalId}) has been submitted for review.`,
+        duration: 5000
+      });
       navigate('/become-host');
     } catch (error) {
       console.error('Submission error:', error);

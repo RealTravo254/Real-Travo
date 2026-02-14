@@ -21,6 +21,27 @@ import { OperatingHoursSection } from "@/components/creation/OperatingHoursSecti
 
 const COLORS = { TEAL: "#008080", CORAL: "#FF7F50", CORAL_LIGHT: "#FF9E7A", SOFT_GRAY: "#F8F9FA" };
 
+// Generate friendly ID from name + 4 random alphanumeric characters
+const generateFriendlyId = (name: string): string => {
+  // Clean the name: lowercase, remove special chars, replace spaces with hyphens
+  const cleanName = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Remove multiple hyphens
+    .substring(0, 30); // Limit length
+  
+  // Generate 4 random alphanumeric characters (mix of letters and numbers)
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return `${cleanName}-${code}`;
+};
+
 const StyledInput = ({ className = "", isInvalid = false, ...props }: React.ComponentProps<typeof Input> & { isInvalid?: boolean }) => (
   <Input className={`rounded-xl border-slate-100 bg-slate-50 focus:bg-white transition-all h-12 font-bold ${isInvalid ? "border-red-500 ring-1 ring-red-500" : ""} ${className}`} {...props} />
 );
@@ -103,6 +124,19 @@ const CreateTripEvent = () => {
 
     setLoading(true);
     try {
+      // Generate friendly ID based on experience name
+      const friendlyId = generateFriendlyId(formData.name);
+      
+      // Check if ID already exists (rare collision case)
+      const { data: existing } = await supabase
+        .from("trips")
+        .select("id")
+        .eq("id", friendlyId)
+        .single();
+      
+      // If collision, regenerate (very unlikely)
+      const finalId = existing ? generateFriendlyId(formData.name) : friendlyId;
+      
       const uploadedUrls: string[] = [];
       for (const file of galleryImages) {
         const fileName = `${user.id}/${Math.random()}.${file.name.split('.').pop()}`;
@@ -115,6 +149,7 @@ const CreateTripEvent = () => {
       const daysOpened = (Object.keys(workingDays) as (keyof WorkingDays)[]).filter(day => workingDays[day]);
 
       const { error } = await supabase.from("trips").insert([{
+        id: finalId, // Use the friendly ID
         name: formData.name, description: formData.description, location: formData.location,
         place: formData.place, country: formData.country,
         date: formData.is_custom_date ? new Date().toISOString().split('T')[0] : formData.date,
@@ -128,7 +163,11 @@ const CreateTripEvent = () => {
         created_by: user.id, approval_status: approvalStatusSchema.parse("pending")
       }]);
       if (error) throw error;
-      toast({ title: "Success!", description: "Submitted for approval." });
+      toast({ 
+        title: "Success!", 
+        description: `ID: ${finalId} - Submitted for approval.`,
+        duration: 5000
+      });
       navigate("/become-host");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
