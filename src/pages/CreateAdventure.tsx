@@ -54,55 +54,110 @@ const safeObjectUrl = (file: File): string => {
   try { return URL.createObjectURL(file); } catch { return ""; }
 };
 
-// ─── Shared item type (used for both Facilities and Activities) ───────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ListItem {
+interface FacilityItem {
   id: string;
   name: string;
-  amenities: string;   // facilities only
-  price: string;       // facilities only
+  amenities: string[];   // stored as array, entered comma-separated
+  amenityInput: string;  // raw input value
+  price: string;
+  capacity: string;
   images: File[];
   previewUrls: string[];
   saved: boolean;
 }
 
-const emptyFacility = (): ListItem => ({
-  id: makeId(), name: "", amenities: "", price: "",
-  images: [], previewUrls: [], saved: false,
-});
-
-const emptyActivity = (): ListItem => ({
-  id: makeId(), name: "", amenities: "", price: "",
-  images: [], previewUrls: [], saved: false,
-});
-
-// ─── Reusable item list builder ───────────────────────────────────────────────
-
-interface ItemListBuilderProps {
-  items: ListItem[];
-  onChange: (items: ListItem[]) => void;
-  showErrors: boolean;
-  onValidationFail: (msg: string) => void;
-  label: string;
-  namePlaceholder: string;
-  accentColor: string;
-  showAmenities: boolean;
-  showPrice: boolean;
-  minPhotos: number;
-  requireSave: boolean;
+interface ActivityItem {
+  id: string;
+  name: string;
+  price: string;
+  images: File[];
+  previewUrls: string[];
+  saved: boolean;
 }
 
-const ItemListBuilder = ({
-  items, onChange, showErrors, onValidationFail,
-  label, namePlaceholder, accentColor,
-  showAmenities, showPrice, minPhotos, requireSave,
-}: ItemListBuilderProps) => {
+const emptyFacility = (): FacilityItem => ({
+  id: makeId(), name: "", amenities: [], amenityInput: "",
+  price: "", capacity: "", images: [], previewUrls: [], saved: false,
+});
 
-  const update = (id: string, patch: Partial<ListItem>) =>
+const emptyActivity = (): ActivityItem => ({
+  id: makeId(), name: "", price: "", images: [], previewUrls: [], saved: false,
+});
+
+// ─── Amenity tag input ────────────────────────────────────────────────────────
+
+interface AmenityTagInputProps {
+  tags: string[];
+  input: string;
+  onInputChange: (v: string) => void;
+  onAdd: () => void;
+  onRemove: (i: number) => void;
+  hasError: boolean;
+}
+
+const AmenityTagInput = ({ tags, input, onInputChange, onAdd, onRemove, hasError }: AmenityTagInputProps) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "," || e.key === "Enter") {
+      e.preventDefault();
+      onAdd();
+    }
+    if (e.key === "Backspace" && !input && tags.length > 0) {
+      onRemove(tags.length - 1);
+    }
+  };
+
+  return (
+    <div className={cn(
+      "min-h-[42px] flex flex-wrap gap-1.5 items-center px-3 py-2 rounded-xl border-2 bg-white transition-colors",
+      hasError ? "border-red-500 bg-red-50" : "border-slate-200 focus-within:border-[#008080]"
+    )}>
+      {tags.map((tag, i) => (
+        <span key={i} className="inline-flex items-center gap-1 bg-[#008080]/10 text-[#008080] text-[11px] font-black rounded-lg px-2 py-0.5">
+          {tag}
+          <button type="button" onClick={() => onRemove(i)} className="hover:text-red-500 transition-colors">
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </span>
+      ))}
+      <input
+        value={input}
+        onChange={(e) => onInputChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={onAdd}
+        placeholder={tags.length === 0 ? "Type amenity, press comma or Enter..." : "Add more..."}
+        className="flex-1 min-w-[120px] text-sm font-bold outline-none bg-transparent placeholder:text-slate-300 placeholder:font-normal"
+      />
+    </div>
+  );
+};
+
+// ─── Facility Builder ─────────────────────────────────────────────────────────
+
+interface FacilityBuilderProps {
+  items: FacilityItem[];
+  onChange: (items: FacilityItem[]) => void;
+  showErrors: boolean;
+  onValidationFail: (msg: string) => void;
+}
+
+const FacilityBuilder = ({ items, onChange, showErrors, onValidationFail }: FacilityBuilderProps) => {
+  const update = (id: string, patch: Partial<FacilityItem>) =>
     onChange(items.map((f) => (f.id === id ? { ...f, ...patch } : f)));
 
   const addItem = () => onChange([...items, emptyFacility()]);
   const removeItem = (id: string) => onChange(items.filter((f) => f.id !== id));
+
+  const addAmenityTag = (item: FacilityItem) => {
+    const val = item.amenityInput.replace(/,/g, "").trim();
+    if (!val) return;
+    update(item.id, { amenities: [...item.amenities, val], amenityInput: "" });
+  };
+
+  const removeAmenityTag = (item: FacilityItem, idx: number) => {
+    update(item.id, { amenities: item.amenities.filter((_, i) => i !== idx) });
+  };
 
   const handleImages = async (id: string, fileList: FileList | null, existing: File[]) => {
     if (!fileList || fileList.length === 0) return;
@@ -124,25 +179,27 @@ const ItemListBuilder = ({
     update(id, { images: updated, previewUrls: updated.map(safeObjectUrl) });
   };
 
-  const saveItem = (item: ListItem) => {
-    if (!item.name.trim()) { onValidationFail(`Please enter a name for this ${label.toLowerCase()}.`); return; }
-    if (showAmenities && !item.amenities.trim()) { onValidationFail("Please fill in the amenities field."); return; }
-    if (item.images.length < minPhotos) { onValidationFail(`Please add at least ${minPhotos} photo${minPhotos > 1 ? "s" : ""}.`); return; }
-    update(item.id, { saved: true });
+  const saveItem = (f: FacilityItem) => {
+    if (!f.name.trim())         { onValidationFail("Please enter a facility name."); return; }
+    if (f.amenities.length === 0) { onValidationFail("Please add at least one amenity."); return; }
+    if (!f.capacity.trim())     { onValidationFail("Please enter the facility capacity."); return; }
+    if (f.images.length < 2)    { onValidationFail("Please add at least 2 photos for this facility."); return; }
+    update(f.id, { saved: true });
   };
 
   return (
     <div className="space-y-4">
-      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</Label>
+      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+        Facilities (with photos)
+      </Label>
 
       {items.map((item) => (
         <div key={item.id} className={cn(
           "rounded-2xl border-2 overflow-hidden transition-all",
-          item.saved ? "border-opacity-30 bg-opacity-5" : "border-slate-200 bg-white"
-        )} style={item.saved ? { borderColor: accentColor + "4D", backgroundColor: accentColor + "0D" } : {}}>
-
-          {/* ── Saved summary ── */}
+          item.saved ? "border-[#FF7F50]/30 bg-[#FF7F50]/5" : "border-slate-200 bg-white"
+        )}>
           {item.saved ? (
+            /* ── Saved summary ── */
             <div className="p-4 flex items-center gap-4">
               <div className="flex gap-2 shrink-0">
                 {item.previewUrls.slice(0, 3).map((url, i) =>
@@ -157,13 +214,15 @@ const ItemListBuilder = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-black text-sm text-slate-800 truncate">{item.name}</p>
-                {showAmenities && <p className="text-[11px] text-slate-500 truncate">{item.amenities}</p>}
-                {showPrice && item.price && <p className="text-[11px] font-bold" style={{ color: accentColor }}>KSh {item.price}</p>}
+                <p className="text-[11px] text-slate-500 truncate">{item.amenities.join(", ")}</p>
+                <div className="flex gap-3 mt-0.5">
+                  {item.capacity && <p className="text-[11px] text-slate-400">Cap: {item.capacity}</p>}
+                  {item.price && <p className="text-[11px] font-bold text-[#FF7F50]">KSh {item.price}</p>}
+                </div>
               </div>
               <div className="flex gap-2 shrink-0">
                 <button type="button" onClick={() => update(item.id, { saved: false })}
-                  className="text-[10px] font-black uppercase tracking-widest border rounded-lg px-3 py-1.5 transition-colors"
-                  style={{ color: accentColor, borderColor: accentColor + "4D" }}>
+                  className="text-[10px] font-black uppercase tracking-widest text-[#FF7F50] border border-[#FF7F50]/30 rounded-lg px-3 py-1.5 hover:bg-[#FF7F50]/10 transition-colors">
                   Edit
                 </button>
                 <button type="button" onClick={() => removeItem(item.id)}
@@ -172,45 +231,61 @@ const ItemListBuilder = ({
                 </button>
               </div>
             </div>
-
           ) : (
             /* ── Edit form ── */
             <div className="p-4 space-y-4">
-              <div className={cn("grid gap-3", showPrice ? "grid-cols-2" : "grid-cols-1")}>
+              {/* Row 1: Name + Price */}
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Name *</Label>
                   <Input value={item.name} onChange={(e) => update(item.id, { name: e.target.value })}
-                    placeholder={namePlaceholder}
+                    placeholder="e.g. Campsite A"
                     className={cn("rounded-xl h-10 font-bold text-sm", showErrors && !item.name.trim() && "border-red-500 bg-red-50")} />
                 </div>
-                {showPrice && (
-                  <div className="space-y-1">
-                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Price (KSh)</Label>
-                    <Input type="number" value={item.price} onChange={(e) => update(item.id, { price: e.target.value })}
-                      placeholder="0" className="rounded-xl h-10 font-bold text-sm" />
-                  </div>
-                )}
+                <div className="space-y-1">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Price (KSh)</Label>
+                  <Input type="number" value={item.price} onChange={(e) => update(item.id, { price: e.target.value })}
+                    placeholder="0" className="rounded-xl h-10 font-bold text-sm" />
+                </div>
               </div>
 
-              {showAmenities && (
-                <div className="space-y-1">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Amenities *</Label>
-                  <Input value={item.amenities} onChange={(e) => update(item.id, { amenities: e.target.value })}
-                    placeholder="e.g. Firepit, Showers, Electricity"
-                    className={cn("rounded-xl h-10 font-bold text-sm", showErrors && !item.amenities.trim() && "border-red-500 bg-red-50")} />
-                </div>
-              )}
+              {/* Row 2: Capacity */}
+              <div className="space-y-1">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Capacity *</Label>
+                <Input value={item.capacity} onChange={(e) => update(item.id, { capacity: e.target.value })}
+                  placeholder="e.g. 20 people, 5 tents"
+                  className={cn("rounded-xl h-10 font-bold text-sm", showErrors && !item.capacity.trim() && "border-red-500 bg-red-50")} />
+              </div>
 
+              {/* Row 3: Amenities tag input */}
+              <div className="space-y-1">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  Amenities * <span className="text-slate-300 normal-case font-normal">(separate with commas)</span>
+                  {showErrors && item.amenities.length === 0 && (
+                    <span className="text-red-500 ml-2">— at least one required</span>
+                  )}
+                </Label>
+                <AmenityTagInput
+                  tags={item.amenities}
+                  input={item.amenityInput}
+                  onInputChange={(v) => update(item.id, { amenityInput: v })}
+                  onAdd={() => addAmenityTag(item)}
+                  onRemove={(i) => removeAmenityTag(item, i)}
+                  hasError={showErrors && item.amenities.length === 0}
+                />
+              </div>
+
+              {/* Row 4: Photos */}
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                  Photos <span className="text-slate-300 normal-case font-medium">(min {minPhotos}, max 5)</span>
-                  {showErrors && item.images.length < minPhotos && (
-                    <span className="text-red-500 ml-2">— at least {minPhotos} required</span>
+                  Photos <span className="text-slate-300 normal-case font-normal">(min 2, max 5)</span>
+                  {showErrors && item.images.length < 2 && (
+                    <span className="text-red-500 ml-2">— at least 2 required</span>
                   )}
                 </Label>
                 <div className={cn(
                   "flex flex-wrap gap-2 p-3 rounded-xl border-2",
-                  showErrors && item.images.length < minPhotos ? "border-red-400 bg-red-50" : "border-dashed border-slate-200"
+                  showErrors && item.images.length < 2 ? "border-red-400 bg-red-50" : "border-dashed border-slate-200"
                 )}>
                   {item.previewUrls.map((url, i) =>
                     url ? (
@@ -234,11 +309,12 @@ const ItemListBuilder = ({
                 </div>
               </div>
 
+              {/* Actions */}
               <div className="flex gap-3 pt-1">
                 <Button type="button" onClick={() => saveItem(item)}
                   className="flex-1 h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-white"
-                  style={{ background: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}CC 100%)` }}>
-                  Save {label.replace(/\s*\(.*\)/, "").trim()}
+                  style={{ background: `linear-gradient(135deg, ${COLORS.CORAL} 0%, #e06040 100%)` }}>
+                  Save Facility
                 </Button>
                 {items.length > 1 && (
                   <Button type="button" onClick={() => removeItem(item.id)} variant="ghost"
@@ -253,11 +329,162 @@ const ItemListBuilder = ({
       ))}
 
       <Button type="button" onClick={addItem} variant="outline"
-        className="w-full h-11 rounded-xl font-black uppercase text-[10px] tracking-widest border-dashed border-2 border-slate-200 text-slate-400"
-        style={{ ["--hover-color" as any]: accentColor }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = accentColor; (e.currentTarget as HTMLButtonElement).style.color = accentColor; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = ""; (e.currentTarget as HTMLButtonElement).style.color = ""; }}>
-        <Plus className="h-4 w-4 mr-2" /> Add {label.replace(/\s*\(.*\)/, "").trim()}
+        className="w-full h-11 rounded-xl font-black uppercase text-[10px] tracking-widest border-dashed border-2 border-slate-200 text-slate-400 hover:border-[#FF7F50] hover:text-[#FF7F50]">
+        <Plus className="h-4 w-4 mr-2" /> Add Facility
+      </Button>
+    </div>
+  );
+};
+
+// ─── Activity Builder ─────────────────────────────────────────────────────────
+
+interface ActivityBuilderProps {
+  items: ActivityItem[];
+  onChange: (items: ActivityItem[]) => void;
+  showErrors: boolean;
+  onValidationFail: (msg: string) => void;
+}
+
+const ActivityBuilder = ({ items, onChange, showErrors, onValidationFail }: ActivityBuilderProps) => {
+  const update = (id: string, patch: Partial<ActivityItem>) =>
+    onChange(items.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+
+  const addItem = () => onChange([...items, emptyActivity()]);
+  const removeItem = (id: string) => onChange(items.filter((a) => a.id !== id));
+
+  const handleImages = async (id: string, fileList: FileList | null, existing: File[]) => {
+    if (!fileList || fileList.length === 0) return;
+    const slots = 5 - existing.length;
+    if (slots <= 0) return;
+    const incoming = Array.from(fileList).slice(0, slots);
+    let merged: File[];
+    try {
+      const compressed = await compressImages(incoming);
+      merged = [...existing, ...compressed.map((c) => c.file)].slice(0, 5);
+    } catch {
+      merged = [...existing, ...incoming].slice(0, 5);
+    }
+    update(id, { images: merged, previewUrls: merged.map(safeObjectUrl) });
+  };
+
+  const removeImage = (id: string, idx: number, existing: File[]) => {
+    const updated = existing.filter((_, i) => i !== idx);
+    update(id, { images: updated, previewUrls: updated.map(safeObjectUrl) });
+  };
+
+  const saveItem = (a: ActivityItem) => {
+    if (!a.name.trim()) { onValidationFail("Please enter an activity name."); return; }
+    update(a.id, { saved: true });
+  };
+
+  return (
+    <div className="space-y-4">
+      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+        Activities (with photos)
+      </Label>
+
+      {items.map((item) => (
+        <div key={item.id} className={cn(
+          "rounded-2xl border-2 overflow-hidden transition-all",
+          item.saved ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200 bg-white"
+        )}>
+          {item.saved ? (
+            /* ── Saved summary ── */
+            <div className="p-4 flex items-center gap-4">
+              <div className="flex gap-2 shrink-0">
+                {item.previewUrls.slice(0, 3).map((url, i) =>
+                  url ? <img key={i} src={url} className="w-12 h-12 rounded-xl object-cover border border-slate-200" alt="" />
+                      : <div key={i} className="w-12 h-12 rounded-xl bg-slate-200" />
+                )}
+                {item.previewUrls.length > 3 && (
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-black text-slate-500">
+                    +{item.previewUrls.length - 3}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-sm text-slate-800 truncate">{item.name}</p>
+                {item.price && <p className="text-[11px] font-bold text-indigo-500">KSh {item.price}</p>}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button type="button" onClick={() => update(item.id, { saved: false })}
+                  className="text-[10px] font-black uppercase tracking-widest text-indigo-500 border border-indigo-200 rounded-lg px-3 py-1.5 hover:bg-indigo-50 transition-colors">
+                  Edit
+                </button>
+                <button type="button" onClick={() => removeItem(item.id)}
+                  className="text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors">
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ── Edit form ── */
+            <div className="p-4 space-y-4">
+              {/* Name + Price */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Activity Name *</Label>
+                  <Input value={item.name} onChange={(e) => update(item.id, { name: e.target.value })}
+                    placeholder="e.g. Hiking"
+                    className={cn("rounded-xl h-10 font-bold text-sm", showErrors && !item.name.trim() && "border-red-500 bg-red-50")} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Price (KSh)</Label>
+                  <Input type="number" value={item.price} onChange={(e) => update(item.id, { price: e.target.value })}
+                    placeholder="0" className="rounded-xl h-10 font-bold text-sm" />
+                </div>
+              </div>
+
+              {/* Photos */}
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  Photos <span className="text-slate-300 normal-case font-normal">(max 5)</span>
+                </Label>
+                <div className="flex flex-wrap gap-2 p-3 rounded-xl border-2 border-dashed border-slate-200">
+                  {item.previewUrls.map((url, i) =>
+                    url ? (
+                      <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                        <img src={url} className="w-full h-full object-cover" alt="" />
+                        <button type="button" onClick={() => removeImage(item.id, i, item.images)}
+                          className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5 shadow">
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
+                    ) : null
+                  )}
+                  {item.images.length < 5 && (
+                    <label className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 shrink-0">
+                      <Plus className="h-4 w-4 text-slate-400" />
+                      <span className="text-[8px] font-black uppercase text-slate-400 mt-0.5">Photo</span>
+                      <input type="file" multiple className="hidden" accept="image/*"
+                        onChange={(e) => handleImages(item.id, e.target.files, item.images)} />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-1">
+                <Button type="button" onClick={() => saveItem(item)}
+                  className="flex-1 h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-white"
+                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" }}>
+                  Save Activity
+                </Button>
+                {items.length > 1 && (
+                  <Button type="button" onClick={() => removeItem(item.id)} variant="ghost"
+                    className="h-10 px-4 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50">
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <Button type="button" onClick={addItem} variant="outline"
+        className="w-full h-11 rounded-xl font-black uppercase text-[10px] tracking-widest border-dashed border-2 border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-400">
+        <Plus className="h-4 w-4 mr-2" /> Add Activity
       </Button>
     </div>
   );
@@ -286,8 +513,8 @@ const CreateAdventure = () => {
   });
 
   const [generalFacilities, setGeneralFacilities] = useState<string[]>([]);
-  const [facilities, setFacilities] = useState<ListItem[]>(() => [emptyFacility()]);
-  const [activities, setActivities] = useState<ListItem[]>(() => [emptyActivity()]);
+  const [facilities, setFacilities] = useState<FacilityItem[]>(() => [emptyFacility()]);
+  const [activities, setActivities] = useState<ActivityItem[]>(() => [emptyActivity()]);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
 
@@ -366,8 +593,12 @@ const CreateAdventure = () => {
       toast({ title: "Unsaved Facility", description: "Please save all facilities before submitting.", variant: "destructive" });
       return;
     }
-    if (facilities.some((f) => !f.name.trim() || !f.amenities.trim() || f.images.length < 2)) {
-      toast({ title: "Facility Incomplete", description: "Each facility needs a name, amenities, and at least 2 photos.", variant: "destructive" });
+    if (facilities.some((f) => !f.name.trim() || f.amenities.length === 0 || !f.capacity.trim() || f.images.length < 2)) {
+      toast({ title: "Facility Incomplete", description: "Each facility needs a name, amenities, capacity, and at least 2 photos.", variant: "destructive" });
+      return;
+    }
+    if (activities.some((a) => a.name.trim() && !a.saved)) {
+      toast({ title: "Unsaved Activity", description: "Please save all activities before submitting.", variant: "destructive" });
       return;
     }
 
@@ -384,17 +615,19 @@ const CreateAdventure = () => {
       const facilitiesForDB = await Promise.all(
         facilities.map(async (fac) => ({
           name: fac.name,
-          amenities: fac.amenities,
+          amenities: fac.amenities,           // array of strings
+          capacity: fac.capacity,
           price: fac.price ? parseFloat(fac.price) || 0 : 0,
           images: await Promise.all(fac.images.map((f) => uploadFile(f, "fac"))),
         }))
       );
 
-      // Upload activities (only saved ones with a name)
+      // Upload activities (only ones with a name)
       const savedActivities = activities.filter((a) => a.name.trim());
       const activitiesForDB = await Promise.all(
         savedActivities.map(async (act) => ({
           name: act.name,
+          price: act.price ? parseFloat(act.price) || 0 : 0,
           images: await Promise.all(act.images.map((f) => uploadFile(f, "act"))),
         }))
       );
@@ -439,7 +672,6 @@ const CreateAdventure = () => {
     }
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header />
@@ -594,24 +826,8 @@ const CreateAdventure = () => {
           </div>
           <div className="space-y-8">
             <GeneralFacilitiesSelector selected={generalFacilities} onChange={setGeneralFacilities} accentColor={COLORS.TEAL} />
-
-            <ItemListBuilder
-              items={facilities} onChange={setFacilities}
-              showErrors={showErrors} onValidationFail={onValidationFail}
-              label="Facilities (with photos)" namePlaceholder="e.g. Campsite A"
-              accentColor={COLORS.CORAL}
-              showAmenities={true} showPrice={true}
-              minPhotos={2} requireSave={true}
-            />
-
-            <ItemListBuilder
-              items={activities} onChange={setActivities}
-              showErrors={showErrors} onValidationFail={onValidationFail}
-              label="Activities (with photos)" namePlaceholder="e.g. Hiking"
-              accentColor="#6366f1"
-              showAmenities={false} showPrice={false}
-              minPhotos={1} requireSave={true}
-            />
+            <FacilityBuilder items={facilities} onChange={setFacilities} showErrors={showErrors} onValidationFail={onValidationFail} />
+            <ActivityBuilder items={activities} onChange={setActivities} showErrors={showErrors} onValidationFail={onValidationFail} />
           </div>
         </Card>
 
