@@ -1,5 +1,5 @@
 import { useState, memo, useCallback, useMemo, useEffect } from "react";
-import { MapPin, Heart, Star, Calendar, Ticket } from "lucide-react";
+import { MapPin, Heart, Star, Calendar, Ticket, ArrowRight, Map } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,14 +8,15 @@ import { useNavigate } from "react-router-dom";
 import { createDetailPath } from "@/lib/slugUtils";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
+// Updated Color Palette for a more premium feel
 const COLORS = {
-  TEAL: "#008080",
-  CORAL: "#FF7F50",
-  KHAKI: "#F0E68C",
-  KHAKI_DARK: "#857F3E",
-  RED: "#FF0000",
-  SOFT_GRAY: "#F8F9FA"
-} as const;
+  PRIMARY: "#0d9488", // Teal 600
+  PRIMARY_DARK: "#0f766e", // Teal 700
+  ACCENT: "#f43f5e", // Rose 500
+  GOLD: "#f59e0b", // Amber 500
+  SURFACE: "#ffffff",
+  MUTED: "#64748b", // Slate 500
+};
 
 interface ListingCardProps {
   id: string;
@@ -79,16 +80,11 @@ const ListingCardComponent = ({
   const fewSlotsRemaining = useMemo(() => tracksAvailability && remainingTickets > 0 && remainingTickets <= 10, [tracksAvailability, remainingTickets]);
   const isUnavailable = useMemo(() => isOutdated || isSoldOut, [isOutdated, isSoldOut]);
 
-  const optimizedImageUrl = useMemo(() => optimizeSupabaseImage(imageUrl, { width: 500, height: 350, quality: 80 }), [imageUrl]);
-  const thumbnailUrl = useMemo(() => optimizeSupabaseImage(imageUrl, { width: 32, height: 24, quality: 30 }), [imageUrl]);
+  const optimizedImageUrl = useMemo(() => optimizeSupabaseImage(imageUrl, { width: 600, height: 450, quality: 85 }), [imageUrl]);
   const displayType = useMemo(() => isEventOrSport ? "Event & Sports" : type.replace('_', ' '), [isEventOrSport, type]);
   
   const formattedName = useMemo(() => {
-    return name
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return name.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
   }, [name]);
   
   const locationString = useMemo(() => [place, location].filter(Boolean).join(', '), [place, location]);
@@ -101,30 +97,31 @@ const ListingCardComponent = ({
     navigate(createDetailPath(typeMap[type], id, name, location));
   }, [navigate, type, id, name, location]);
 
-  const handleSaveClick = useCallback((e: React.MouseEvent) => {
+  const handleSaveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsSavedLocal(!isSavedLocal);
     onSave?.(id, type);
-  }, [onSave, id, type, isSavedLocal]);
+  };
 
   return (
     <Card 
       onClick={handleCardClick} 
       className={cn(
-        "group overflow-hidden transition-all duration-500 hover:-translate-y-1.5 cursor-pointer border-none flex flex-col",
-        "rounded-[24px] bg-white w-full max-w-full shadow-sm hover:shadow-2xl hover:shadow-slate-200/50",
+        "group relative flex flex-col overflow-hidden rounded-[32px] border-none bg-white transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]",
         compact ? "h-auto" : "h-full",
-        isUnavailable && "opacity-95"
+        isUnavailable && "opacity-90 grayscale-[0.3]"
       )}
     >
-      {/* Image Section */}
+      {/* Media Wrapper */}
       <div 
         ref={imageContainerRef} 
-        className="relative overflow-hidden w-full bg-slate-100" 
-        style={{ paddingBottom: '68%' }}
+        className="relative aspect-[4/3] w-full overflow-hidden"
       >
+        {/* Background Overlay Gradients */}
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        
         {!imageLoaded && !imageError && (
-          <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
+          <Skeleton className="absolute inset-0 h-full w-full rounded-none bg-slate-200" />
         )}
         
         {shouldLoadImage && !imageError && (
@@ -134,125 +131,129 @@ const ListingCardComponent = ({
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
             className={cn(
-                "absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110", 
-                imageLoaded ? "opacity-100" : "opacity-0",
-                isUnavailable && "grayscale-[0.8]" 
+                "absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110", 
+                imageLoaded ? "opacity-100" : "opacity-0"
             )} 
           />
         )}
-        
-        {/* Status Overlays */}
-        {isUnavailable && (
-          <div className="absolute inset-0 z-20 bg-black/20 flex items-center justify-center backdrop-blur-[2px]">
-            <Badge className="bg-white/90 text-black font-bold border-none px-4 py-1.5 text-[10px] uppercase rounded-full shadow-xl">
-                {isSoldOut ? 'Sold Out' : 'Not Available'}
-            </Badge>
-          </div>
-        )}
-        
-        {/* Floating Category Tag */}
-        <Badge 
-          className="absolute top-4 left-4 z-10 px-3 py-1 border-none text-[9px] font-bold uppercase tracking-wider rounded-full backdrop-blur-md shadow-sm"
-          style={{ background: isUnavailable ? 'rgba(100, 116, 139, 0.8)' : 'rgba(0, 128, 128, 0.85)', color: 'white' }}
-        >
-          {displayType}
-        </Badge>
 
-        {/* Round Save Button */}
+        {/* Top Badges (Left) */}
+        <div className="absolute left-4 top-4 z-20 flex flex-col gap-2">
+          <Badge className="w-fit border-none bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-900 backdrop-blur-md shadow-sm">
+            {displayType}
+          </Badge>
+          {avgRating && (
+            <div className="flex w-fit items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 text-white backdrop-blur-md">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span className="text-[11px] font-bold">{avgRating.toFixed(1)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Save Button */}
         {onSave && (
           <button 
             onClick={handleSaveClick}
             className={cn(
-                "absolute top-4 right-4 z-20 h-9 w-9 flex items-center justify-center rounded-full transition-all active:scale-90 shadow-lg", 
-                isSavedLocal ? "bg-white" : "bg-white/70 hover:bg-white backdrop-blur-sm"
+                "absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-90 shadow-xl", 
+                isSavedLocal ? "bg-white" : "bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white"
             )}
           >
-            <Heart className={cn("h-4.5 w-4.5 transition-colors", isSavedLocal ? "text-red-500 fill-red-500" : "text-slate-700")} />
+            <Heart className={cn("h-5 w-5 transition-colors", isSavedLocal ? "fill-rose-500 text-rose-500" : "text-white group-hover:text-slate-900")} />
           </button>
+        )}
+
+        {/* Sold Out Overlay */}
+        {isUnavailable && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+            <span className="rotate-[-12deg] rounded-lg border-2 border-white/80 px-4 py-1 text-sm font-black uppercase tracking-tighter text-white">
+               {isSoldOut ? 'Sold Out' : 'Unavailable'}
+            </span>
+          </div>
         )}
       </div>
       
-      {/* Content Section */}
-      <div className="p-5 flex flex-col flex-1"> 
-        <div className="flex justify-between items-start gap-2 mb-1.5">
-          <h3 className="font-bold text-base md:text-[17px] leading-tight tracking-tight line-clamp-2 text-slate-800 transition-colors group-hover:text-teal-700">
+      {/* Content Area */}
+      <div className="flex flex-1 flex-col p-5"> 
+        <div className="mb-2 flex items-start justify-between">
+          <h3 className="line-clamp-2 text-lg font-bold leading-snug tracking-tight text-slate-800 transition-colors group-hover:text-teal-600">
             {formattedName}
           </h3>
-          {avgRating && (
-            <div className="flex items-center gap-1 shrink-0 bg-slate-50 px-2 py-1 rounded-lg">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              <span className="text-xs font-bold text-slate-700">{avgRating.toFixed(1)}</span>
-            </div>
-          )}
         </div>
         
-        <div className="flex items-center gap-1 mb-4">
-            <MapPin className="h-3.5 w-3.5 text-slate-400" />
-            <p className="text-[12px] font-medium text-slate-500 truncate capitalize">
+        <div className="mb-4 flex items-center gap-1.5 text-slate-500">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
+                <MapPin className="h-3 w-3" />
+            </div>
+            <p className="text-xs font-medium truncate capitalize">
                 {locationString.toLowerCase()}
             </p>
         </div>
 
-        {/* Activity Pills */}
+        {/* Activity Tag Group */}
         {activities && activities.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-5">
+          <div className="mb-6 flex flex-wrap gap-2">
             {activities.slice(0, 2).map((act, i) => (
-              <span key={i} className={cn(
-                "text-[10px] font-semibold px-2.5 py-1 rounded-full",
-                isUnavailable ? "bg-slate-100 text-slate-400" : "bg-teal-50 text-teal-700"
-              )}>
-                {typeof act === 'string' ? act : act.name}
+              <span key={i} className="rounded-lg bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700">
+                #{typeof act === 'string' ? act : act.name}
               </span>
             ))}
           </div>
         )}
         
-        {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-slate-50 flex items-end justify-between">
-            <div className="flex flex-col">
+        {/* Modern Footer */}
+        <div className="mt-auto flex items-end justify-between border-t border-slate-100 pt-5">
+            <div className="space-y-0.5">
                 {!hidePrice && price != null && (
                   <>
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight mb-0.5">
-                      {['HOTEL', 'ACCOMMODATION'].includes(type) ? 'Per Night' : 'Starting at'}
-                    </span>
-                    <span className={cn("text-lg font-black tracking-tighter", isUnavailable ? "text-slate-300 line-through" : "text-teal-900")}>
-                        KSh {price.toLocaleString()}
-                    </span>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      {['HOTEL', 'ACCOMMODATION'].includes(type) ? 'Per Night' : 'From'}
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                        <span className={cn("text-xl font-black text-slate-900", isUnavailable && "text-slate-300 line-through")}>
+                            KSh {price.toLocaleString()}
+                        </span>
+                    </div>
                   </>
                 )}
             </div>
 
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex flex-col items-end gap-2">
+                {/* Date Badge */}
                 {(date || isFlexibleDate) && (
                   <div className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full",
-                    isFlexibleDate ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-600"
+                    "flex items-center gap-1.5 rounded-lg px-2 py-1 shadow-sm border",
+                    isFlexibleDate ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-white border-slate-100 text-slate-600"
                   )}>
                       <Calendar className="h-3 w-3" />
-                      <span className="text-[10px] font-bold uppercase">
+                      <span className="text-[10px] font-black uppercase">
                           {isFlexibleDate ? 'Flexible' : new Date(date!).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                       </span>
                   </div>
                 )}
                 
-                <div className="h-4">
+                {/* Availability Info */}
+                <div className="flex items-center">
                   {isOutdated ? (
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">Passed</span>
+                    <span className="text-[10px] font-bold text-slate-400">Past Date</span>
                   ) : isSoldOut ? (
-                    <span className="text-[9px] font-bold text-red-500 uppercase">Fully Booked</span>
+                    <span className="text-[10px] font-bold text-rose-500">Fully Booked</span>
                   ) : fewSlotsRemaining ? (
-                    <span className="text-[9px] font-extrabold text-orange-600 uppercase flex items-center gap-1">
-                        <Ticket className="h-2.5 w-2.5" /> Only {remainingTickets} left!
-                    </span>
+                    <div className="animate-pulse flex items-center gap-1 text-[10px] font-black text-orange-600">
+                        <Ticket className="h-3 w-3" /> {remainingTickets} LEFT!
+                    </div>
                   ) : (tracksAvailability && availableTickets > 0) && (
-                    <span className="text-[9px] font-bold text-teal-600 uppercase">
-                        {remainingTickets} Spots Available
+                    <span className="text-[10px] font-bold text-teal-600">
+                        {remainingTickets} Spots
                     </span>
                   )}
                 </div>
             </div>
         </div>
       </div>
+
+      {/* Subtle Hover Indicator */}
+      <div className="absolute bottom-0 h-1 w-0 bg-teal-500 transition-all duration-500 group-hover:w-full" />
     </Card>
   );
 };
