@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { 
   Home, Ticket, Heart, Phone, Info, LogIn, LogOut, User, 
   FileText, Shield, ChevronRight, Trophy, Map, Mountain, Bed, Building2 
@@ -80,43 +80,35 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
       </div>
 
       <nav className="flex-1 p-4 overflow-y-auto scrollbar-hide">
-        {/* User Profile Card */}
+        {/* User Account Section */}
         <div className="mb-6">
           {user ? (
-            <div className="p-4 rounded-[24px] bg-slate-50 dark:bg-gray-900 border border-slate-100 dark:border-gray-800">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-full bg-[#008080] flex items-center justify-center text-white font-black">
-                  {userName?.charAt(0) || "U"}
-                </div>
-                <div className="flex flex-col overflow-hidden">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Welcome back</span>
-                  <span className="text-sm font-black uppercase tracking-tight truncate dark:text-white text-slate-900">
-                    {userName || "Explorer"}
+            <div className="p-4 rounded-2xl border border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-900/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-gray-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    Traveler Account
                   </span>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Link 
-                  to="/profile" onClick={onClose}
-                  className="flex items-center justify-center gap-2 py-2 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-[9px] font-black uppercase tracking-widest hover:border-[#008080] transition-colors text-slate-600"
-                >
-                  <User className="h-3 w-3" /> Profile
-                </Link>
                 <button 
                   onClick={() => { signOut(); onClose(); }}
-                  className="flex items-center justify-center gap-2 py-2 rounded-lg bg-red-50 text-red-600 text-[9px] font-black uppercase tracking-widest hover:bg-red-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                  title="Logout"
                 >
-                  <LogOut className="h-3 w-3" /> Logout
+                  <LogOut className="h-4 w-4" />
                 </button>
               </div>
             </div>
           ) : (
             <Link
               to="/auth" onClick={onClose}
-              className="flex items-center justify-center w-full py-4 rounded-[20px] bg-[#008080] text-white shadow-lg shadow-[#008080]/20 active:scale-95 transition-all"
+              className="flex items-center justify-center w-full py-3 rounded-xl border-2 border-[#008080] text-[#008080] hover:bg-[#008080] hover:text-white transition-all"
             >
               <LogIn className="h-4 w-4 mr-2" />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em]">Login / Register</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Login / Register</span>
             </Link>
           )}
         </div>
@@ -128,7 +120,6 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           <NavItem icon={Heart} label="Wishlist" path="/saved" isProtected />
           
           <div className="h-4" />
-          {/* NEW CATEGORIES SECTION */}
           <p className="px-4 text-[9px] font-black text-[#008080] uppercase tracking-[0.2em] mb-2">Explore Categories</p>
           <NavItem icon={Trophy} label="Events & Sports" path="/category/events" />
           <NavItem icon={Map} label="Trips & Tours" path="/category/trips" />
@@ -145,14 +136,17 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
         </ul>
       </nav>
       
-      <div className="p-6 border-t border-slate-50 dark:border-gray-900 text-center">
-        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-          RealTravo v1.0
-        </span>
+      {/* Footer & Transparency Note */}
+      <div className="p-6 border-t border-slate-50 dark:border-gray-900 bg-slate-50/30 dark:bg-gray-900/30">
+        <p className="text-[10px] leading-relaxed text-slate-400 dark:text-slate-500 mb-4 text-center">
+          <span className="font-black text-slate-500 dark:text-slate-400">TRANSPARENCY:</span> RealTravo may earn a commission for some bookings. This is paid by the property and <span className="text-[#008080] font-bold">is never added to your final cost</span>.
+        </p>
+        <div className="text-center">
+          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
+            RealTravo v1.0
+          </span>
+        </div>
       </div>
     </div>
   );
-  <p className="text-xs leading-relaxed text-slate-500">
-      <strong>Transparency:</strong> RealTravo may earn a commission for some accommodation bookings. This commission is paid by the property and <strong>is never added to your final booking cost</strong>. This allows us to keep our platform free for travelers.
-  </p>
-}; 
+};
