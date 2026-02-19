@@ -18,7 +18,6 @@ const BRAND_COLORS = {
   X: "#000000",
   LINKEDIN: "#0A66C2",
   PINTEREST: "#BD081C",
-  WIKIPEDIA: "#000000",
 };
 
 // --- Custom Brand-Accurate Icons ---
@@ -38,12 +37,6 @@ const YouTubeIcon = () => (
 const TikTokIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.06-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.59-1.01V14.5c.03 2.1-.47 4.31-1.89 5.88-1.53 1.77-3.92 2.64-6.2 2.37-2.58-.23-4.9-2-5.74-4.46-.91-2.47-.41-5.46 1.34-7.42 1.44-1.68 3.73-2.53 5.93-2.25V12.7c-1.01-.15-2.15.09-2.88.85-.75.84-.81 2.14-.31 3.09.47 1.05 1.64 1.75 2.79 1.6 1.18-.1 2.22-1.14 2.25-2.32V.02z" />
-  </svg>
-);
-
-const WikipediaIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12.09 4.41l-1.51 4.16-1.51-4.16H6.18l3.64 9.09-1.85 4.54H9.7l1.39-3.41 1.39 3.41h1.73l-1.85-4.54 3.64-9.09h-2.89zM2.5 4.41l3.64 9.09-1.85 4.54H6l1.39-3.41L8.78 18h1.73l-1.85-4.54L12.3 4.41h-2.9l-1.51 4.16-1.51-4.16H2.5zm15.32 0l-1.51 4.16-1.51-4.16h-2.89l3.64 9.09-1.85 4.54h1.73l1.39-3.41 1.39 3.41h1.73l-1.85-4.54 3.64-9.09h-2.89z" />
   </svg>
 );
 
@@ -109,9 +102,8 @@ export const Footer = ({ className = "" }: { className?: string }) => {
               <SocialIcon href="https://www.tiktok.com/@real_travo" color={BRAND_COLORS.TIKTOK} icon={<TikTokIcon />} />
               <SocialIcon href="https://youtube.com/@realtravo" color={BRAND_COLORS.YOUTUBE} icon={<YouTubeIcon />} />
               <SocialIcon href="https://www.facebook.com/profile.php?id=61588626561026" color={BRAND_COLORS.FACEBOOK} icon={<Facebook className="h-5 w-5 fill-current" />} />
-              <SocialIcon href="https://linkedin.com/company/realtravo" color={BRAND_COLORS.LINKEDIN} icon={<Linkedin className="h-5 w-5 fill-current" />} />
+              <SocialIcon href="https://www.linkedin.com/in/real-travo-aa62b63b2/" color={BRAND_COLORS.LINKEDIN} icon={<Linkedin className="h-5 w-5 fill-current" />} />
               <SocialIcon href="https://www.pinterest.com/RealTravo01/" color={BRAND_COLORS.PINTEREST} icon={<PinterestIcon />} />
-              <SocialIcon href="https://wikipedia.org/wiki/RealTravo" color={BRAND_COLORS.WIKIPEDIA} icon={<WikipediaIcon />} />
             </div>
             
             <a href="mailto:support@realtravo.com" className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#008080] transition-all">
