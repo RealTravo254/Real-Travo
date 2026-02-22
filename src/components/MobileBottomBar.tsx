@@ -3,7 +3,7 @@ import { Home, Ticket, Heart, User, ChevronLeft } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AccountSheet } from "@/components/AccountSheet";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetPortal, SheetContent } from "@/components/ui/sheet";
 import { TealLoader } from "@/components/ui/teal-loader";
 
 const Bookings = lazy(() => import("@/pages/Bookings"));
@@ -13,6 +13,39 @@ const COLORS = {
   TEAL: "#008080",
   SOFT_GRAY: "#F8F9FA",
   CORAL: "#FF7F50",
+};
+
+/**
+ * A transparent full-page sheet panel — no dark overlay/backdrop.
+ * We skip <SheetOverlay> entirely and render only <SheetPortal> + <SheetContent>.
+ */
+const FullPageSheet = ({
+  open,
+  onOpenChange,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+}) => {
+  if (!open) return null;
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {/* SheetPortal without SheetOverlay = no dark backdrop */}
+      <SheetPortal>
+        <SheetContent
+          side="bottom"
+          // [&>button]:hidden  — hides the default X close button added by shadcn
+          className="h-[100dvh] w-full p-0 z-[100] flex flex-col rounded-none border-none shadow-none [&>button]:hidden"
+          style={{ maxHeight: "100dvh" }}
+          // Prevent scroll-lock stealing focus away from inner content
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          {children}
+        </SheetContent>
+      </SheetPortal>
+    </Sheet>
+  );
 };
 
 export const MobileBottomBar = () => {
@@ -42,7 +75,7 @@ export const MobileBottomBar = () => {
 
   return (
     <>
-      {/* Bottom Navigation Bar — z-[110] stays above sheets at z-[100] */}
+      {/* ── Bottom Navigation Bar — z-[110] stays above sheets ── */}
       <div className="fixed bottom-0 left-0 right-0 z-[110] flex items-center justify-around bg-white border-t border-gray-200 shadow-md px-2 pt-2 pb-4">
         {navItems.map((item) => {
           const isSheetPath =
@@ -134,73 +167,61 @@ export const MobileBottomBar = () => {
         <AccountSheet open={accountOpen} onOpenChange={setAccountOpen} />
       )}
 
-      {/* ── Bookings Full-Page Sheet ── */}
-      <Sheet open={bookingsOpen} onOpenChange={setBookingsOpen}>
-        <SheetContent
-          side="bottom"
-          className="h-[100dvh] w-full p-0 z-[100] flex flex-col rounded-none"
-          style={{ maxHeight: "100dvh" }}
-        >
-          {/* Sticky Header */}
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
-            <button
-              onClick={() => setBookingsOpen(false)}
-              className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="Close bookings"
-            >
-              <ChevronLeft size={22} />
-            </button>
-            <h2 className="text-lg font-semibold">My Bookings</h2>
-          </div>
+      {/* ── Bookings Full-Page Sheet (no dark overlay) ── */}
+      <FullPageSheet open={bookingsOpen} onOpenChange={setBookingsOpen}>
+        {/* Sticky Header */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
+          <button
+            onClick={() => setBookingsOpen(false)}
+            className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Close bookings"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <h2 className="text-lg font-semibold">My Bookings</h2>
+        </div>
 
-          {/* Scrollable Content — pb-24 clears the bottom nav bar */}
-          <div className="flex-1 overflow-y-auto pb-24">
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center h-full py-20">
-                  <TealLoader />
-                </div>
-              }
-            >
-              <Bookings />
-            </Suspense>
-          </div>
-        </SheetContent>
-      </Sheet>
+        {/* Scrollable Content — pb-24 clears the bottom nav bar */}
+        <div className="flex-1 overflow-y-auto pb-24 bg-white">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full py-20">
+                <TealLoader />
+              </div>
+            }
+          >
+            <Bookings />
+          </Suspense>
+        </div>
+      </FullPageSheet>
 
-      {/* ── Saved Full-Page Sheet ── */}
-      <Sheet open={savedOpen} onOpenChange={setSavedOpen}>
-        <SheetContent
-          side="bottom"
-          className="h-[100dvh] w-full p-0 z-[100] flex flex-col rounded-none"
-          style={{ maxHeight: "100dvh" }}
-        >
-          {/* Sticky Header */}
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
-            <button
-              onClick={() => setSavedOpen(false)}
-              className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="Close saved"
-            >
-              <ChevronLeft size={22} />
-            </button>
-            <h2 className="text-lg font-semibold">Saved Items</h2>
-          </div>
+      {/* ── Saved Full-Page Sheet (no dark overlay) ── */}
+      <FullPageSheet open={savedOpen} onOpenChange={setSavedOpen}>
+        {/* Sticky Header */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
+          <button
+            onClick={() => setSavedOpen(false)}
+            className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Close saved"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <h2 className="text-lg font-semibold">Saved Items</h2>
+        </div>
 
-          {/* Scrollable Content — pb-24 clears the bottom nav bar */}
-          <div className="flex-1 overflow-y-auto pb-24">
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center h-full py-20">
-                  <TealLoader />
-                </div>
-              }
-            >
-              <Saved />
-            </Suspense>
-          </div>
-        </SheetContent>
-      </Sheet>
+        {/* Scrollable Content — pb-24 clears the bottom nav bar */}
+        <div className="flex-1 overflow-y-auto pb-24 bg-white">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full py-20">
+                <TealLoader />
+              </div>
+            }
+          >
+            <Saved />
+          </Suspense>
+        </div>
+      </FullPageSheet>
     </>
   );
 };
