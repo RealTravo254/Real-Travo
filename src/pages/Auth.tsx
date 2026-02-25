@@ -37,13 +37,14 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      <Header className="hidden md:block" />
+      {/* Always show header on auth page */}
+      <Header __fromLayout />
       
-      <main className="container px-4 pt-12 max-w-md mx-auto relative z-10">
-        {/* Back Button */}
+      <main className="container px-4 pt-20 max-w-md mx-auto relative z-10">
+        {/* Back Button - always goes home */}
         <Button
           variant="ghost"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/")}
           className="mb-8 hover:bg-transparent p-0 group"
         >
           <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100 group-hover:bg-[#008080] transition-colors mr-3">
@@ -94,7 +95,7 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pb-8">
-                <LoginForm />
+                <LoginForm onSwitchToSignup={() => setActiveTab("signup")} />
               </CardContent>
             </Card>
           </TabsContent>

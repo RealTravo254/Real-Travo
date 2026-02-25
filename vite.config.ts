@@ -81,9 +81,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/supabase/],
-        skipWaiting: false,
-        clientsClaim: false,
+        navigateFallbackDenylist: [/^\/api/, /^\/supabase/, /^\/~oauth/],
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/lmkxpzemfvmffxppxzky\.supabase\.co\/rest\/v1\/.*/i,

@@ -17,6 +17,7 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
   const shouldHideMobileBar =
     pathname === "/host-verification" || pathname.startsWith("/booking/");
 
+  // Auth page renders its own header
   const shouldHideHeader =
     pathname === "/auth" || pathname === "/reset-password" || pathname === "/forgot-password" ||
     pathname === "/verify-email" || pathname === "/complete-profile";
@@ -35,7 +36,8 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
           <Header __fromLayout />
         </div>
       )}
-      <div className="flex-1 w-full pb-20 md:pb-0">{children}</div>
+      {/* pt-14 ensures body content starts below the fixed header */}
+      <div className={`flex-1 w-full pb-20 md:pb-0 ${!shouldHideHeader ? 'pt-14' : ''}`}>{children}</div>
       {shouldShowFooter && <Footer />}
       {!shouldHideMobileBar && <MobileBottomBar />}
     </div>

@@ -5,9 +5,10 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getUserId } from "@/lib/sessionManager";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2, Bookmark, MapPin, ChevronRight, Loader2, Check } from "lucide-react";
+import { createDetailPath } from "@/lib/slugUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   AlertDialog,
@@ -79,11 +80,11 @@ const Saved = () => {
 
     const tripIds = savedData.filter(s => s.item_type === "trip" || s.item_type === "event").map(s => s.item_id);
     const hotelIds = savedData.filter(s => s.item_type === "hotel").map(s => s.item_id);
-    const adventureIds = savedData.filter(s => s.item_type === "adventure_place").map(s => s.item_id);
+    const adventureIds = savedData.filter(s => s.item_type === "adventure_place" || s.item_type === "attraction").map(s => s.item_id);
 
     const [tripsRes, hotelsRes, adventuresRes] = await Promise.all([
       tripIds.length > 0 
-        ? supabase.from("trips").select("id,name,location,country,image_url,is_hidden").in("id", tripIds)
+        ? supabase.from("trips").select("id,name,location,country,image_url,is_hidden,type").in("id", tripIds)
         : Promise.resolve({ data: [] }),
       hotelIds.length > 0 
         ? supabase.from("hotels").select("id,name,location,country,image_url,is_hidden").in("id", hotelIds)
@@ -96,7 +97,9 @@ const Saved = () => {
     const itemMap = new Map<string, any>();
     (tripsRes.data || []).forEach((item: any) => {
       if (item.is_hidden) return;
-      itemMap.set(item.id, { ...item, savedType: "trip" });
+      // Use actual type from DB (trip or event)
+      const savedType = item.type === "event" ? "event" : "trip";
+      itemMap.set(item.id, { ...item, savedType });
     });
     (hotelsRes.data || []).forEach((item: any) => {
       if (item.is_hidden) return;
@@ -104,7 +107,10 @@ const Saved = () => {
     });
     (adventuresRes.data || []).forEach((item: any) => {
       if (item.is_hidden) return;
-      itemMap.set(item.id, { ...item, savedType: "adventure_place" });
+      // Check original saved type for attraction vs adventure
+      const originalSaved = savedData.find(s => s.item_id === item.id);
+      const savedType = originalSaved?.item_type === "attraction" ? "attraction" : "adventure";
+      itemMap.set(item.id, { ...item, savedType });
     });
 
     const items = savedData
@@ -189,7 +195,7 @@ const Saved = () => {
             savedListings.map((item) => (
               <Link
                 key={item.id}
-                to={`/${item.savedType === 'adventure_place' ? 'adventures' : item.savedType + 's'}/${item.id}`}
+                to={createDetailPath(item.savedType, item.id, item.name, item.location)}
                 className={`group relative bg-white p-4 rounded-[28px] border transition-all flex items-center gap-5 ${
                   selectedItems.has(item.id) ? "border-[#007AFF] bg-blue-50/20" : "border-slate-100 hover:shadow-md"
                 }`}

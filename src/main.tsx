@@ -20,20 +20,35 @@ root.render(
  * This prevents SW registration from blocking the initial paint.
  */
 if ('serviceWorker' in navigator) {
-  // Use requestIdleCallback or setTimeout to defer registration
   const registerSW = () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('SW registered with scope:', registration.scope);
+        
+        // Check for updates every 60 seconds
+        setInterval(() => {
+          registration.update();
+        }, 60 * 1000);
+
         registration.onupdatefound = () => {
           const installingWorker = registration.installing;
           if (installingWorker == null) return;
           installingWorker.onstatechange = () => {
             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('New content available; please refresh.');
+              // New content available - auto-activate without user action
+              installingWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           };
         };
+
+        // When the new SW takes over, reload the page automatically
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
       })
       .catch((error) => {
         console.error('Error during service worker registration:', error);

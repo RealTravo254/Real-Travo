@@ -35,7 +35,14 @@ self.addEventListener('install', (event) => {
       return cache.addAll(PRECACHE_ASSETS).catch(err => console.warn("Precache failed for some assets", err));
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Activate immediately
+});
+
+// Listen for skip waiting message from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // --- ACTIVATE: Cleanup old caches ---

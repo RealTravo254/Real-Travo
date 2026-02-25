@@ -860,7 +860,15 @@ const Index = () => {
                   </div>
                 ))}
               </div>
-            ) : sortedListings.length > 0 ? (
+            ) : sortedListings.length === 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="w-full">
+                    <ListingSkeleton />
+                  </div>
+                ))}
+              </div>
+            ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {sortedListings.map((listing, index) => {
                   const itemDistance = position && listing.latitude && listing.longitude ? calculateDistance(position.latitude, position.longitude, listing.latitude, listing.longitude) : undefined;
@@ -898,8 +906,6 @@ const Index = () => {
                   );
                 })}
               </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No results found</p>
             )}
           </div>
         )}
@@ -974,8 +980,12 @@ const Index = () => {
                       ))}
                     </div>
                   ) : displayCampsites.length === 0 ? (
-                    <div className="flex-1 text-center py-8 text-muted-foreground">
-                      No adventure places available
+                    <div className="flex gap-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-[75vw] sm:w-[320px] md:w-[380px]">
+                          <ListingSkeleton />
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     displayCampsites.map((place, index) => {
@@ -1044,8 +1054,12 @@ const Index = () => {
                       ))}
                     </div>
                   ) : displayHotels.length === 0 ? (
-                    <div className="flex-1 text-center py-8 text-muted-foreground">
-                      No hotels available
+                    <div className="flex gap-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-[75vw] sm:w-[320px] md:w-[380px]">
+                          <ListingSkeleton />
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     displayHotels.map((hotel, index) => {
@@ -1114,8 +1128,12 @@ const Index = () => {
                       ))}
                     </div>
                   ) : displayTrips.length === 0 ? (
-                    <div className="flex-1 text-center py-8 text-muted-foreground">
-                      No trips available
+                    <div className="flex gap-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-[75vw] sm:w-[320px] md:w-[380px]">
+                          <ListingSkeleton />
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     displayTrips.map((trip, index) => {
@@ -1188,8 +1206,12 @@ const Index = () => {
                       ))}
                     </div>
                   ) : displayEvents.length === 0 ? (
-                    <div className="flex-1 text-center py-8 text-muted-foreground">
-                      No events available
+                    <div className="flex gap-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-[75vw] sm:w-[320px] md:w-[380px]">
+                          <ListingSkeleton />
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     displayEvents.map((event, index) => {
