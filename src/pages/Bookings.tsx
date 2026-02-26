@@ -17,83 +17,46 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 const bookingsCache = { data: null as any[] | null, timestamp: 0 };
 const CACHE_TTL = 5 * 60 * 1000;
 
-interface Booking {
-  id: string;
-  booking_type: string;
-  total_amount: number;
-  booking_details: any;
-  payment_status: string;
-  status: string;
-  created_at: string;
-  guest_name: string | null;
-  guest_email: string | null;
-  guest_phone: string | null;
-  slots_booked: number | null;
-  visit_date: string | null;
-  item_id: string;
-  isPending?: boolean;
-  payment_phone?: string;
-  pendingPaymentId?: string;
-  result_code?: string | null;
-}
-
-interface ItemDetails { name: string; type: string; }
-
 const Bookings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const isOnline = useOnlineStatus();
   const { cachedBookings, cacheBookings } = useOfflineBookings();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [itemDetails, setItemDetails] = useState<Record<string, ItemDetails>>({});
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [itemDetails, setItemDetails] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
+  const [rescheduleBooking, setRescheduleBooking] = useState<any | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [bookingToCancel, setBookingToCancel] = useState<any | null>(null);
   const [expandedBookings, setExpandedBookings] = useState<Set<string>>(new Set());
-  const ITEMS_PER_PAGE = 20;
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 20;
   const hasFetched = useRef(false);
 
   useEffect(() => { if (!authLoading && !user) navigate("/auth"); }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    const checkProfile = async () => {
-      if (!user) return;
-      const { data } = await supabase.from('profiles').select('profile_completed').eq('id', user.id).single();
-      if (data && !data.profile_completed) navigate('/complete-profile');
-    };
-    if (user) checkProfile();
-  }, [user, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      if (isOnline) {
-        if (bookingsCache.data && Date.now() - bookingsCache.timestamp < CACHE_TTL && !hasFetched.current) {
-          setBookings(bookingsCache.data);
-          setLoading(false);
-          hasFetched.current = true;
-        } else {
-          fetchBookings();
-        }
-        const channel = supabase.channel('payments-updates').on('postgres_changes', {
-          event: '*', schema: 'public', table: 'payments', filter: `user_id=eq.${user.id}`
-        }, () => fetchBookings()).subscribe();
-        return () => { supabase.removeChannel(channel); };
-      } else {
-        setBookings(cachedBookings as Booking[]);
+    if (user && isOnline) {
+      if (bookingsCache.data && !hasFetched.current) {
+        setBookings(bookingsCache.data);
         setLoading(false);
+        hasFetched.current = true;
+      } else {
+        fetchBookings();
       }
+    } else if (user && !isOnline) {
+      setBookings(cachedBookings);
+      setLoading(false);
     }
   }, [user, isOnline]);
 
   const fetchBookings = async (fetchOffset: number = 0) => {
     try {
-      const { data: confirmedBookings, error } = await supabase
+      const { data, error } = await supabase
         .from("bookings")
-        .select("id,booking_type,total_amount,booking_details,payment_status,status,created_at,guest_name,guest_email,guest_phone,slots_booked,visit_date,item_id,payment_phone")
+        .select("*")
         .eq("user_id", user?.id)
         .in("payment_status", ["paid", "completed"])
         .not("status", "eq", "cancelled")
@@ -101,233 +64,173 @@ const Bookings = () => {
         .range(fetchOffset, fetchOffset + ITEMS_PER_PAGE - 1);
       
       if (error) throw error;
-      const newBookings = confirmedBookings || [];
-      
       if (fetchOffset === 0) {
-        setBookings(newBookings);
-        bookingsCache.data = newBookings;
-        bookingsCache.timestamp = Date.now();
+        setBookings(data || []);
+        bookingsCache.data = data;
       } else {
-        setBookings(prev => [...prev, ...newBookings]);
+        setBookings(prev => [...prev, ...(data || [])]);
       }
-      
-      setHasMore(newBookings.length >= ITEMS_PER_PAGE);
-      setOffset(fetchOffset);
-      hasFetched.current = true;
-      
-      if (newBookings.length > 0) {
-        cacheBookings(newBookings.map(b => ({ ...b, item_name: itemDetails[b.item_id]?.name })));
-        await fetchItemDetailsBatch(fetchOffset === 0 ? newBookings : [...bookings, ...newBookings]);
-      }
-    } catch (error) { console.error("Error fetching bookings:", error); }
+      setHasMore((data || []).length >= ITEMS_PER_PAGE);
+    } catch (e) { console.error(e); }
     finally { setLoading(false); setLoadingMore(false); }
   };
 
-  const loadMore = async () => { if (loadingMore || !hasMore) return; setLoadingMore(true); await fetchBookings(offset + ITEMS_PER_PAGE); };
-
-  const fetchItemDetailsBatch = async (bookings: Booking[]) => {
-    const details: Record<string, ItemDetails> = {};
-    const tripIds = bookings.filter(b => b.booking_type === "trip" || b.booking_type === "event").map(b => b.item_id);
-    const hotelIds = bookings.filter(b => b.booking_type === "hotel").map(b => b.item_id);
-    const adventureIds = bookings.filter(b => b.booking_type === "adventure" || b.booking_type === "adventure_place").map(b => b.item_id);
-    
-    const [tripsData, hotelsData, adventuresData] = await Promise.all([
-      tripIds.length > 0 ? supabase.from("trips").select("id,name").in("id", tripIds) : { data: [] },
-      hotelIds.length > 0 ? supabase.from("hotels").select("id,name").in("id", hotelIds) : { data: [] },
-      adventureIds.length > 0 ? supabase.from("adventure_places").select("id,name").in("id", adventureIds) : { data: [] }
-    ]);
-    
-    (tripsData.data || []).forEach((t: any) => { details[t.id] = { name: t.name, type: "trip" }; });
-    (hotelsData.data || []).forEach((h: any) => { details[h.id] = { name: h.name, type: "hotel" }; });
-    (adventuresData.data || []).forEach((a: any) => { details[a.id] = { name: a.name, type: "adventure" }; });
-    setItemDetails(details);
-  };
-
   const groupedBookings = useMemo(() => {
-    const groups: Record<string, Booking[]> = { Today: [], Yesterday: [], Earlier: [] };
-    bookings.forEach(booking => {
-      const d = parseISO(booking.created_at);
-      if (isToday(d)) groups.Today.push(booking);
-      else if (isYesterday(d)) groups.Yesterday.push(booking);
-      else groups.Earlier.push(booking);
+    const groups: Record<string, any[]> = { Today: [], Yesterday: [], Earlier: [] };
+    bookings.forEach(b => {
+      const d = parseISO(b.created_at);
+      if (isToday(d)) groups.Today.push(b);
+      else if (isYesterday(d)) groups.Yesterday.push(b);
+      else groups.Earlier.push(b);
     });
     return groups;
   }, [bookings]);
 
-  const canReschedule = (b: Booking) => ['paid', 'completed'].includes(b.payment_status) && b.status !== 'cancelled' && b.booking_type !== 'event';
-  const canCancel = (b: Booking) => {
-    if (!['paid', 'completed'].includes(b.payment_status) || b.status === 'cancelled') return false;
-    if (b.visit_date) { const h = (new Date(b.visit_date).getTime() - Date.now()) / 3600000; if (h < 48) return false; }
-    return true;
-  };
-
-  const handleCancelBooking = async () => {
-    if (!bookingToCancel) return;
-    try {
-      const { error } = await supabase.from('bookings').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', bookingToCancel.id);
-      if (error) throw error;
-      toast.success("Booking cancelled");
-      fetchBookings();
-    } catch (e: any) { toast.error(e.message || "Failed"); }
-    finally { setShowCancelDialog(false); setBookingToCancel(null); }
-  };
-
-  const toggleExpanded = (id: string) => setExpandedBookings(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
-  const getItemName = (b: Booking) => itemDetails[b.item_id]?.name || b.booking_details?.trip_name || b.booking_details?.hotel_name || b.booking_details?.place_name || b.booking_details?.event_name || 'Booking';
+  const toggleExpanded = (id: string) => setExpandedBookings(prev => {
+    const s = new Set(prev);
+    if (s.has(id)) s.delete(id); else s.add(id);
+    return s;
+  });
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen w-full bg-background">
-        <main className="container px-4 py-6 animate-pulse space-y-3">
-          <div className="h-6 bg-muted rounded w-32" />
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-card rounded-xl border border-border" />)}
-        </main>
+      <div className="fixed inset-0 bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-background flex flex-col overflow-x-hidden">
-      {/* Scrollable area with touch-pan-y for better mobile scrolling */}
-      <main className="flex-1 container px-4 py-6 max-w-2xl mx-auto pb-32 md:pb-12 touch-pan-y overflow-y-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-black uppercase tracking-tight text-foreground">My Bookings</h1>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verified Reservations</p>
-        </div>
+    /* FIXED INSET-0: This creates a layer that ignores parent layout bugs */
+    <div className="fixed inset-0 z-0 flex flex-col bg-background overflow-hidden">
+      
+      {/* MAIN SCROLL CONTAINER: touch-pan-y is critical for mobile */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain px-4 pt-8 pb-32">
+        <div className="max-w-xl mx-auto w-full">
+          
+          <header className="mb-8">
+            <h1 className="text-2xl font-black uppercase tracking-tighter text-foreground">My Bookings</h1>
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verified Reservations</p>
+            </div>
+          </header>
 
-        {!isOnline && (
-          <div className="mb-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 flex items-center gap-2">
-            <WifiOff className="h-3.5 w-3.5 text-yellow-600" />
-            <span className="text-[10px] font-bold uppercase text-yellow-700">Offline Mode • Showing cached data</span>
-          </div>
-        )}
+          {!isOnline && (
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2">
+              <WifiOff size={14} className="text-amber-600" />
+              <p className="text-[10px] font-black uppercase text-amber-700">Offline: Showing cached data</p>
+            </div>
+          )}
 
-        {bookings.length === 0 ? (
-          <div className="bg-card rounded-2xl p-12 text-center border border-dashed border-border">
-            <Calendar className="h-10 w-10 text-muted-foreground/40 mx-auto mb-4" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">No active bookings found</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedBookings).map(([groupName, groupBookings]) => {
-              if (groupBookings.length === 0) return null;
-              return (
-                <div key={groupName} className="space-y-3">
-                  <div className="flex items-center gap-2 px-1">
-                    <History className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{groupName}</span>
+          {bookings.length === 0 ? (
+            <div className="py-20 text-center">
+              <p className="text-[10px] font-black uppercase text-muted-foreground">No bookings found</p>
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {Object.entries(groupedBookings).map(([groupName, groupItems]) => groupItems.length > 0 && (
+                <section key={groupName} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{groupName}</span>
                     <div className="h-px bg-border flex-1" />
                   </div>
-                  
-                  <div className="space-y-2">
-                    {groupBookings.map(booking => {
-                      const isExpanded = expandedBookings.has(booking.id);
-                      const details = booking.booking_details as Record<string, any> | null;
+
+                  <div className="space-y-3">
+                    {groupItems.map((b) => {
+                      const isOpen = expandedBookings.has(b.id);
                       return (
-                        <Collapsible key={booking.id} open={isExpanded} onOpenChange={() => toggleExpanded(booking.id)}>
-                          <div className="bg-card rounded-2xl border border-border overflow-hidden transition-colors duration-200">
-                            {/* Improved Header as a full trigger area */}
-                            <CollapsibleTrigger asChild>
-                              <div className="flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Badge variant="secondary" className="text-[8px] px-2 py-0 h-4 font-black uppercase tracking-tighter">{booking.booking_type}</Badge>
-                                    <Badge variant="outline" className="text-[8px] px-2 py-0 h-4 font-black text-emerald-600 border-emerald-200 bg-emerald-50 uppercase">Paid</Badge>
-                                  </div>
-                                  <p className="text-sm font-bold text-foreground truncate">{getItemName(booking)}</p>
-                                  <div className="flex items-center gap-3 mt-1.5">
-                                    {booking.visit_date && (
-                                      <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                        <Calendar className="h-3 w-3" /> {format(new Date(booking.visit_date), 'dd MMM yyyy')}
-                                      </span>
-                                    )}
-                                    <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                      <Users className="h-3 w-3" /> {booking.slots_booked || 1} Guests
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                                  <p className="text-sm font-black text-foreground">KSh {booking.total_amount.toLocaleString()}</p>
-                                  <div className="p-1 rounded-full bg-muted/50">
-                                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                                  </div>
-                                </div>
+                        <div key={b.id} className="bg-card rounded-[24px] border border-border overflow-hidden">
+                          {/* We use a standard div for the header to avoid CollapsibleTrigger scroll hijacking */}
+                          <div 
+                            onClick={() => toggleExpanded(b.id)}
+                            className="p-4 flex items-center justify-between cursor-pointer active:bg-muted/50 transition-colors"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex gap-2 mb-1.5">
+                                <Badge variant="secondary" className="text-[8px] font-black uppercase h-4 px-1.5">
+                                  {b.booking_type}
+                                </Badge>
+                                <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-black uppercase h-4 px-1.5">
+                                  Paid
+                                </Badge>
                               </div>
-                            </CollapsibleTrigger>
-
-                            <CollapsibleContent>
-                              <div className="px-4 pb-4 pt-2 border-t border-border/50 bg-muted/10 space-y-4">
-                                <div className="grid grid-cols-2 gap-y-3 gap-x-4">
-                                  <div className="space-y-0.5">
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Guest</p>
-                                    <p className="text-[11px] font-semibold">{booking.guest_name || 'N/A'}</p>
-                                  </div>
-                                  <div className="space-y-0.5">
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Ref ID</p>
-                                    <p className="text-[11px] font-mono uppercase">{booking.id.slice(0, 8)}</p>
-                                  </div>
-                                  <div className="space-y-0.5">
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Adults</p>
-                                    <p className="text-[11px] font-semibold">{details?.adults || booking.slots_booked || 1}</p>
-                                  </div>
-                                  {details?.children > 0 && (
-                                    <div className="space-y-0.5">
-                                      <p className="text-[9px] font-bold text-muted-foreground uppercase">Children</p>
-                                      <p className="text-[11px] font-semibold">{details.children}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {details?.selectedActivities?.length > 0 && (
-                                  <div>
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1.5">Selected Activities</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {details.selectedActivities.map((a: any, i: number) => (
-                                        <span key={i} className="text-[9px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{a.name}</span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="flex flex-wrap gap-2 pt-2">
-                                  <BookingDownloadButton booking={{
-                                    bookingId: booking.id, guestName: booking.guest_name || 'Guest', guestEmail: booking.guest_email || '',
-                                    itemName: getItemName(booking), bookingType: booking.booking_type, visitDate: booking.visit_date || booking.created_at,
-                                    totalAmount: booking.total_amount, slotsBooked: booking.slots_booked || 1, adults: details?.adults, children: details?.children, paymentStatus: booking.payment_status,
-                                  }} />
-                                  
-                                  {canReschedule(booking) && (
-                                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setRescheduleBooking(booking); }} className="h-8 text-[10px] font-bold rounded-xl border-border bg-background">
-                                      <CalendarClock className="h-3 w-3 mr-1.5 text-primary" /> Reschedule
-                                    </Button>
-                                  )}
-                                  
-                                  {canCancel(booking) && (
-                                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setBookingToCancel(booking); setShowCancelDialog(true); }} className="h-8 text-[10px] font-bold rounded-xl text-destructive hover:bg-destructive/5">
-                                      <XCircle className="h-3 w-3 mr-1.5" /> Cancel
-                                    </Button>
-                                  )}
-                                </div>
+                              <p className="text-sm font-bold text-foreground truncate pr-4">
+                                {b.booking_details?.trip_name || b.booking_details?.hotel_name || b.booking_details?.place_name || 'Reservation'}
+                              </p>
+                              <p className="text-[9px] font-mono text-muted-foreground mt-1 uppercase">ID: {b.id.slice(0, 8)}</p>
+                            </div>
+                            
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-black text-foreground">KSh {b.total_amount.toLocaleString()}</p>
+                              <div className="flex justify-end mt-1 text-muted-foreground">
+                                {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                               </div>
-                            </CollapsibleContent>
+                            </div>
                           </div>
-                        </Collapsible>
+
+                          {/* Expansion Content */}
+                          {isOpen && (
+                            <div className="border-t border-border/50 bg-muted/20 p-4 space-y-5 animate-in slide-in-from-top-2 duration-200">
+                              <div className="grid grid-cols-2 gap-4 text-[10px] font-bold uppercase">
+                                <div>
+                                  <p className="text-muted-foreground mb-1 tracking-widest">Guest</p>
+                                  <p className="text-foreground">{b.guest_name || 'N/A'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground mb-1 tracking-widest">Date</p>
+                                  <p className="text-foreground">
+                                    {b.visit_date ? format(new Date(b.visit_date), 'dd MMM yyyy') : 'N/A'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground mb-1 tracking-widest">Guests</p>
+                                  <p className="text-foreground">{b.slots_booked || 1}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground mb-1 tracking-widest">Status</p>
+                                  <p className="text-emerald-600">Confirmed</p>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 pt-2">
+                                <BookingDownloadButton booking={{...b, bookingId: b.id}} />
+                                
+                                {b.booking_type !== 'event' && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={(e) => { e.stopPropagation(); setRescheduleBooking(b); }}
+                                    className="h-9 rounded-xl text-[9px] font-black uppercase border-2"
+                                  >
+                                    <CalendarClock size={14} className="mr-2" /> Reschedule
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                </section>
+              ))}
+            </div>
+          )}
 
-        {hasMore && bookings.length > 0 && (
-          <div className="flex justify-center mt-8">
-            <Button onClick={loadMore} disabled={loadingMore} variant="outline" className="rounded-2xl text-[10px] font-black uppercase h-10 px-8 border-2">
-              {loadingMore ? <><Loader2 className="h-3 w-3 mr-2 animate-spin" /> Fetching...</> : "View Older Bookings"}
-            </Button>
-          </div>
-        )}
+          {hasMore && bookings.length > 0 && (
+            <div className="mt-12 mb-8 flex justify-center">
+              <Button 
+                onClick={loadMore} 
+                disabled={loadingMore}
+                variant="ghost" 
+                className="text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4"
+              >
+                {loadingMore ? "Loading..." : "Older Bookings"}
+              </Button>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Dialogs */}
@@ -335,25 +238,10 @@ const Bookings = () => {
         <RescheduleBookingDialog 
           booking={rescheduleBooking} 
           open={!!rescheduleBooking} 
-          onOpenChange={open => !open && setRescheduleBooking(null)} 
+          onOpenChange={(o) => !o && setRescheduleBooking(null)} 
           onSuccess={fetchBookings} 
         />
       )}
-
-      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent className="max-w-[92vw] md:max-w-lg rounded-[2rem] border-none p-6 shadow-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">Cancel Reservation?</AlertDialogTitle>
-            <div className="text-xs text-muted-foreground leading-relaxed">
-              This action cannot be undone. Per our policy, cancellations within 48 hours of the visit date are non-refundable.
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-6 flex flex-col gap-2">
-            <AlertDialogAction onClick={handleCancelBooking} className="w-full rounded-2xl bg-destructive hover:bg-destructive/90 text-[10px] font-bold uppercase h-12 order-1 sm:order-2">Confirm Cancellation</AlertDialogAction>
-            <AlertDialogCancel className="w-full rounded-2xl text-[10px] font-bold uppercase h-12 order-2 sm:order-1">Go Back</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
