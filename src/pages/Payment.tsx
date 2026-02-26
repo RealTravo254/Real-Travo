@@ -203,7 +203,7 @@ export default function Payment() {
 const ReferralRatesSection = () => {
   const [rates, setRates] = useState<any>(null);
   useEffect(() => {
-    supabase.from("referral_settings").select("trip_commission_rate,event_commission_rate,hotel_commission_rate,adventure_place_commission_rate,attraction_commission_rate").single()
+    supabase.from("referral_settings").select("trip_commission_rate,event_commission_rate,hotel_commission_rate,adventure_place_commission_rate").single()
       .then(({ data }) => data && setRates(data));
   }, []);
   if (!rates) return null;
@@ -212,7 +212,6 @@ const ReferralRatesSection = () => {
     { label: "Events", value: `${rates.event_commission_rate}%` },
     { label: "Hotels", value: `${rates.hotel_commission_rate}%` },
     { label: "Adventures", value: `${rates.adventure_place_commission_rate}%` },
-    { label: "Attractions", value: `${rates.attraction_commission_rate}%` },
   ];
   return (
     <div className="grid grid-cols-2 gap-2 mb-4">
