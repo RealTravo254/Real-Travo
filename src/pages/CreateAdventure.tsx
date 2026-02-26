@@ -507,7 +507,7 @@ const CreateAdventure = () => {
   const [formData, setFormData] = useState({
     registrationName: "", registrationNumber: "", locationName: "", place: "",
     country: "", description: "", email: "", phoneNumber: "",
-    openingHours: "00:00", closingHours: "23:59",
+    openingHours: "8:00 AM", closingHours: "5:00 PM",
     entranceFeeType: "free", adultPrice: "0", childPrice: "0",
     latitude: null as number | null, longitude: null as number | null,
   });

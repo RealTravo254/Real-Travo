@@ -535,7 +535,7 @@ const CreateHotel = () => {
     registrationName: "", registrationNumber: "", place: "", country: "",
     description: "", email: "", phoneNumber: "", establishmentType: "hotel",
     latitude: null as number | null, longitude: null as number | null,
-    openingHours: "00:00", closingHours: "23:59", generalBookingLink: "",
+    openingHours: "8:00 AM", closingHours: "5:00 PM", generalBookingLink: "",
   });
 
   const isAccommodationOnly = formData.establishmentType === "accommodation_only";

@@ -33,5 +33,6 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#008080",
-  "background_color": "#008080"
+  "background_color": "#008080",
+  "categories": ["travel", "lifestyle"]
 }

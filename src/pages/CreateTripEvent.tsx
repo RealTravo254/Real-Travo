@@ -61,7 +61,7 @@ const CreateTripEvent = () => {
     price: "0", price_child: "0", available_tickets: "0", email: "", phone_number: "",
     map_link: "", is_custom_date: false, type: "trip" as "trip" | "event",
     latitude: null as number | null, longitude: null as number | null,
-    opening_hours: "00:00", closing_hours: "23:59",
+    opening_hours: "8:00 AM", closing_hours: "5:00 PM",
   });
 
   const [workingDays, setWorkingDays] = useState<WorkingDays>({ Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: true, Sun: true });
