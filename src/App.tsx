@@ -9,6 +9,8 @@ import { PageLayout } from "@/components/PageLayout";
 import { SmallScreenInstallBanner } from "@/components/SmallScreenInstallBanner";
 import { DetailPageSkeleton } from "@/components/detail/DetailPageSkeleton";
 import { TealLoader } from "@/components/ui/teal-loader";
+import { OfflineIndicator, OfflineFullScreen } from "@/components/OfflineIndicator";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
  
 // Only the Index page loads eagerly - everything else is lazy
 import Index from "./pages/Index";
@@ -81,6 +83,13 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Suspense fallback that shows offline screen when not connected */
+const SuspenseFallback = () => {
+  const isOnline = useOnlineStatus();
+  if (!isOnline) return <OfflineFullScreen />;
+  return <TealLoader />;
+};
+
 const App = () => {
   useEffect(() => {
     const handler = (e: PromiseRejectionEvent) => {
@@ -98,9 +107,10 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <OfflineIndicator />
             <SmallScreenInstallBanner />
             <PageLayout>
-              <Suspense fallback={<TealLoader />}>
+              <Suspense fallback={<SuspenseFallback />}>
                 <div className="w-full">
                   <Routes>
                     <Route path="/" element={<Index />} />

@@ -78,14 +78,13 @@ export const useSafeBack = (fallback = "/") => {
   const location = useLocation();
 
   return useCallback(() => {
-    const parentRoute = getParentRoute(location.pathname);
-
-    if (parentRoute) {
-      navigate(parentRoute);
-    } else if (window.history.length > 1) {
+    // Always use browser back if there's history, for natural navigation
+    if (window.history.length > 1) {
       navigate(-1);
     } else {
-      navigate(fallback, { replace: true });
+      // Fallback to parent route or home
+      const parentRoute = getParentRoute(location.pathname);
+      navigate(parentRoute || fallback, { replace: true });
     }
   }, [navigate, fallback, location.pathname]);
 };
