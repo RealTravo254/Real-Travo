@@ -37,7 +37,8 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
         </div>
       )}
       {/* pt-14 ensures body content starts below the fixed header */}
-      <div className={`flex-1 w-full pb-20 md:pb-0 ${!shouldHideHeader ? 'pt-14' : ''}`}>{children}</div>
+      {/* On mobile detail pages where header is hidden, remove top padding to avoid empty space */}
+      <div className={`flex-1 w-full pb-20 md:pb-0 ${!shouldHideHeader ? (shouldHideHeaderOnMobile ? 'pt-0 md:pt-14' : 'pt-14') : ''}`}>{children}</div>
       {shouldShowFooter && <Footer />}
       {!shouldHideMobileBar && <MobileBottomBar />}
     </div>

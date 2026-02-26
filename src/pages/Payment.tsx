@@ -179,11 +179,17 @@ export default function Payment() {
             </div>
             <div className="grid grid-cols-2 gap-2 mb-4">
               <StatCard icon={<TrendingUp className="h-4 w-4" />} label="From Bookings" value={`KES ${stats.bookingEarnings.toLocaleString()}`} />
-              <StatCard icon={<Percent className="h-4 w-4" />} label="Rate" value={`${stats.avgServiceFeeRate}%`} />
               <StatCard icon={<Award className="h-4 w-4" />} label="Referrals" value={stats.totalReferred} />
               <StatCard icon={<DollarSign className="h-4 w-4" />} label="Conversions" value={stats.totalBookings} />
               <StatCard icon={<Wallet className="h-4 w-4" />} label="Total Earned" value={`KES ${stats.totalCommission.toLocaleString()}`} />
             </div>
+
+            {/* Per-item referral rates */}
+            <div className="mb-3">
+              <h2 className="text-sm font-black uppercase tracking-tight text-foreground">Referral Rates by Category</h2>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Commission rates per item type</p>
+            </div>
+            <ReferralRatesSection />
           </>
         )}
       </main>
@@ -193,6 +199,29 @@ export default function Payment() {
     </div>
   );
 }
+
+const ReferralRatesSection = () => {
+  const [rates, setRates] = useState<any>(null);
+  useEffect(() => {
+    supabase.from("referral_settings").select("trip_commission_rate,event_commission_rate,hotel_commission_rate,adventure_place_commission_rate,attraction_commission_rate").single()
+      .then(({ data }) => data && setRates(data));
+  }, []);
+  if (!rates) return null;
+  const items = [
+    { label: "Trips", value: `${rates.trip_commission_rate}%` },
+    { label: "Events", value: `${rates.event_commission_rate}%` },
+    { label: "Hotels", value: `${rates.hotel_commission_rate}%` },
+    { label: "Adventures", value: `${rates.adventure_place_commission_rate}%` },
+    { label: "Attractions", value: `${rates.attraction_commission_rate}%` },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-2 mb-4">
+      {items.map(item => (
+        <StatCard key={item.label} icon={<Percent className="h-4 w-4" />} label={item.label} value={item.value} />
+      ))}
+    </div>
+  );
+};
 
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) => (
   <div className="bg-card rounded-xl p-3 border border-border">
