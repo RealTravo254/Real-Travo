@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getUserId } from "@/lib/sessionManager";
 import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Trash2, MapPin, ChevronRight, Loader2 } from "lucide-react";
 import { createDetailPath } from "@/lib/slugUtils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +41,7 @@ const Saved = () => {
     initializeData();
   }, [authLoading]);
 
-  // Sync with global saved items state
+  // Sync with global saved state if an item is removed elsewhere
   useEffect(() => {
     if (userId && hasFetched.current) {
       fetchSavedItems(userId, 0);
@@ -68,15 +69,9 @@ const Saved = () => {
     const adventureIds = savedData.filter(s => s.item_type === "adventure_place" || s.item_type === "attraction").map(s => s.item_id);
 
     const [tripsRes, hotelsRes, adventuresRes] = await Promise.all([
-      tripIds.length > 0 
-        ? supabase.from("trips").select("id,name,location,image_url,is_hidden,type").in("id", tripIds) 
-        : { data: [] },
-      hotelIds.length > 0 
-        ? supabase.from("hotels").select("id,name,location,image_url,is_hidden").in("id", hotelIds) 
-        : { data: [] },
-      adventureIds.length > 0 
-        ? supabase.from("adventure_places").select("id,name,location,image_url,is_hidden").in("id", adventureIds) 
-        : { data: [] },
+      tripIds.length > 0 ? supabase.from("trips").select("id,name,location,image_url,is_hidden,type").in("id", tripIds) : { data: [] },
+      hotelIds.length > 0 ? supabase.from("hotels").select("id,name,location,image_url,is_hidden").in("id", hotelIds) : { data: [] },
+      adventureIds.length > 0 ? supabase.from("adventure_places").select("id,name,location,image_url,is_hidden").in("id", adventureIds) : { data: [] },
     ]);
 
     const itemMap = new Map();
@@ -92,7 +87,7 @@ const Saved = () => {
     setIsLoading(false);
   };
 
-  const handleRemoveItem = async (e: React.MouseEvent, itemId: string) => {
+  const handleRemoveSingle = async (e: React.MouseEvent, itemId: string) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -108,8 +103,6 @@ const Saved = () => {
     if (!error) {
       setSavedListings(prev => prev.filter(item => item.id !== itemId));
       toast({ title: "Removed", description: "Item removed from your collection." });
-    } else {
-      toast({ variant: "destructive", title: "Error", description: "Could not remove item." });
     }
     setDeletingId(null);
   };
@@ -118,52 +111,44 @@ const Saved = () => {
     <div className={isEmbeddedInSheet ? "min-h-full bg-background" : "min-h-screen bg-[#F4F7FA] pb-24 font-sans"}>
       {!isEmbeddedInSheet && <Header />}
       
-      <div className={isEmbeddedInSheet 
-        ? "max-w-[1200px] mx-auto px-4 py-4" 
-        : "max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 py-12"}
-      >
+      <div className={isEmbeddedInSheet ? "px-4 py-4" : "max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 py-12"}>
+        
         {!isEmbeddedInSheet && (
           <aside className="lg:col-span-4">
             <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 sticky top-24">
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Saved Places</h1>
-              <p className="text-slate-500 text-sm">Review and manage your curated travel list.</p>
+              <p className="text-slate-500 text-sm">Your curated collection of adventures and stays.</p>
             </div>
           </aside>
         )}
 
         <main className={isEmbeddedInSheet ? "space-y-3" : "lg:col-span-8 space-y-3"}>
           {isEmbeddedInSheet && (
-            <div className="mb-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Saved Items</p>
+            <div className="mb-2 px-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Your Saved Items</p>
             </div>
           )}
 
           {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-[24px]" />)}
-            </div>
+            <Skeleton className="h-64 w-full rounded-[32px]" />
           ) : savedListings.length === 0 ? (
-            <div className="bg-white rounded-[32px] p-16 text-center text-slate-400 border border-slate-100 italic">
-              No items in your collection.
+            <div className="bg-white rounded-[40px] p-20 text-center text-slate-400 border border-slate-100">
+              No items saved yet.
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="grid gap-3">
               {savedListings.map((item) => (
                 <div key={item.id} className="group relative">
                   <Link
                     to={createDetailPath(item.savedType, item.id, item.name, item.location)}
-                    className="flex items-center gap-4 bg-white p-3 sm:p-4 rounded-[24px] border border-slate-100 hover:shadow-lg transition-all active:scale-[0.99]"
+                    className="flex items-center gap-4 bg-white p-3 sm:p-4 rounded-[24px] border border-slate-100 hover:shadow-md transition-all active:scale-[0.98]"
                   >
-                    <img src={item.image_url} className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover shrink-0" alt="" />
+                    <img src={item.image_url} className="h-16 w-16 rounded-xl object-cover shrink-0" alt="" />
                     
-                    <div className="flex-1 min-w-0 pr-10">
-                      <p className="text-[9px] font-bold text-[#007AFF] uppercase mb-0.5 tracking-wider">
-                        {item.savedType?.replace('_', ' ')}
-                      </p>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-800 truncate">
-                        {item.name}
-                      </h3>
-                      <div className="flex items-center text-slate-400 text-[11px] mt-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] font-bold text-[#007AFF] uppercase mb-0.5">{item.savedType?.replace('_', ' ')}</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-800 truncate pr-8">{item.name}</h3>
+                      <div className="flex items-center text-slate-400 text-xs mt-0.5">
                         <MapPin size={10} className="mr-1 shrink-0" />
                         <span className="truncate">{item.location}</span>
                       </div>
@@ -174,16 +159,17 @@ const Saved = () => {
                     </div>
                   </Link>
 
-                  {/* Absolute Positioned Remove Button */}
+                  {/* Individual Remove Button */}
                   <button
-                    onClick={(e) => handleRemoveItem(e, item.id)}
+                    onClick={(e) => handleRemoveSingle(e, item.id)}
                     disabled={deletingId === item.id}
-                    className="absolute right-14 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors z-20 border border-red-100/50"
+                    className="absolute right-14 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 active:scale-90 transition-all z-20 border border-red-100"
+                    aria-label="Remove item"
                   >
                     {deletingId === item.id ? (
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2 size={16} className="animate-spin" />
                     ) : (
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     )}
                   </button>
                 </div>
