@@ -255,20 +255,33 @@ export function RescheduleBookingDialog({
     // Backdrop
     <div
       className="fixed inset-0 flex items-end sm:items-center justify-center"
-      style={{ zIndex: 400 }}
+      style={{ zIndex: 400, pointerEvents: "all", touchAction: "none" }}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => { e.stopPropagation(); if (e.target === e.currentTarget) onOpenChange(false); }}
       onClick={(e) => { if (e.target === e.currentTarget) onOpenChange(false); }}
     >
-      {/* Dim overlay */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      {/* Dim overlay — also blocks touches */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        style={{ pointerEvents: "all", touchAction: "none" }}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => { e.stopPropagation(); onOpenChange(false); }}
+        onClick={() => onOpenChange(false)}
+      />
 
       {/* Modal panel — slides up from bottom on mobile, centered on desktop */}
       <div
         className="relative w-full sm:max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl flex flex-col"
         style={{
           maxHeight: "92dvh",
-          // Ensure touch events work correctly inside the modal
+          pointerEvents: "all",
           touchAction: "pan-y",
+          zIndex: 401,
         }}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle (mobile) */}
