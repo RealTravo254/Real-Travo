@@ -87,10 +87,7 @@ const Saved = () => {
     setIsLoading(false);
   };
 
-  const handleRemoveSingle = async (e: React.MouseEvent, itemId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleRemoveSingle = async (itemId: string) => {
     if (!userId) return;
     setDeletingId(itemId);
 
@@ -138,33 +135,21 @@ const Saved = () => {
           ) : (
             <div className="grid gap-3">
               {savedListings.map((item) => (
-                <div key={item.id} className="group relative">
-                  <Link
-                    to={createDetailPath(item.savedType, item.id, item.name, item.location)}
-                    className="flex items-center gap-4 bg-white p-3 sm:p-4 rounded-[24px] border border-slate-100 hover:shadow-md transition-all active:scale-[0.98]"
-                  >
-                    <img src={item.image_url} className="h-16 w-16 rounded-xl object-cover shrink-0" alt="" />
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-bold text-[#007AFF] uppercase mb-0.5">{item.savedType?.replace('_', ' ')}</p>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-800 truncate pr-8">{item.name}</h3>
-                      <div className="flex items-center text-slate-400 text-xs mt-0.5">
-                        <MapPin size={10} className="mr-1 shrink-0" />
-                        <span className="truncate">{item.location}</span>
-                      </div>
-                    </div>
-
-                    <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[#007AFF] group-hover:text-white transition-all">
-                      <ChevronRight size={16} />
-                    </div>
-                  </Link>
-
-                  {/* Individual Remove Button */}
+                // FIX: Wrapper is now a flex row — Link and delete button are SIBLINGS, not nested
+                // This prevents the Link from swallowing touch events meant for the delete button
+                <div key={item.id} className="flex items-center gap-2">
+                  {/* Delete button BEFORE the link in DOM, positioned to the left on mobile */}
                   <button
-                    onClick={(e) => handleRemoveSingle(e, item.id)}
+                    onPointerDown={(e) => {
+                      // Use onPointerDown for fastest mobile response
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleRemoveSingle(item.id);
+                    }}
                     disabled={deletingId === item.id}
-                    className="absolute right-14 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 active:scale-90 transition-all z-20 border border-red-100"
+                    className="shrink-0 p-3 rounded-full bg-red-50 text-red-500 active:bg-red-100 active:scale-90 transition-all border border-red-100 touch-manipulation select-none"
                     aria-label="Remove item"
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
                     {deletingId === item.id ? (
                       <Loader2 size={16} className="animate-spin" />
@@ -172,6 +157,27 @@ const Saved = () => {
                       <Trash2 size={16} />
                     )}
                   </button>
+
+                  {/* Link takes remaining space */}
+                  <Link
+                    to={createDetailPath(item.savedType, item.id, item.name, item.location)}
+                    className="flex-1 flex items-center gap-4 bg-white p-3 sm:p-4 rounded-[24px] border border-slate-100 hover:shadow-md transition-all active:scale-[0.98] min-w-0 group"
+                  >
+                    <img src={item.image_url} className="h-16 w-16 rounded-xl object-cover shrink-0" alt="" />
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] font-bold text-[#007AFF] uppercase mb-0.5">{item.savedType?.replace('_', ' ')}</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-800 truncate">{item.name}</h3>
+                      <div className="flex items-center text-slate-400 text-xs mt-0.5">
+                        <MapPin size={10} className="mr-1 shrink-0" />
+                        <span className="truncate">{item.location}</span>
+                      </div>
+                    </div>
+
+                    <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[#007AFF] group-hover:text-white transition-all shrink-0">
+                      <ChevronRight size={16} />
+                    </div>
+                  </Link>
                 </div>
               ))}
             </div>

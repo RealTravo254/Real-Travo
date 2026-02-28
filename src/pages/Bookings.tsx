@@ -30,7 +30,6 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
   const [rescheduleBooking, setRescheduleBooking] = useState<any | null>(null);
   
-  // Use a simple object to track which items are expanded
   const [expandedBookings, setExpandedBookings] = useState<Record<string, boolean>>({});
   
   const [offset, setOffset] = useState(0);
@@ -93,6 +92,11 @@ const Bookings = () => {
     fetchBookings(nextOffset);
   };
 
+  // FIX: Toggle function using functional update to avoid stale closures
+  const toggleBooking = (id: string) => {
+    setExpandedBookings(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const groupedBookings = useMemo(() => {
     const groups: Record<string, any[]> = { Today: [], Yesterday: [], Earlier: [] };
     bookings.forEach(b => {
@@ -114,7 +118,6 @@ const Bookings = () => {
 
   return (
     <div className="relative flex min-h-full flex-col bg-background">
-      {/* Removed onPointerDownCapture that was likely blocking touch events */}
       <main className={isEmbeddedInSheet ? "flex-1 px-4 pt-4 pb-20" : "flex-1 px-4 pt-8 pb-32"}>
         <div className="max-w-xl mx-auto w-full">
           
@@ -148,81 +151,113 @@ const Bookings = () => {
 
                   <div className="space-y-3">
                     {groupItems.map((b) => (
-                      <Collapsible 
-                        key={b.id} 
-                        open={expandedBookings[b.id]} 
-                        onOpenChange={(isOpen) => setExpandedBookings(prev => ({ ...prev, [b.id]: isOpen }))}
+                      <div
+                        key={b.id}
                         className="bg-card rounded-[24px] border border-border overflow-hidden"
                       >
-                        <CollapsibleTrigger asChild>
-                          {/* Entire card is now the button for better mobile UX */}
-                          <button className="w-full text-left p-4 flex items-center justify-between active:bg-muted/50 transition-colors focus:outline-none">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex gap-2 mb-1.5">
-                                <Badge variant="secondary" className="text-[8px] font-black uppercase h-4 px-1.5">
-                                  {b.booking_type}
-                                </Badge>
-                                <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-black uppercase h-4 px-1.5">
-                                  Paid
-                                </Badge>
-                              </div>
-                              <p className="text-sm font-bold text-foreground truncate pr-4">
-                                {b.booking_details?.trip_name || b.booking_details?.hotel_name || b.booking_details?.place_name || 'Reservation'}
-                              </p>
-                              <p className="text-[9px] font-mono text-muted-foreground mt-1 uppercase">ID: {b.id.slice(0, 8)}</p>
+                        {/* 
+                          FIX: Replaced CollapsibleTrigger asChild + button with a plain div using onPointerDown.
+                          On mobile, Radix CollapsibleTrigger with asChild + nested interactive elements
+                          causes pointer capture conflicts. Using onPointerDown on a div is more reliable
+                          for touch devices and avoids the button-inside-button accessibility issue.
+                        */}
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={!!expandedBookings[b.id]}
+                          onPointerDown={() => toggleBooking(b.id)}
+                          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleBooking(b.id)}
+                          className="w-full text-left p-4 flex items-center justify-between cursor-pointer select-none active:bg-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex gap-2 mb-1.5">
+                              <Badge variant="secondary" className="text-[8px] font-black uppercase h-4 px-1.5">
+                                {b.booking_type}
+                              </Badge>
+                              <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-black uppercase h-4 px-1.5">
+                                Paid
+                              </Badge>
                             </div>
-                            
-                            <div className="text-right shrink-0">
-                              <p className="text-sm font-black text-foreground">KSh {b.total_amount.toLocaleString()}</p>
-                              <div className="flex justify-end mt-1 text-muted-foreground">
-                                {expandedBookings[b.id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                              </div>
-                            </div>
-                          </button>
-                        </CollapsibleTrigger>
-
-                        <CollapsibleContent className="border-t border-border/50 bg-muted/20 p-4 space-y-5">
-                          <div className="grid grid-cols-2 gap-4 text-[10px] font-bold uppercase">
-                            <div>
-                              <p className="text-muted-foreground mb-1 tracking-widest">Guest</p>
-                              <p className="text-foreground">{b.guest_name || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground mb-1 tracking-widest">Date</p>
-                              <p className="text-foreground">
-                                {b.visit_date ? format(new Date(b.visit_date), 'dd MMM yyyy') : 'N/A'}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground mb-1 tracking-widest">Guests</p>
-                              <p className="text-foreground">{b.slots_booked || 1}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground mb-1 tracking-widest">Status</p>
-                              <p className="text-emerald-600">Confirmed</p>
+                            <p className="text-sm font-bold text-foreground truncate pr-4">
+                              {b.booking_details?.trip_name || b.booking_details?.hotel_name || b.booking_details?.place_name || 'Reservation'}
+                            </p>
+                            <p className="text-[9px] font-mono text-muted-foreground mt-1 uppercase">ID: {b.id.slice(0, 8)}</p>
+                          </div>
+                          
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-black text-foreground">KSh {b.total_amount.toLocaleString()}</p>
+                            <div className="flex justify-end mt-1 text-muted-foreground">
+                              {expandedBookings[b.id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
                           </div>
+                        </div>
 
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            {/* The QR code button */}
-                            <BookingDownloadButton booking={{...b, bookingId: b.id}} />
-                            
-                            {b.booking_type !== 'event' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); // Only stop propagation on the sub-button
-                                  setRescheduleBooking(b); 
-                                }}
-                                className="h-9 rounded-xl text-[9px] font-black uppercase border-2"
+                        {/* 
+                          FIX: Replaced CollapsibleContent with a simple conditional render.
+                          This removes the Radix dependency entirely for this section,
+                          preventing any pointer event capture that blocked child buttons on mobile.
+                        */}
+                        {expandedBookings[b.id] && (
+                          <div className="border-t border-border/50 bg-muted/20 p-4 space-y-5">
+                            <div className="grid grid-cols-2 gap-4 text-[10px] font-bold uppercase">
+                              <div>
+                                <p className="text-muted-foreground mb-1 tracking-widest">Guest</p>
+                                <p className="text-foreground">{b.guest_name || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground mb-1 tracking-widest">Date</p>
+                                <p className="text-foreground">
+                                  {b.visit_date ? format(new Date(b.visit_date), 'dd MMM yyyy') : 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground mb-1 tracking-widest">Guests</p>
+                                <p className="text-foreground">{b.slots_booked || 1}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground mb-1 tracking-widest">Status</p>
+                                <p className="text-emerald-600">Confirmed</p>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {/* 
+                                FIX: Wrap BookingDownloadButton in a container that stops propagation
+                                at the pointer level so taps don't bubble up to the toggle handler.
+                                Also added touch-manipulation for faster mobile response.
+                              */}
+                              <div
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
+                                className="touch-manipulation"
+                                style={{ touchAction: 'manipulation' }}
                               >
-                                <CalendarClock size={14} className="mr-2" /> Reschedule
-                              </Button>
-                            )}
+                                <BookingDownloadButton booking={{...b, bookingId: b.id}} />
+                              </div>
+                              
+                              {b.booking_type !== 'event' && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onPointerDown={(e) => {
+                                    // FIX: Use onPointerDown + stopPropagation for reliable mobile touch
+                                    e.stopPropagation();
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRescheduleBooking(b); 
+                                  }}
+                                  className="h-9 rounded-xl text-[9px] font-black uppercase border-2 touch-manipulation"
+                                  style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+                                >
+                                  <CalendarClock size={14} className="mr-2" /> Reschedule
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </CollapsibleContent>
-                      </Collapsible>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </section>
