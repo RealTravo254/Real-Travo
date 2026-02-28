@@ -197,7 +197,10 @@ export function RescheduleBookingDialog({
 
       if (booking.visit_date) {
         await supabase.from('reschedule_log').insert({
-          booking_id: booking.id, user_id: user.id, old_date: booking.visit_date, new_date: newDateStr
+          booking_id: booking.id,
+          user_id: user.id,
+          old_date: booking.visit_date,
+          new_date: newDateStr
         });
       }
 
@@ -233,55 +236,87 @@ export function RescheduleBookingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[40px] border-none shadow-2xl bg-white">
-        <div className="p-8">
-          <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>
-              {isNewSchedule ? 'Set Visit Date' : 'Reschedule Booking'}
-            </DialogTitle>
-            <DialogDescription className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-2">
-              {isNewSchedule 
-                ? 'Select a visit date. Schedule at least 48 hours in advance.'
-                : 'Move your booking to a new date.'}
-            </DialogDescription>
-          </DialogHeader>
+      {/*
+        FIX 1: Removed rounded-[40px] — on small screens this clips the dialog edges
+        and can push content off-screen. Using rounded-2xl which is safe on all sizes.
 
-          {!isEligible ? (
-            <div className="flex items-start gap-4 p-6 bg-red-50 rounded-3xl border border-red-100">
-              <div className="bg-white p-2 rounded-xl shadow-sm">
-                <AlertCircle className="h-5 w-5 text-red-500" />
-              </div>
-              <div>
-                <p className="font-black text-red-600 uppercase text-xs tracking-widest">Action Restricted</p>
-                <p className="text-sm text-red-500/80 leading-relaxed mt-1 font-bold">{eligibilityMessage}</p>
-              </div>
+        FIX 2: Removed overflow-hidden — this was clipping the Calendar dropdown/popover
+        on mobile and preventing the dialog from scrolling its own content.
+
+        FIX 3: Added max-h-[90dvh] overflow-y-auto so the dialog scrolls internally
+        on small screens rather than being cut off.
+
+        FIX 4: Reduced p-8 to p-4 sm:p-8 — 32px padding on a 375px screen leaves
+        only 311px for content, which is too tight for the calendar.
+      */}
+      <DialogContent className="w-[calc(100vw-24px)] sm:max-w-2xl max-h-[90dvh] overflow-y-auto p-4 sm:p-8 rounded-2xl border-none shadow-2xl bg-white mx-auto">
+        <DialogHeader className="mb-4 sm:mb-6">
+          <DialogTitle
+            className="text-xl sm:text-2xl font-black uppercase tracking-tight"
+            style={{ color: COLORS.TEAL }}
+          >
+            {isNewSchedule ? 'Set Visit Date' : 'Reschedule Booking'}
+          </DialogTitle>
+          <DialogDescription className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-2">
+            {isNewSchedule 
+              ? 'Select a visit date. Schedule at least 48 hours in advance.'
+              : 'Move your booking to a new date.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!isEligible ? (
+          <div className="flex items-start gap-4 p-4 sm:p-6 bg-red-50 rounded-2xl border border-red-100">
+            <div className="bg-white p-2 rounded-xl shadow-sm shrink-0">
+              <AlertCircle className="h-5 w-5 text-red-500" />
             </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Status Header */}
-              <div className="grid grid-cols-2 gap-4">
-                {booking.visit_date && (
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Date</p>
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-slate-400" />
-                      <span className="text-xs font-black text-slate-600">{format(new Date(booking.visit_date), 'dd MMM yyyy')}</span>
-                    </div>
+            <div>
+              <p className="font-black text-red-600 uppercase text-xs tracking-widest">Action Restricted</p>
+              <p className="text-sm text-red-500/80 leading-relaxed mt-1 font-bold">{eligibilityMessage}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 sm:space-y-6">
+            {/* Status Header */}
+            <div className="grid grid-cols-2 gap-3">
+              {booking.visit_date && (
+                <div className="p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Date</p>
+                  <div className="flex items-center gap-1.5">
+                    <CalendarIcon className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <span className="text-xs font-black text-slate-600 truncate">
+                      {format(new Date(booking.visit_date), 'dd MMM yyyy')}
+                    </span>
                   </div>
-                )}
-                {selectedDate && (
-                  <div className="p-4 rounded-2xl border border-[#008080]/20" style={{ backgroundColor: `${COLORS.TEAL}10` }}>
-                    <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: COLORS.TEAL }}>Selected Date</p>
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4" style={{ color: COLORS.TEAL }} />
-                      <span className="text-xs font-black" style={{ color: COLORS.TEAL }}>{format(selectedDate, 'dd MMM yyyy')}</span>
-                    </div>
+                </div>
+              )}
+              {selectedDate && (
+                <div
+                  className="p-3 sm:p-4 rounded-2xl border"
+                  style={{ backgroundColor: `${COLORS.TEAL}10`, borderColor: `${COLORS.TEAL}30` }}
+                >
+                  <p
+                    className="text-[10px] font-black uppercase tracking-widest mb-1"
+                    style={{ color: COLORS.TEAL }}
+                  >
+                    Selected Date
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <CalendarIcon className="h-3.5 w-3.5 shrink-0" style={{ color: COLORS.TEAL }} />
+                    <span className="text-xs font-black truncate" style={{ color: COLORS.TEAL }}>
+                      {format(selectedDate, 'dd MMM yyyy')}
+                    </span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* Calendar Section */}
-              <div className="bg-white rounded-[28px] p-4 shadow-sm border border-slate-100">
+            {/* Calendar Section */}
+            <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-100">
+              {/*
+                FIX 5: Wrapped Calendar in overflow-x-auto so on very small screens
+                (< 340px) the calendar can scroll horizontally rather than being clipped.
+              */}
+              <div className="overflow-x-auto">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -289,50 +324,57 @@ export function RescheduleBookingDialog({
                   disabled={isDayDisabled}
                   className="mx-auto"
                 />
-                
-                <div className="mt-6 pt-6 border-t border-slate-50 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Info className="h-3 w-3 text-slate-400" />
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Policy & Availability</p>
-                  </div>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <li className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" /> 48H ADVANCE NOTICE REQUIRED
-                    </li>
-                    {workingDays.length > 0 && (
-                      <li className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                        <CheckCircle2 className="h-3 w-3 text-green-500" /> {workingDays.length} WORKING DAYS PER WEEK
-                      </li>
-                    )}
-                  </ul>
-                </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => onOpenChange(false)} 
-                  disabled={loading}
-                  className="flex-1 py-7 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-slate-400 hover:bg-slate-50"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleReschedule} 
-                  disabled={!selectedDate || loading}
-                  className="flex-[2] py-7 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all active:scale-95 border-none"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`,
-                    boxShadow: `0 12px 24px -8px ${COLORS.CORAL}88`
-                  }}
-                >
-                  {loading ? "Processing..." : (isNewSchedule ? "Set Visit Date" : "Confirm Move")}
-                </Button>
+              
+              <div className="mt-4 pt-4 border-t border-slate-50 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Info className="h-3 w-3 text-slate-400" />
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    Policy & Availability
+                  </p>
+                </div>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <li className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                    <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                    48H ADVANCE NOTICE REQUIRED
+                  </li>
+                  {workingDays.length > 0 && (
+                    <li className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                      <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                      {workingDays.length} WORKING DAYS PER WEEK
+                    </li>
+                  )}
+                </ul>
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="flex-1 py-6 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-slate-400 hover:bg-slate-50"
+                style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReschedule}
+                disabled={!selectedDate || loading}
+                className="flex-[2] py-6 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all active:scale-95 border-none"
+                style={{
+                  background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`,
+                  boxShadow: `0 12px 24px -8px ${COLORS.CORAL}88`,
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent"
+                }}
+              >
+                {loading ? "Processing..." : (isNewSchedule ? "Set Visit Date" : "Confirm Move")}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

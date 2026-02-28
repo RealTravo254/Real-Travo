@@ -12,11 +12,11 @@ interface BookingDownloadButtonProps {
   className?: string;
 }
 
-export const BookingDownloadButton = ({ 
-  booking, 
-  variant = "outline", 
+export const BookingDownloadButton = ({
+  booking,
+  variant = "outline",
   size = "sm",
-  className 
+  className
 }: BookingDownloadButtonProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const qrRef = useRef<HTMLCanvasElement>(null);
@@ -24,40 +24,38 @@ export const BookingDownloadButton = ({
 
   const getQRDataUrl = (): Promise<string> => {
     return new Promise((resolve, reject) => {
-      // First try: use the already-rendered hidden canvas
-      const existingCanvas = qrRef.current;
-      if (existingCanvas) {
+      const canvas = qrRef.current;
+
+      if (canvas) {
         try {
-          const dataUrl = existingCanvas.toDataURL("image/png");
-          // toDataURL returns "data:," if canvas is empty/tainted — check for valid data
+          const dataUrl = canvas.toDataURL("image/png");
+          // Valid canvas produces a long base64 string; "data:," means empty/unpainted
           if (dataUrl && dataUrl.length > 100 && dataUrl !== "data:,") {
             resolve(dataUrl);
             return;
           }
         } catch (e) {
-          // Canvas may be tainted on some Android WebViews — fall through to fresh render
-          console.warn("Existing canvas toDataURL failed, re-rendering:", e);
+          // SecurityError on tainted canvas (rare) — fall through to fresh render
+          console.warn("canvas.toDataURL failed:", e);
         }
       }
 
-      // Fallback: create a fresh offscreen container and render QR code into it.
-      // This handles cases where the hidden div canvas hasn't painted yet on mobile
-      // (e.g. inside a collapsed section, or iOS Safari lazy canvas painting).
-      try {
-        const container = document.createElement("div");
-        container.style.cssText = [
-          "position:fixed",
-          "top:-9999px",
-          "left:-9999px",
-          "width:256px",
-          "height:256px",
-          "opacity:0",
-          "pointer-events:none",
-        ].join(";");
-        document.body.appendChild(container);
+      /*
+        Fallback: dynamically mount a fresh QRCodeCanvas into a temporary
+        zero-size inline container appended to document.body.
 
-        // Dynamically render a fresh QRCodeCanvas into the temp container
-        import("react-dom/client").then(({ createRoot }) => {
+        Why NOT position:fixed top:-9999?
+        Inside a Radix Sheet/Dialog, the browser may refuse to paint canvases
+        that are outside the sheet's stacking context or clipping rect.
+        Appending directly to document.body at zero opacity sidesteps this.
+      */
+      const container = document.createElement("div");
+      container.style.cssText =
+        "position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:0;left:0;";
+      document.body.appendChild(container);
+
+      import("react-dom/client")
+        .then(({ createRoot }) =>
           import("react").then((React) => {
             const root = createRoot(container);
             root.render(
@@ -69,20 +67,20 @@ export const BookingDownloadButton = ({
               })
             );
 
-            // Give React one animation frame + small timeout to paint the canvas
+            // rAF + 200ms gives React time to commit and the browser time to rasterise
             requestAnimationFrame(() => {
               setTimeout(() => {
                 try {
                   const tempCanvas = container.querySelector("canvas");
-                  if (tempCanvas) {
-                    const dataUrl = tempCanvas.toDataURL("image/png");
-                    if (dataUrl && dataUrl.length > 100 && dataUrl !== "data:,") {
-                      resolve(dataUrl);
-                    } else {
-                      reject(new Error("Temp canvas produced empty data URL"));
-                    }
+                  if (!tempCanvas) {
+                    reject(new Error("QR canvas not found after render"));
+                    return;
+                  }
+                  const dataUrl = tempCanvas.toDataURL("image/png");
+                  if (dataUrl && dataUrl.length > 100 && dataUrl !== "data:,") {
+                    resolve(dataUrl);
                   } else {
-                    reject(new Error("No canvas found in temp container"));
+                    reject(new Error("QR canvas produced empty data URL"));
                   }
                 } catch (err) {
                   reject(err);
@@ -92,13 +90,11 @@ export const BookingDownloadButton = ({
                     document.body.removeChild(container);
                   }
                 }
-              }, 150); // 150ms is enough for a single QR canvas render
+              }, 200);
             });
-          });
-        });
-      } catch (err) {
-        reject(err);
-      }
+          })
+        )
+        .catch(reject);
     });
   };
 
@@ -119,24 +115,21 @@ export const BookingDownloadButton = ({
   return (
     <>
       {/*
-        FIX: The hidden QR canvas MUST NOT use display:none or visibility:hidden.
-        Both of those prevent the canvas from painting on iOS Safari and some Android WebViews.
-        
-        Safe approach: use fixed positioning off-screen + opacity:0.
-        The canvas is technically "visible" to the browser so it paints,
-        but the user never sees it.
+        The inline hidden canvas.
+
+        Why inline instead of position:fixed?
+        position:fixed elements are painted relative to the viewport stacking context.
+        Inside a Radix Sheet (which uses a Portal), the sheet lives in a separate
+        stacking context. A fixed canvas at top:-9999 may fall outside the sheet's
+        composited layer and never get rasterised on iOS Safari / Chrome Android.
+
+        Inline with width:0 / height:0 / overflow:hidden keeps it inside the same
+        render tree, so it always paints. The ref still works because the canvas
+        element itself is 256×256 — only the wrapper is collapsed.
       */}
-      <div
+      <span
         aria-hidden="true"
-        style={{
-          position: "fixed",
-          top: -9999,
-          left: -9999,
-          width: 256,
-          height: 256,
-          opacity: 0,
-          pointerEvents: "none",
-        }}
+        style={{ display: "inline-block", width: 0, height: 0, overflow: "hidden", verticalAlign: "top" }}
       >
         <QRCodeCanvas
           ref={qrRef}
@@ -145,16 +138,11 @@ export const BookingDownloadButton = ({
           level="H"
           includeMargin
         />
-      </div>
+      </span>
 
       <Button
         variant={variant}
         size={size}
-        /*
-          FIX: onPointerDown stopPropagation prevents the parent collapsible card
-          from toggling when this button is tapped on mobile. Must be on BOTH
-          onPointerDown (fires first, stops Radix pointer capture) and onClick.
-        */
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
@@ -162,10 +150,6 @@ export const BookingDownloadButton = ({
         }}
         disabled={isDownloading}
         className={className}
-        /*
-          FIX: touch-action:manipulation removes the 300ms tap delay on mobile browsers.
-          Without this, buttons inside scrollable areas feel unresponsive.
-        */
         style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
       >
         {isDownloading ? (
