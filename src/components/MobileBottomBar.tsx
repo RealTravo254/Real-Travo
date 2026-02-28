@@ -172,11 +172,17 @@ export const MobileBottomBar = () => {
             <h2 className="text-lg font-semibold">My Bookings</h2>
           </div>
 
-          {/* Scrollable content — pb-24 clears the bottom nav */}
+          {/*
+            FIX: Removed onPointerDownCapture and onClickCapture with stopPropagation.
+            Those "Capture" handlers fire BEFORE any child element receives the event,
+            meaning every tap on a booking card, delete button, download button, or
+            reschedule button was being silently killed before it could do anything.
+            The sheet scroll works correctly with just touch-pan-y — no capture
+            interception is needed.
+          */}
           <div
-            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-24 bg-white"
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            onClickCapture={(e) => e.stopPropagation()}
+            className="flex-1 overflow-y-auto overscroll-contain pb-24 bg-white"
+            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
           >
             <Suspense
               fallback={
@@ -212,11 +218,14 @@ export const MobileBottomBar = () => {
             <h2 className="text-lg font-semibold">Saved Items</h2>
           </div>
 
-          {/* Scrollable content — pb-24 clears the bottom nav */}
+          {/*
+            FIX: Same as above — removed onPointerDownCapture and onClickCapture.
+            These were blocking all taps on the delete button and list item links
+            inside the Saved component when rendered in this sheet.
+          */}
           <div
-            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-24 bg-white"
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            onClickCapture={(e) => e.stopPropagation()}
+            className="flex-1 overflow-y-auto overscroll-contain pb-24 bg-white"
+            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
           >
             <Suspense
               fallback={
