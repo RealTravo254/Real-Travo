@@ -1,6 +1,6 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { Home, Ticket, Heart, User, ChevronLeft } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { AccountSheet } from "@/components/AccountSheet";
@@ -18,11 +18,19 @@ const COLORS = {
 
 export const MobileBottomBar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [bookingsOpen, setBookingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
 
   const isAnySheetOpen = bookingsOpen || savedOpen;
+
+  // When the route changes (e.g. user tapped a saved item card and navigated),
+  // close any open sheet so the detail page is fully visible.
+  useEffect(() => {
+    setBookingsOpen(false);
+    setSavedOpen(false);
+  }, [location.pathname]);
 
   const handleNavClick = (path: string, e: React.MouseEvent) => {
     if (path === "/bookings") {
@@ -45,12 +53,13 @@ export const MobileBottomBar = () => {
   return (
     <>
       {/* ── Bottom Nav Bar ── */}
-      <div className={cn("md:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white/80 backdrop-blur-xl border-t border-slate-100 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)]", isAnySheetOpen && "hidden")}>
+      <div className={cn(
+        "md:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white/80 backdrop-blur-xl border-t border-slate-100 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)]",
+        isAnySheetOpen && "hidden"
+      )}>
         <nav className="flex items-center justify-around h-20 px-6">
           {navItems.map((item) => {
-            const isSheetPath =
-              item.path === "/bookings" || item.path === "/saved";
-
+            const isSheetPath = item.path === "/bookings" || item.path === "/saved";
             const isActive =
               (location.pathname === item.path && !bookingsOpen && !savedOpen) ||
               (item.path === "/bookings" && bookingsOpen) ||
@@ -65,17 +74,12 @@ export const MobileBottomBar = () => {
                   )}
                   style={{ backgroundColor: COLORS.TEAL }}
                 />
-                <div
-                  className={cn(
-                    "p-2 rounded-2xl transition-all duration-300 mb-1",
-                    isActive ? "bg-[#008080]/10" : "bg-transparent group-active:scale-90"
-                  )}
-                >
+                <div className={cn(
+                  "p-2 rounded-2xl transition-all duration-300 mb-1",
+                  isActive ? "bg-[#008080]/10" : "bg-transparent group-active:scale-90"
+                )}>
                   <item.icon
-                    className={cn(
-                      "h-5 w-5 transition-colors duration-300",
-                      isActive ? "" : "text-slate-400"
-                    )}
+                    className={cn("h-5 w-5 transition-colors duration-300", isActive ? "" : "text-slate-400")}
                     style={isActive ? { color: COLORS.TEAL, fill: `${COLORS.TEAL}20` } : undefined}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
@@ -108,10 +112,7 @@ export const MobileBottomBar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => {
-                  setBookingsOpen(false);
-                  setSavedOpen(false);
-                }}
+                onClick={() => { setBookingsOpen(false); setSavedOpen(false); }}
                 className="relative flex flex-col items-center justify-center group"
               >
                 {NavContent}
@@ -124,10 +125,7 @@ export const MobileBottomBar = () => {
             <AccountSheet>
               <button className="relative flex flex-col items-center justify-center group">
                 <div
-                  className={cn(
-                    "absolute -top-3 w-8 h-1 rounded-full transition-all duration-300",
-                    "opacity-0 scale-0"
-                  )}
+                  className={cn("absolute -top-3 w-8 h-1 rounded-full transition-all duration-300", "opacity-0 scale-0")}
                   style={{ backgroundColor: COLORS.TEAL }}
                 />
                 <div className="p-2 rounded-2xl transition-all duration-300 mb-1 bg-transparent group-active:scale-90">
@@ -160,7 +158,6 @@ export const MobileBottomBar = () => {
           side="bottom"
           className="h-[100dvh] rounded-none p-0 border-none flex flex-col z-[260] [&>button]:hidden"
         >
-          {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
             <button
               onClick={() => setBookingsOpen(false)}
@@ -172,25 +169,13 @@ export const MobileBottomBar = () => {
             <h2 className="text-lg font-semibold">My Bookings</h2>
           </div>
 
-          {/*
-            FIX: Removed onPointerDownCapture and onClickCapture with stopPropagation.
-            Those "Capture" handlers fire BEFORE any child element receives the event,
-            meaning every tap on a booking card, delete button, download button, or
-            reschedule button was being silently killed before it could do anything.
-            The sheet scroll works correctly with just touch-pan-y — no capture
-            interception is needed.
-          */}
           <div
             className="flex-1 overflow-y-auto overscroll-contain pb-24 bg-white"
-            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+            // touchAction pan-y is fine for Bookings since it has no tappable
+            // nav cards — only buttons which are native interactive elements.
+            style={{ touchAction: "pan-y" }}
           >
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center py-20">
-                  <TealLoader />
-                </div>
-              }
-            >
+            <Suspense fallback={<div className="flex items-center justify-center py-20"><TealLoader /></div>}>
               <Bookings />
             </Suspense>
           </div>
@@ -206,7 +191,6 @@ export const MobileBottomBar = () => {
           side="bottom"
           className="h-[100dvh] rounded-none p-0 border-none flex flex-col z-[260] [&>button]:hidden"
         >
-          {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
             <button
               onClick={() => setSavedOpen(false)}
@@ -219,21 +203,26 @@ export const MobileBottomBar = () => {
           </div>
 
           {/*
-            FIX: Same as above — removed onPointerDownCapture and onClickCapture.
-            These were blocking all taps on the delete button and list item links
-            inside the Saved component when rendered in this sheet.
+            KEY FIX for Saved card navigation:
+            ─────────────────────────────────────
+            REMOVED touchAction:"pan-y" and WebkitOverflowScrolling:"touch" from
+            this scroll container.
+
+            touchAction:"pan-y" tells the browser to claim ALL touch events for
+            scroll handling — this is what was preventing the <a> card taps from
+            firing even though native anchors normally bypass React's event system.
+            On iOS with WebkitOverflowScrolling:"touch" (momentum scrolling), this
+            interception is even more aggressive.
+
+            Without these two properties the browser uses default scroll behaviour
+            (which still works fine for overflow-y-auto) but no longer pre-empts
+            touch events on child elements — so <a> taps fire normally.
+
+            The location.pathname useEffect above closes the sheet as soon as the
+            router navigates, so the detail page appears cleanly.
           */}
-          <div
-            className="flex-1 overflow-y-auto overscroll-contain pb-24 bg-white"
-            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
-          >
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center py-20">
-                  <TealLoader />
-                </div>
-              }
-            >
+          <div className="flex-1 overflow-y-auto overscroll-contain pb-24 bg-white">
+            <Suspense fallback={<div className="flex items-center justify-center py-20"><TealLoader /></div>}>
               <Saved />
             </Suspense>
           </div>
