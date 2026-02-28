@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/collapsible";
 
 const bookingsCache = { data: null as any[] | null, timestamp: 0 };
-const CACHE_TTL = 5 * 60 * 1000;
 
 const Bookings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -30,6 +29,8 @@ const Bookings = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [rescheduleBooking, setRescheduleBooking] = useState<any | null>(null);
+  
+  // Use a simple object to track which items are expanded
   const [expandedBookings, setExpandedBookings] = useState<Record<string, boolean>>({});
   
   const [offset, setOffset] = useState(0);
@@ -77,7 +78,7 @@ const Bookings = () => {
       }
       setHasMore((data || []).length >= ITEMS_PER_PAGE);
     } catch (e) { 
-      console.error(e); 
+      console.error("Fetch error:", e); 
     } finally { 
       setLoading(false); 
       setLoadingMore(false); 
@@ -103,25 +104,18 @@ const Bookings = () => {
     return groups;
   }, [bookings]);
 
-  // Toggle function that ensures React detects the state change
-  const toggleBooking = (id: string) => {
-    setExpandedBookings(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
   if (authLoading || loading) {
     return (
-      <div className={isEmbeddedInSheet ? "flex min-h-[40vh] items-center justify-center bg-background" : "fixed inset-0 bg-background flex items-center justify-center"}>
+      <div className="flex h-[300px] items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className={isEmbeddedInSheet ? "flex min-h-full flex-col bg-background" : "flex min-h-screen flex-col bg-background"}>
-      <main className={isEmbeddedInSheet ? "flex-1 px-4 pt-4 pb-8" : "flex-1 px-4 pt-8 pb-32"}>
+    <div className="relative flex min-h-full flex-col bg-background">
+      {/* Removed onPointerDownCapture that was likely blocking touch events */}
+      <main className={isEmbeddedInSheet ? "flex-1 px-4 pt-4 pb-20" : "flex-1 px-4 pt-8 pb-32"}>
         <div className="max-w-xl mx-auto w-full">
           
           <header className="mb-8">
@@ -157,11 +151,12 @@ const Bookings = () => {
                       <Collapsible 
                         key={b.id} 
                         open={expandedBookings[b.id]} 
-                        onOpenChange={() => toggleBooking(b.id)}
+                        onOpenChange={(isOpen) => setExpandedBookings(prev => ({ ...prev, [b.id]: isOpen }))}
                         className="bg-card rounded-[24px] border border-border overflow-hidden"
                       >
                         <CollapsibleTrigger asChild>
-                          <div className="p-4 flex items-center justify-between cursor-pointer active:bg-muted/50 transition-colors">
+                          {/* Entire card is now the button for better mobile UX */}
+                          <button className="w-full text-left p-4 flex items-center justify-between active:bg-muted/50 transition-colors focus:outline-none">
                             <div className="min-w-0 flex-1">
                               <div className="flex gap-2 mb-1.5">
                                 <Badge variant="secondary" className="text-[8px] font-black uppercase h-4 px-1.5">
@@ -183,10 +178,10 @@ const Bookings = () => {
                                 {expandedBookings[b.id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                               </div>
                             </div>
-                          </div>
+                          </button>
                         </CollapsibleTrigger>
 
-                        <CollapsibleContent className="border-t border-border/50 bg-muted/20 p-4 space-y-5 animate-in slide-in-from-top-2 duration-200">
+                        <CollapsibleContent className="border-t border-border/50 bg-muted/20 p-4 space-y-5">
                           <div className="grid grid-cols-2 gap-4 text-[10px] font-bold uppercase">
                             <div>
                               <p className="text-muted-foreground mb-1 tracking-widest">Guest</p>
@@ -209,7 +204,7 @@ const Bookings = () => {
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-2">
-                            {/* The QR code is usually rendered inside this button's dialog/expansion */}
+                            {/* The QR code button */}
                             <BookingDownloadButton booking={{...b, bookingId: b.id}} />
                             
                             {b.booking_type !== 'event' && (
@@ -217,7 +212,7 @@ const Bookings = () => {
                                 variant="outline" 
                                 size="sm" 
                                 onClick={(e) => { 
-                                  e.stopPropagation(); 
+                                  e.stopPropagation(); // Only stop propagation on the sub-button
                                   setRescheduleBooking(b); 
                                 }}
                                 className="h-9 rounded-xl text-[9px] font-black uppercase border-2"
