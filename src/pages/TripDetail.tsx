@@ -17,7 +17,7 @@ import { generateReferralLink, trackReferralClick } from "@/lib/referralUtils";
 import { useBookingSubmit, BookingFormData } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { useRealtimeItemAvailability } from "@/hooks/useRealtimeBookings";
-import { Header } from "@/components/Header"; 
+import { Header } from "@/components/Header";
 import { DetailMapSection } from "@/components/detail/DetailMapSection";
 import { DetailPageSkeleton } from "@/components/detail/DetailPageSkeleton";
 import { ImageGalleryModal } from "@/components/detail/ImageGalleryModal";
@@ -47,9 +47,9 @@ const ReviewHeader = ({ event }: { event: any }) => (
   </div>
 );
 
-const SELECT_FIELDS = "id,name,location,place,country,image_url,gallery_images,images,date,is_custom_date,price,price_child,available_tickets,description,activities,phone_number,email,created_by,type,opening_hours,closing_hours,days_opened,map_link,is_flexible_date";
+const SELECT_FIELDS = "id,name,location,place,country,image_url,gallery_images,images,date,is_custom_date,price,price_child,available_tickets,description,activities,phone_number,email,created_by,type,opening_hours,closing_hours,map_link,is_flexible_date";
 
-const EventDetail = () => {
+const TripDetail = () => {
   const { slug } = useParams();
   const id = slug ? extractIdFromSlug(slug) : null;
   const navigate = useNavigate();
@@ -68,10 +68,10 @@ const EventDetail = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (id) fetchEvent();
+    if (id) fetchTrip();
     const urlParams = new URLSearchParams(window.location.search);
     const refSlug = urlParams.get("ref");
-    if (refSlug && id) trackReferralClick(refSlug, id, "event", "booking");
+    if (refSlug && id) trackReferralClick(refSlug, id, "trip", "booking");
   }, [id]);
 
   useEffect(() => {
@@ -80,15 +80,15 @@ const EventDetail = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const fetchEvent = async () => {
+  const fetchTrip = async () => {
     if (!id) return;
     try {
-      // Step 1: exact match on id column (UUID or legacy friendly ID)
+      // Step 1: exact match by id
       let { data } = await supabase
         .from("trips")
         .select(SELECT_FIELDS)
         .eq("id", id)
-        .eq("type", "event")
+        .eq("type", "trip")          // ← FIXED: was "event"
         .maybeSingle() as { data: any };
 
       // Step 2: fallback to slug column
@@ -97,7 +97,7 @@ const EventDetail = () => {
           .from("trips")
           .select(SELECT_FIELDS)
           .eq("slug", id)
-          .eq("type", "event")
+          .eq("type", "trip")        // ← FIXED: was "event"
           .maybeSingle() as { data: any };
         if (res.data) data = res.data;
       }
@@ -105,15 +105,15 @@ const EventDetail = () => {
       if (!data) throw new Error("Not found");
       setEvent(data);
     } catch (error) {
-      toast({ title: "Event not found", variant: "destructive" });
+      toast({ title: "Trip not found", variant: "destructive" });
     } finally { setLoading(false); }
   };
 
-  const handleSave = () => id && handleSaveItem(id, "event");
+  const handleSave = () => id && handleSaveItem(id, "trip");
   const handleCopyLink = async () => {
     if (!event) return;
     toast({ title: "Copying link..." });
-    const refLink = await generateReferralLink(event.id, "event", event.id);
+    const refLink = await generateReferralLink(event.id, "trip", event.id);
     await navigator.clipboard.writeText(refLink);
     toast({ title: "Link Copied!" });
   };
@@ -121,7 +121,7 @@ const EventDetail = () => {
   const handleShare = async () => {
     if (!event) return;
     toast({ title: "Preparing share..." });
-    const refLink = await generateReferralLink(event.id, "event", event.id);
+    const refLink = await generateReferralLink(event.id, "trip", event.id);
     if (navigator.share) {
       try { await navigator.share({ title: event.name, url: refLink }); } catch (e) {}
     } else { 
@@ -143,7 +143,7 @@ const EventDetail = () => {
     try {
       const totalAmount = (data.num_adults * event.price) + (data.num_children * (event.price_child || 0));
       await submitBooking({
-        itemId: event.id, itemName: event.name, bookingType: 'event', totalAmount,
+        itemId: event.id, itemName: event.name, bookingType: 'trip', totalAmount,
         slotsBooked: data.num_adults + data.num_children, visitDate: event.date,
         guestName: data.guest_name, guestEmail: data.guest_email, guestPhone: data.guest_phone,
         hostId: event.created_by, bookingDetails: { ...data, event_name: event.name }
@@ -189,6 +189,7 @@ const EventDetail = () => {
       </div>
 
       <div className="max-w-6xl mx-auto md:px-4 md:pt-3">
+        {/* Mobile Carousel */}
         <div className="relative w-full overflow-hidden h-[55vh] bg-slate-900 md:rounded-3xl md:hidden">
           <div className="absolute top-4 left-4 right-4 z-50 flex justify-between items-center">
             <Button onClick={goBack} className="rounded-full w-10 h-10 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
@@ -213,7 +214,7 @@ const EventDetail = () => {
           {allImages.length > 1 && <ImageGalleryModal images={allImages} name={event.name} />}
           <div className="absolute bottom-6 left-0 z-40 w-full px-4 pointer-events-none">
             <div className="relative z-10 space-y-2 pointer-events-auto bg-gradient-to-r from-black/70 via-black/50 to-transparent rounded-2xl p-4 max-w-xl">
-              <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 h-auto uppercase font-black tracking-[0.1em] text-[9px] rounded-full shadow-lg">Event</Button>
+              <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 h-auto uppercase font-black tracking-[0.1em] text-[9px] rounded-full shadow-lg">Trip</Button>
               <h1 className="text-2xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-2xl">{event.name}</h1>
               <div className="flex items-center gap-2 cursor-pointer group w-fit" onClick={openInMaps}>
                 <MapPin className="h-4 w-4 text-white" />
@@ -223,6 +224,7 @@ const EventDetail = () => {
           </div>
         </div>
 
+        {/* Desktop Grid */}
         <div className="hidden md:block relative">
           <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
             <Button onClick={goBack} className="rounded-full w-12 h-12 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
@@ -240,7 +242,7 @@ const EventDetail = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6 z-20">
                     <div className="space-y-3">
-                      <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-4 py-1.5 h-auto uppercase font-black tracking-[0.1em] text-[10px] rounded-full shadow-lg">Experience</Button>
+                      <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-4 py-1.5 h-auto uppercase font-black tracking-[0.1em] text-[10px] rounded-full shadow-lg">Trip</Button>
                       <h1 className="text-3xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-2xl">{event.name}</h1>
                       <div className="flex items-center gap-2 cursor-pointer group/map w-fit" onClick={openInMaps}>
                         <MapPin className="h-4 w-4 text-white" />
@@ -283,33 +285,25 @@ const EventDetail = () => {
         <div className="grid lg:grid-cols-[1.7fr,1fr] gap-6">
           <div className="space-y-6">
             <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
-              <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>About this Event</h2>
+              <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>About this Trip</h2>
               <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">{event.description}</p>
             </div>
 
-            {(event.opening_hours || event.days_opened?.length > 0) && (
+            {/* Operating Hours — no days_opened */}
+            {(event.opening_hours || event.closing_hours) && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 rounded-xl bg-teal-50"><Clock className="h-5 w-5 text-[#008080]" /></div>
                   <div>
-                    <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Event Hours</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Hours</p>
+                    <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Trip Hours</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Operating Hours</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {(event.opening_hours || event.closing_hours) && (
-                    <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Operating Hours</span>
-                      <span className="text-sm font-black text-slate-700">{event.opening_hours || "08:00"} - {event.closing_hours || "18:00"}</span>
-                    </div>
-                  )}
-                  {event.days_opened?.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {event.days_opened.map((day: string, i: number) => (
-                        <span key={i} className="px-4 py-2 rounded-xl bg-teal-50 text-[10px] font-black uppercase text-[#008080] border border-teal-100">{day}</span>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Operating Hours</span>
+                  <span className="text-sm font-black text-slate-700">
+                    {event.opening_hours || "08:00"} - {event.closing_hours || "18:00"}
+                  </span>
                 </div>
               </div>
             )}
@@ -333,7 +327,7 @@ const EventDetail = () => {
 
             <div className="hidden lg:block bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
               <ReviewHeader event={event} />
-              <ReviewSection itemId={event.id} itemType="event" />
+              <ReviewSection itemId={event.id} itemType="trip" />
             </div>
           </div>
 
@@ -355,7 +349,7 @@ const EventDetail = () => {
 
               <div className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><Users className="h-3 w-3" /> Event Availability</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><Users className="h-3 w-3" /> Availability</span>
                   <span className={`text-[10px] font-black uppercase ${remainingSlots < 5 ? 'text-red-500' : 'text-emerald-600'}`}>{isSoldOut ? "Sold Out" : `${remainingSlots} Slots Available`}</span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -377,12 +371,12 @@ const EventDetail = () => {
               </div>
 
               <Button
-                onClick={() => navigate(`/booking/event/${event.id}`)}
+                onClick={() => navigate(`/booking/trip/${event.id}`)}
                 disabled={!canBook}
                 className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all active:scale-95 border-none"
                 style={{ background: !canBook ? "#cbd5e1" : `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`, boxShadow: !canBook ? "none" : `0 12px 24px -8px ${COLORS.CORAL}88` }}
               >
-                {isSoldOut ? "Fully Booked" : isExpired ? "Event Expired" : "Reserve Spot"}
+                {isSoldOut ? "Fully Booked" : isExpired ? "Trip Expired" : "Reserve Spot"}
               </Button>
 
               <div className="grid grid-cols-3 gap-3 mt-8 mb-8">
@@ -410,14 +404,14 @@ const EventDetail = () => {
 
             <div className="lg:hidden bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
               <ReviewHeader event={event} />
-              <ReviewSection itemId={event.id} itemType="event" />
+              <ReviewSection itemId={event.id} itemType="trip" />
             </div>
           </div>
         </div>
 
         <DetailMapSection
           currentItem={{ id: event.id, name: event.name, latitude: null, longitude: null, location: event.location, country: event.country, image_url: event.image_url, price: event.price }}
-          itemType="event"
+          itemType="trip"
         />
 
         <div className="mt-16">
@@ -437,4 +431,4 @@ const UtilityButton = ({ icon, label, onClick }: { icon: React.ReactNode, label:
   </Button>
 );
 
-export default EventDetail;
+export default TripDetail;

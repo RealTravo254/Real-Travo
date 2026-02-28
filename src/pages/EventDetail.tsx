@@ -17,7 +17,7 @@ import { generateReferralLink, trackReferralClick } from "@/lib/referralUtils";
 import { useBookingSubmit, BookingFormData } from "@/hooks/useBookingSubmit";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { useRealtimeItemAvailability } from "@/hooks/useRealtimeBookings";
-import { Header } from "@/components/Header";
+import { Header } from "@/components/Header"; 
 import { DetailMapSection } from "@/components/detail/DetailMapSection";
 import { DetailPageSkeleton } from "@/components/detail/DetailPageSkeleton";
 import { ImageGalleryModal } from "@/components/detail/ImageGalleryModal";
@@ -46,6 +46,8 @@ const ReviewHeader = ({ event }: { event: any }) => (
     )}
   </div>
 );
+
+const SELECT_FIELDS = "id,name,location,place,country,image_url,gallery_images,images,date,is_custom_date,price,price_child,available_tickets,description,activities,phone_number,email,created_by,type,opening_hours,closing_hours,map_link,is_flexible_date";
 
 const EventDetail = () => {
   const { slug } = useParams();
@@ -81,11 +83,10 @@ const EventDetail = () => {
   const fetchEvent = async () => {
     if (!id) return;
     try {
-      const SELECT = "id,name,location,place,country,image_url,gallery_images,images,date,is_custom_date,price,price_child,available_tickets,description,activities,phone_number,email,created_by,type,opening_hours,closing_hours,days_opened,map_link,is_flexible_date";
-      // Step 1: exact match on id
+      // Step 1: exact match on id column (UUID or legacy friendly ID)
       let { data } = await supabase
         .from("trips")
-        .select(SELECT)
+        .select(SELECT_FIELDS)
         .eq("id", id)
         .eq("type", "event")
         .maybeSingle() as { data: any };
@@ -94,7 +95,7 @@ const EventDetail = () => {
       if (!data) {
         const res = await supabase
           .from("trips")
-          .select(SELECT)
+          .select(SELECT_FIELDS)
           .eq("slug", id)
           .eq("type", "event")
           .maybeSingle() as { data: any };
@@ -168,10 +169,8 @@ const EventDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      {/* Header - All Screens */}
       <Header showSearchIcon={false} />
 
-      {/* Sticky Scroll Bar */}
       <div
         className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 py-3 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-300"
         style={{
@@ -180,44 +179,22 @@ const EventDetail = () => {
           pointerEvents: scrolled ? "auto" : "none",
         }}
       >
-        <Button
-          onClick={goBack}
-          className="rounded-full w-9 h-9 p-0 border-none bg-slate-100 text-slate-900 hover:bg-slate-200 shadow-none transition-all flex-shrink-0"
-        >
+        <Button onClick={goBack} className="rounded-full w-9 h-9 p-0 border-none bg-slate-100 text-slate-900 hover:bg-slate-200 shadow-none transition-all flex-shrink-0">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-black uppercase tracking-tight text-slate-800 truncate mx-3 flex-1 text-center">
-          {event.name}
-        </span>
-        <Button
-          onClick={handleSave}
-          className={`rounded-full w-9 h-9 p-0 border-none shadow-none transition-all flex-shrink-0 ${
-            isSaved ? "bg-red-500 hover:bg-red-600" : "bg-slate-100 text-slate-900 hover:bg-slate-200"
-          }`}
-        >
+        <span className="text-sm font-black uppercase tracking-tight text-slate-800 truncate mx-3 flex-1 text-center">{event.name}</span>
+        <Button onClick={handleSave} className={`rounded-full w-9 h-9 p-0 border-none shadow-none transition-all flex-shrink-0 ${isSaved ? "bg-red-500 hover:bg-red-600" : "bg-slate-100 text-slate-900 hover:bg-slate-200"}`}>
           <Heart className={`h-4 w-4 ${isSaved ? "fill-white text-white" : "text-slate-900"}`} />
         </Button>
       </div>
 
-      {/* HERO / IMAGE GALLERY */}
       <div className="max-w-6xl mx-auto md:px-4 md:pt-3">
-        {/* Mobile Carousel View */}
         <div className="relative w-full overflow-hidden h-[55vh] bg-slate-900 md:rounded-3xl md:hidden">
-          {/* Action Buttons - Overlaid on Gallery */}
           <div className="absolute top-4 left-4 right-4 z-50 flex justify-between items-center">
-            <Button 
-              onClick={goBack} 
-              className="rounded-full w-10 h-10 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all"
-            >
+            <Button onClick={goBack} className="rounded-full w-10 h-10 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-
-            <Button 
-              onClick={handleSave} 
-              className={`rounded-full w-10 h-10 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${
-                isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"
-              }`}
-            >
+            <Button onClick={handleSave} className={`rounded-full w-10 h-10 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"}`}>
               <Heart className={`h-5 w-5 ${isSaved ? "fill-white text-white" : "text-slate-900"}`} />
             </Button>
           </div>
@@ -233,97 +210,54 @@ const EventDetail = () => {
               ))}
             </CarouselContent>
           </Carousel>
-          {/* Mobile See All Gallery Button */}
-          {allImages.length > 1 && (
-            <ImageGalleryModal images={allImages} name={event.name} />
-          )}
+          {allImages.length > 1 && <ImageGalleryModal images={allImages} name={event.name} />}
           <div className="absolute bottom-6 left-0 z-40 w-full px-4 pointer-events-none">
             <div className="relative z-10 space-y-2 pointer-events-auto bg-gradient-to-r from-black/70 via-black/50 to-transparent rounded-2xl p-4 max-w-xl">
               <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-3 py-1 h-auto uppercase font-black tracking-[0.1em] text-[9px] rounded-full shadow-lg">Event</Button>
               <h1 className="text-2xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-2xl">{event.name}</h1>
               <div className="flex items-center gap-2 cursor-pointer group w-fit" onClick={openInMaps}>
-                  <MapPin className="h-4 w-4 text-white" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wide">
-                    {[event.place, event.location, event.country].filter(Boolean).join(', ')}
-                  </span>
+                <MapPin className="h-4 w-4 text-white" />
+                <span className="text-xs font-bold text-white uppercase tracking-wide">{[event.place, event.location, event.country].filter(Boolean).join(', ')}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Desktop Grid View */}
         <div className="hidden md:block relative">
-          {/* Action Buttons - Overlaid on Gallery */}
           <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
-            <Button 
-              onClick={goBack} 
-              className="rounded-full w-12 h-12 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all"
-            >
+            <Button onClick={goBack} className="rounded-full w-12 h-12 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
               <ArrowLeft className="h-6 w-6" />
             </Button>
-
-            <Button 
-              onClick={handleSave} 
-              className={`rounded-full w-12 h-12 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${
-                isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"
-              }`}
-            >
+            <Button onClick={handleSave} className={`rounded-full w-12 h-12 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"}`}>
               <Heart className={`h-6 w-6 ${isSaved ? "fill-white text-white" : "text-slate-900"}`} />
             </Button>
           </div>
-
-          {/* Image Grid Layout */}
           <div className="grid grid-cols-4 gap-2 h-[550px]">
             {allImages.length > 0 ? (
               <>
-                {/* Main Large Image - Takes 2 columns and full height */}
                 <div className="col-span-2 row-span-2 rounded-3xl overflow-hidden relative group">
-                  <img 
-                    src={allImages[0]} 
-                    alt={event.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  <img src={allImages[0]} alt={event.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  
-                  {/* Event Info Overlay */}
                   <div className="absolute bottom-6 left-6 right-6 z-20">
                     <div className="space-y-3">
-                      <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-4 py-1.5 h-auto uppercase font-black tracking-[0.1em] text-[10px] rounded-full shadow-lg">
-                        Experience
-                      </Button>
-                      <h1 className="text-3xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-2xl">
-                        {event.name}
-                      </h1>
+                      <Button className="bg-[#FF7F50] hover:bg-[#FF7F50] border-none px-4 py-1.5 h-auto uppercase font-black tracking-[0.1em] text-[10px] rounded-full shadow-lg">Experience</Button>
+                      <h1 className="text-3xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-2xl">{event.name}</h1>
                       <div className="flex items-center gap-2 cursor-pointer group/map w-fit" onClick={openInMaps}>
                         <MapPin className="h-4 w-4 text-white" />
-                        <span className="text-sm font-bold text-white uppercase tracking-wide">
-                          {[event.place, event.location, event.country].filter(Boolean).join(', ')}
-                        </span>
+                        <span className="text-sm font-bold text-white uppercase tracking-wide">{[event.place, event.location, event.country].filter(Boolean).join(', ')}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Top Right Image */}
                 {allImages[1] && (
                   <div className="col-span-2 rounded-3xl overflow-hidden relative group">
-                    <img 
-                      src={allImages[1]} 
-                      alt={`${event.name} - Gallery 2`}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    <img src={allImages[1]} alt={`${event.name} - Gallery 2`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   </div>
                 )}
-
-                {/* Bottom Right - 3 Small Images */}
                 <div className="col-span-2 grid grid-cols-3 gap-2">
                   {allImages.slice(2, 5).map((img, idx) => (
                     <div key={idx} className="rounded-2xl overflow-hidden relative group">
-                      <img 
-                        src={img} 
-                        alt={`${event.name} - Gallery ${idx + 3}`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+                      <img src={img} alt={`${event.name} - Gallery ${idx + 3}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       {idx === 2 && allImages.length > 5 && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                           <div className="text-center">
@@ -345,50 +279,33 @@ const EventDetail = () => {
         </div>
       </div>
 
-      {/* 3. MAIN BODY */}
       <main className="container px-4 max-w-6xl mx-auto mt-6 relative z-50">
         <div className="grid lg:grid-cols-[1.7fr,1fr] gap-6">
-          
           <div className="space-y-6">
-            {/* About */}
             <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
               <h2 className="text-xl font-black uppercase tracking-tight mb-4" style={{ color: COLORS.TEAL }}>About this Event</h2>
               <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">{event.description}</p>
             </div>
 
-            {/* Event Hours */}
-            {(event.opening_hours || event.days_opened?.length > 0) && (
+            {/* Operating Hours — no days_opened */}
+            {(event.opening_hours || event.closing_hours) && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 rounded-xl bg-teal-50"><Clock className="h-5 w-5 text-[#008080]" /></div>
                   <div>
                     <h2 className="text-xl font-black uppercase tracking-tight" style={{ color: COLORS.TEAL }}>Event Hours</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Hours</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Operating Hours</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {(event.opening_hours || event.closing_hours) && (
-                    <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Operating Hours</span>
-                      <span className="text-sm font-black text-slate-700">
-                        {event.opening_hours || "08:00"} - {event.closing_hours || "18:00"}
-                      </span>
-                    </div>
-                  )}
-                  {event.days_opened?.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {event.days_opened.map((day: string, i: number) => (
-                        <span key={i} className="px-4 py-2 rounded-xl bg-teal-50 text-[10px] font-black uppercase text-[#008080] border border-teal-100">
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Operating Hours</span>
+                  <span className="text-sm font-black text-slate-700">
+                    {event.opening_hours || "08:00"} - {event.closing_hours || "18:00"}
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* Highlights / Activities */}
             {event.activities?.length > 0 && (
               <div className="bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
                 <h2 className="text-xl font-black uppercase tracking-tight mb-5" style={{ color: COLORS.TEAL }}>Highlights</h2>
@@ -398,9 +315,7 @@ const EventDetail = () => {
                       <CheckCircle2 className="h-4 w-4 text-[#857F3E]" />
                       <div className="flex flex-col">
                         <span className="text-[11px] font-black text-[#857F3E] uppercase tracking-wide">{act.name}</span>
-                        <span className="text-[10px] font-bold text-[#857F3E]/70">
-                          {act.price === 0 || act.is_free ? "Included" : `KSh ${Number(act.price).toLocaleString()}`}
-                        </span>
+                        <span className="text-[10px] font-bold text-[#857F3E]/70">{act.price === 0 || act.is_free ? "Included" : `KSh ${Number(act.price).toLocaleString()}`}</span>
                       </div>
                     </div>
                   ))}
@@ -408,17 +323,14 @@ const EventDetail = () => {
               </div>
             )}
 
-            {/* Reviews — desktop */}
             <div className="hidden lg:block bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
               <ReviewHeader event={event} />
               <ReviewSection itemId={event.id} itemType="event" />
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
             <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-100 lg:sticky lg:top-24">
-              {/* Price + availability badge */}
               <div className="flex justify-between items-end mb-8">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ticket Price</p>
@@ -429,43 +341,25 @@ const EventDetail = () => {
                 </div>
                 <div className="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 flex items-center gap-2">
                   <Clock className="h-4 w-4" style={{ color: COLORS.TEAL }} />
-                  <span className={`text-xs font-black uppercase ${isSoldOut ? "text-red-500" : "text-slate-600"}`}>
-                    {isSoldOut ? "FULL" : `${remainingSlots} Left`}
-                  </span>
+                  <span className={`text-xs font-black uppercase ${isSoldOut ? "text-red-500" : "text-slate-600"}`}>{isSoldOut ? "FULL" : `${remainingSlots} Left`}</span>
                 </div>
               </div>
 
-              {/* Availability bar */}
               <div className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                    <Users className="h-3 w-3" /> Event Availability
-                  </span>
-                  <span className={`text-[10px] font-black uppercase ${remainingSlots < 5 ? 'text-red-500' : 'text-emerald-600'}`}>
-                    {isSoldOut ? "Sold Out" : `${remainingSlots} Slots Available`}
-                  </span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><Users className="h-3 w-3" /> Event Availability</span>
+                  <span className={`text-[10px] font-black uppercase ${remainingSlots < 5 ? 'text-red-500' : 'text-emerald-600'}`}>{isSoldOut ? "Sold Out" : `${remainingSlots} Slots Available`}</span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                   <div 
-                    className={`h-full transition-all duration-500 ${remainingSlots < 5 ? 'bg-red-500' : 'bg-emerald-500'}`}
-                    style={{ width: `${Math.min((remainingSlots / (event.available_tickets || 50)) * 100, 100)}%` }}
-                   />
+                  <div className={`h-full transition-all duration-500 ${remainingSlots < 5 ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min((remainingSlots / (event.available_tickets || 50)) * 100, 100)}%` }} />
                 </div>
               </div>
 
-              {/* Date + child price */}
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-xs font-bold uppercase tracking-tight">
                   <span className="text-slate-400">Scheduled Date</span>
                   <span className={isExpired ? "text-red-500" : "text-slate-700"}>
-                    {event.is_custom_date ? (
-                      <span className="text-emerald-600 font-black">AVAILABLE</span>
-                    ) : (
-                      <>
-                        {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        {isExpired && <span className="ml-1">(Past)</span>}
-                      </>
-                    )}
+                    {event.is_custom_date ? <span className="text-emerald-600 font-black">AVAILABLE</span> : (<>{new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}{isExpired && <span className="ml-1">(Past)</span>}</>)}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs font-bold uppercase tracking-tight">
@@ -474,29 +368,21 @@ const EventDetail = () => {
                 </div>
               </div>
 
-              {/* CTA */}
-              <Button 
+              <Button
                 onClick={() => navigate(`/booking/event/${event.id}`)}
                 disabled={!canBook}
                 className="w-full py-8 rounded-2xl text-md font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all active:scale-95 border-none"
-                style={{ 
-                    background: !canBook 
-                        ? "#cbd5e1" 
-                        : `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`,
-                    boxShadow: !canBook ? "none" : `0 12px 24px -8px ${COLORS.CORAL}88`
-                }}
+                style={{ background: !canBook ? "#cbd5e1" : `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)`, boxShadow: !canBook ? "none" : `0 12px 24px -8px ${COLORS.CORAL}88` }}
               >
                 {isSoldOut ? "Fully Booked" : isExpired ? "Event Expired" : "Reserve Spot"}
               </Button>
 
-              {/* Utility buttons */}
               <div className="grid grid-cols-3 gap-3 mt-8 mb-8">
                 <UtilityButton icon={<MapPin className="h-5 w-5" />} label="Map" onClick={openInMaps} />
                 <UtilityButton icon={<Copy className="h-5 w-5" />} label="Copy" onClick={handleCopyLink} />
                 <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={handleShare} />
               </div>
 
-              {/* Contact */}
               <div className="space-y-4 pt-6 border-t border-slate-50">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</h3>
                 {event.phone_number && (
@@ -514,7 +400,6 @@ const EventDetail = () => {
               </div>
             </div>
 
-            {/* Reviews — mobile */}
             <div className="lg:hidden bg-white rounded-[28px] p-7 shadow-sm border border-slate-100">
               <ReviewHeader event={event} />
               <ReviewSection itemId={event.id} itemType="event" />
@@ -522,24 +407,13 @@ const EventDetail = () => {
           </div>
         </div>
 
-        {/* Map Section */}
         <DetailMapSection
-          currentItem={{
-            id: event.id,
-            name: event.name,
-            latitude: null,
-            longitude: null,
-            location: event.location,
-            country: event.country,
-            image_url: event.image_url,
-            price: event.price,
-          }}
+          currentItem={{ id: event.id, name: event.name, latitude: null, longitude: null, location: event.location, country: event.country, image_url: event.image_url, price: event.price }}
           itemType="event"
         />
 
-        {/* Similar Items */}
         <div className="mt-16">
-           <SimilarItems currentItemId={event.id} itemType="trip" location={event.location} country={event.country} />
+          <SimilarItems currentItemId={event.id} itemType="trip" location={event.location} country={event.country} />
         </div>
       </main>
 
