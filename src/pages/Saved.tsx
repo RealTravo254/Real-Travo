@@ -5,8 +5,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getUserId } from "@/lib/sessionManager";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Trash2, MapPin, ChevronRight, Loader2 } from "lucide-react";
 import { createDetailPath } from "@/lib/slugUtils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,17 +27,16 @@ const Saved = () => {
   const navigate = useNavigate();
   const isEmbeddedInSheet = location.pathname !== "/saved";
 
-  // Track whether a delete is in progress to prevent card navigation triggering
+  // Tracks which item is actively being deleted so card tap doesn't fire
   const deletingRef = useRef<string | null>(null);
+  // Records Y position at touchstart to distinguish tap vs scroll
+  const touchStartY = useRef<number>(0);
 
   useEffect(() => {
     const initializeData = async () => {
       if (authLoading) return;
       const uid = await getUserId();
-      if (!uid) {
-        setIsLoading(false);
-        return;
-      }
+      if (!uid) { setIsLoading(false); return; }
       setUserId(uid);
       fetchSavedItems(uid, 0);
     };
@@ -46,9 +44,7 @@ const Saved = () => {
   }, [authLoading]);
 
   useEffect(() => {
-    if (userId && hasFetched.current) {
-      fetchSavedItems(userId, 0);
-    }
+    if (userId && hasFetched.current) fetchSavedItems(userId, 0);
   }, [savedItems]);
 
   const fetchSavedItems = async (uid: string, fetchOffset: number) => {
@@ -84,19 +80,15 @@ const Saved = () => {
       itemMap.set(item.id, { ...item, savedType: original?.item_type });
     });
 
-    const items = savedData.map(s => itemMap.get(s.item_id)).filter(Boolean);
-    setSavedListings(items);
+    setSavedListings(savedData.map(s => itemMap.get(s.item_id)).filter(Boolean));
     hasFetched.current = true;
     setIsLoading(false);
   };
 
   const handleRemoveSingle = async (itemId: string, e: React.MouseEvent | React.TouchEvent) => {
-    // Stop the event from bubbling up to the card / Link
     e.preventDefault();
     e.stopPropagation();
-
     if (!userId || deletingRef.current === itemId) return;
-
     deletingRef.current = itemId;
     setDeletingId(itemId);
 
@@ -110,16 +102,13 @@ const Saved = () => {
       setSavedListings(prev => prev.filter(item => item.id !== itemId));
       toast({ title: "Removed", description: "Item removed from your collection." });
     }
-
     deletingRef.current = null;
     setDeletingId(null);
   };
 
-  const handleCardTap = (item: any, e: React.MouseEvent | React.TouchEvent) => {
-    // If a delete is in progress for this card, swallow the navigation
+  const goToDetail = (item: any) => {
     if (deletingRef.current === item.id) return;
-    const path = createDetailPath(item.savedType, item.id, item.name, item.location);
-    navigate(path);
+    navigate(createDetailPath(item.savedType, item.id, item.name, item.location));
   };
 
   return (
@@ -155,41 +144,65 @@ const Saved = () => {
               {savedListings.map((item) => (
                 <div key={item.id} className="flex items-center gap-2">
 
-                  {/* ── Delete button ──
-                      Uses onClick (not onPointerDown) so it doesn't cancel the touch
-                      sequence that the card Link needs to fire its own click.
-                      stopPropagation prevents the tap from reaching the card. */}
+                  {/* Delete button */}
                   <button
                     onClick={(e) => handleRemoveSingle(item.id, e)}
                     disabled={deletingId === item.id}
-                    className="shrink-0 p-3 rounded-full bg-red-50 text-red-500 active:bg-red-100 active:scale-90 transition-all border border-red-100 touch-manipulation select-none z-10"
+                    className="shrink-0 p-3 rounded-full bg-red-50 text-red-500 active:bg-red-100 active:scale-90 transition-all border border-red-100 select-none z-10"
                     aria-label="Remove item"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
-                    {deletingId === item.id ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={16} />
-                    )}
+                    {deletingId === item.id
+                      ? <Loader2 size={16} className="animate-spin" />
+                      : <Trash2 size={16} />
+                    }
                   </button>
 
-                  {/* ── Card ──
-                      Uses a plain div + imperative navigate() instead of <Link>.
-                      Inside a Sheet's scroll container on iOS, <Link> often loses
-                      its click because the browser steals the touch for scroll.
-                      A div with onClick + touch-manipulation bypasses that. */}
+                  {/*
+                    Card navigation strategy:
+                    ─────────────────────────
+                    The Sheet scroll container uses touchAction:"pan-y". On iOS/Android
+                    the browser holds every touch for ~300ms to decide scroll-vs-tap,
+                    meaning the synthetic "click" event either never fires on a div, or
+                    fires on whatever element happens to be underneath at that point.
+
+                    Fix: use onTouchEnd (fires the instant the finger lifts, no delay)
+                    combined with a Y-delta guard — if the finger moved < 8px it was a
+                    tap so we navigate; if it moved more it was a scroll so we ignore.
+                    e.preventDefault() on a confirmed tap suppresses the ghost click.
+
+                    onClick is kept for mouse/desktop where touch events never fire.
+                  */}
                   <div
                     role="link"
                     tabIndex={0}
-                    onClick={(e) => handleCardTap(item, e)}
-                    onKeyDown={(e) => e.key === "Enter" && navigate(createDetailPath(item.savedType, item.id, item.name, item.location))}
-                    className="flex-1 flex items-center gap-4 bg-white p-3 sm:p-4 rounded-[24px] border border-slate-100 hover:shadow-md transition-all active:scale-[0.98] min-w-0 group cursor-pointer"
-                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                    onTouchStart={(e) => {
+                      touchStartY.current = e.touches[0].clientY;
+                    }}
+                    onTouchEnd={(e) => {
+                      if (deletingRef.current === item.id) return;
+                      const delta = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+                      if (delta < 8) {
+                        e.preventDefault(); // kill the subsequent ghost click
+                        goToDetail(item);
+                      }
+                    }}
+                    onClick={() => goToDetail(item)}
+                    onKeyDown={(e) => e.key === "Enter" && goToDetail(item)}
+                    className="flex-1 flex items-center gap-4 bg-white p-3 sm:p-4 rounded-[24px] border border-slate-100 hover:shadow-md transition-all active:scale-[0.98] min-w-0 group cursor-pointer select-none"
+                    style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'pan-y' }}
                   >
-                    <img src={item.image_url} className="h-16 w-16 rounded-xl object-cover shrink-0" alt="" />
+                    <img
+                      src={item.image_url}
+                      className="h-16 w-16 rounded-xl object-cover shrink-0"
+                      alt=""
+                      draggable={false}
+                    />
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-bold text-[#007AFF] uppercase mb-0.5">{item.savedType?.replace('_', ' ')}</p>
+                      <p className="text-[9px] font-bold text-[#007AFF] uppercase mb-0.5">
+                        {item.savedType?.replace('_', ' ')}
+                      </p>
                       <h3 className="text-sm sm:text-base font-bold text-slate-800 truncate">{item.name}</h3>
                       <div className="flex items-center text-slate-400 text-xs mt-0.5">
                         <MapPin size={10} className="mr-1 shrink-0" />
