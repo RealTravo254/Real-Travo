@@ -122,9 +122,21 @@ export const useSavedItems = () => {
     };
   }, [user]);
 
+  const normalizeItemType = (type: string) => {
+    const t = type.toLowerCase().replace(/\s+/g, '_');
+    // Map common variations
+    const typeMap: Record<string, string> = {
+      'adventure_place': 'adventure_place',
+      'adventure': 'adventure_place',
+      'sport': 'event',
+    };
+    return typeMap[t] || t;
+  };
+
   const handleSave = async (itemId: string, itemType: string) => {
+    const normalizedType = normalizeItemType(itemType);
+    
     if (!user) {
-      // Save locally for non-logged-in users
       const isLocalSaved = savedItems.has(itemId);
       
       if (isLocalSaved) {
@@ -135,7 +147,7 @@ export const useSavedItems = () => {
           return newSet;
         });
       } else {
-        saveItemLocally(itemId, itemType);
+        saveItemLocally(itemId, normalizedType);
         setSavedItems(prev => new Set([...prev, itemId]));
         toast({ 
           title: "Item saved", 
@@ -154,7 +166,6 @@ export const useSavedItems = () => {
         .eq("item_id", itemId)
         .eq("user_id", user.id);
     } else {
-      // Check if item already exists in database
       const { data: existing } = await supabase
         .from("saved_items")
         .select("id")
@@ -168,7 +179,7 @@ export const useSavedItems = () => {
           .insert([{ 
             user_id: user.id, 
             item_id: itemId, 
-            item_type: itemType.toLowerCase()
+            item_type: normalizedType
           }]);
       }
     }
