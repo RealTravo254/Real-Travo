@@ -55,6 +55,16 @@ export const checkReferralEligibility = async (): Promise<{
  * - Verified hosts: Base URL + ?ref={slugified-email-name}
  * - Non-verified users: Clean base URL only (referrals disabled)
  */
+/**
+ * Shorten a UUID to first 8 chars for display purposes
+ */
+export const shortenId = (id: string): string => {
+  if (id && id.length > 8 && id.includes('-')) {
+    return id.substring(0, 8);
+  }
+  return id;
+};
+
 export const generateReferralLink = async (
   itemId: string,
   itemType: string,

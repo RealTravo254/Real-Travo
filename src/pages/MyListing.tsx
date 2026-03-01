@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Edit3, EyeOff, LayoutDashboard, ReceiptText, Star, Loader2, ArrowLeft } from "lucide-react";
+import { MapPin, Calendar, Edit3, EyeOff, LayoutDashboard, ReceiptText, Star, Loader2, ArrowLeft, Link } from "lucide-react";
+import { ShareableBookingLink } from "@/components/host/ShareableBookingLink";
 
 const COLORS = {
   TEAL: "#008080",
@@ -172,13 +173,18 @@ const MyListing = () => {
                       <span className="text-sm font-black text-[#FF0000]">KSh {item.price || item.price_adult || item.entry_fee || 0}</span>
                    </div>
                    
-                   <div className="flex gap-2">
+                   <div className="flex gap-2 flex-wrap">
                     {item.is_hidden && (
                         <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
                             <EyeOff className="h-3 w-3 text-yellow-600" />
                             <span className="text-[8px] font-black text-yellow-700 uppercase">Hidden</span>
                         </div>
                     )}
+                    <ShareableBookingLink
+                      itemId={item.id}
+                      itemType={item.type}
+                      itemName={item.name || item.local_name || 'Listing'}
+                    />
                     <Button
                         onClick={() => navigate(`/edit-listing/${item.type}/${item.id}`)}
                         size="sm"
