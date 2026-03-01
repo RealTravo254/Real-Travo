@@ -22,7 +22,7 @@ export const ShareableBookingLink = ({ itemId, itemType, itemName }: ShareableBo
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const bookingLink = `${window.location.origin}/book/${itemType}/${itemId}`;
+  const bookingLink = `${window.location.origin}/booking/${itemType}/${itemId}`;
 
   const copyToClipboard = async () => {
     try {
