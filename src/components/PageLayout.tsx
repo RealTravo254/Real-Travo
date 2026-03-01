@@ -20,7 +20,7 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
   // Auth page renders its own header
   const shouldHideHeader =
     pathname === "/auth" || pathname === "/reset-password" || pathname === "/forgot-password" ||
-    pathname === "/verify-email" || pathname === "/complete-profile";
+    pathname === "/verify-email" || pathname === "/complete-profile" || pathname.startsWith("/booking/");
 
   const shouldHideHeaderOnMobile =
     pathname.startsWith("/hotel/") ||
