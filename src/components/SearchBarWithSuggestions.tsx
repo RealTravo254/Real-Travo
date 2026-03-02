@@ -39,6 +39,7 @@ interface SearchResult {
   facilities?: any;
   date?: string;
   image_url?: string;
+  matchedActivity?: string;
 }
 
 const SEARCH_HISTORY_KEY = "search_history";
@@ -142,14 +143,20 @@ export const SearchBarWithSuggestions = ({ value, onChange, onSubmit, onSuggesti
       ];
 
       if (queryValue) {
-        combined = combined.filter(item => 
-          item.name?.toLowerCase().includes(queryValue) ||
-          item.location?.toLowerCase().includes(queryValue) ||
-          item.place?.toLowerCase().includes(queryValue) ||
-          item.country?.toLowerCase().includes(queryValue) ||
-          checkJsonArrayMatch(item.activities, queryValue) ||
-          checkJsonArrayMatch(item.facilities, queryValue)
-        );
+        combined = combined
+          .map(item => {
+            // Check if the match is via an activity name
+            const activityMatch = findMatchingActivity(item.activities, queryValue);
+            return { ...item, matchedActivity: activityMatch };
+          })
+          .filter(item => 
+            item.name?.toLowerCase().includes(queryValue) ||
+            item.location?.toLowerCase().includes(queryValue) ||
+            item.place?.toLowerCase().includes(queryValue) ||
+            item.country?.toLowerCase().includes(queryValue) ||
+            item.matchedActivity ||
+            checkJsonArrayMatch(item.facilities, queryValue)
+          );
       }
       combined.sort((a, b) => a.name.localeCompare(b.name));
       setSuggestions(combined.slice(0, 10));
@@ -166,6 +173,15 @@ export const SearchBarWithSuggestions = ({ value, onChange, onSubmit, onSuggesti
       return data.some(item => (typeof item === 'string' ? item : item?.name)?.toLowerCase().includes(query));
     }
     return false;
+  };
+
+  const findMatchingActivity = (activities: any, query: string): string | undefined => {
+    if (!Array.isArray(activities)) return undefined;
+    for (const item of activities) {
+      const name = typeof item === 'object' ? item.name : item;
+      if (name && name.toLowerCase().includes(query)) return name;
+    }
+    return undefined;
   };
 
   const getActivitiesText = (activities: any) => {
@@ -357,6 +373,13 @@ export const SearchBarWithSuggestions = ({ value, onChange, onSubmit, onSuggesti
                               </span>
                             </div>
                           </div>
+                          {result.matchedActivity && (
+                            <div className="flex items-center shrink-0">
+                              <span className="text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider bg-[#FF7F50]/10 text-[#FF7F50] border border-[#FF7F50]/20">
+                                {result.matchedActivity}
+                              </span>
+                            </div>
+                          )}
                         </button>
                       ))}
                     </>

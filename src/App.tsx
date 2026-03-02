@@ -9,7 +9,7 @@ import { PageLayout } from "@/components/PageLayout";
 import { SmallScreenInstallBanner } from "@/components/SmallScreenInstallBanner";
 import { DetailPageSkeleton } from "@/components/detail/DetailPageSkeleton";
 import { TealLoader } from "@/components/ui/teal-loader";
-import { OfflineIndicator, OfflineFullScreen } from "@/components/OfflineIndicator";
+import { OfflineFullScreen } from "@/components/OfflineIndicator";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
  
 // Only the Index page loads eagerly - everything else is lazy
@@ -107,7 +107,6 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <OfflineIndicator />
             <SmallScreenInstallBanner />
             <PageLayout>
               <Suspense fallback={<SuspenseFallback />}>

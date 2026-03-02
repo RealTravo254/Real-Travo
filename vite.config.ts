@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   build: {
-    sourcemap: true,
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -35,9 +35,17 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('@supabase')) {
             return 'supabase';
           }
+          // PDF generation chunk - only loaded when downloading
+          if (id.includes('jspdf') || id.includes('qrcode')) {
+            return 'pdf';
+          }
           // Calendar/date picker chunk
           if (id.includes('react-day-picker') || id.includes('date-fns')) {
             return 'calendar';
+          }
+          // Paystack chunk - only loaded on payment pages
+          if (id.includes('@paystack')) {
+            return 'paystack';
           }
         },
       },
