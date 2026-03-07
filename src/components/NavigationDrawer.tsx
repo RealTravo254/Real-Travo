@@ -18,12 +18,16 @@ const Separator = () => (
 export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
   const { user, signOut } = useAuth();
   const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
-      const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).single();
-      if (profile?.name) setUserName(profile.name);
+      const { data: profile } = await supabase.from("profiles").select("name, profile_picture_url").eq("id", user.id).single();
+      if (profile) {
+        setUserName(profile.name || "");
+        setUserAvatar(profile.profile_picture_url || null);
+      }
     };
     fetchUserData();
   }, [user]);
@@ -86,12 +90,21 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
             <div className="p-4 rounded-2xl border border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-900/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-gray-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
-                    <User className="h-4 w-4" />
+                  <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-gray-800 flex items-center justify-center text-slate-600 dark:text-slate-400 overflow-hidden">
+                    {userAvatar ? (
+                      <img src={userAvatar} alt={userName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Traveler Account
-                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                      {userName || "Traveler"}
+                    </p>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      Account
+                    </span>
+                  </div>
                 </div>
                 <button 
                   onClick={() => { signOut(); onClose(); }}

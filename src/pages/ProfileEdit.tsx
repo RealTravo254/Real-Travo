@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Calendar, Globe, Phone, ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react";
+import { User, Calendar, Globe, Phone, ArrowLeft, CheckCircle2, ShieldCheck, Camera } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -33,6 +33,8 @@ const ProfileEdit = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
+  const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [uploadingPic, setUploadingPic] = useState(false);
   const [profileData, setProfileData] = useState<{
     name: string;
     gender: "male" | "female" | "other" | "prefer_not_to_say" | "";
@@ -68,6 +70,7 @@ const ProfileEdit = () => {
         .single();
 
       if (data) {
+        setProfilePicUrl(data.profile_picture_url || null);
         setProfileData({
           name: data.name || "",
           gender: data.gender || "",
@@ -121,6 +124,30 @@ const ProfileEdit = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setVerifyingCode(false);
+    }
+  };
+
+  const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    setUploadingPic(true);
+    try {
+      const fileName = `${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
+      const { error: uploadError } = await supabase.storage.from('profile-photos').upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(fileName);
+      
+      const { error: updateError } = await supabase.from('profiles').update({ profile_picture_url: publicUrl }).eq('id', user.id);
+      if (updateError) throw updateError;
+      
+      setProfilePicUrl(publicUrl);
+      toast({ title: "Profile picture updated!" });
+    } catch (error: any) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingPic(false);
     }
   };
 
@@ -178,6 +205,28 @@ const ProfileEdit = () => {
         <div className="bg-white rounded-[28px] p-8 shadow-sm border border-slate-100">
           <form onSubmit={handleSubmit} className="space-y-8">
             
+            {/* Profile Picture */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="h-24 w-24 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-4 border-[#008080]/20">
+                  {profilePicUrl ? (
+                    <img src={profilePicUrl} alt="Profile" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <User className="h-10 w-10 text-slate-400" />
+                  )}
+                </div>
+                <label className="absolute bottom-0 right-0 p-2 rounded-full bg-[#008080] text-white cursor-pointer shadow-lg hover:bg-[#006666] transition-colors">
+                  {uploadingPic ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} disabled={uploadingPic} />
+                </label>
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tap camera to change photo</p>
+            </div>
+
             {/* Field: Name */}
             <div className="space-y-4">
                <div className="flex items-center gap-3">

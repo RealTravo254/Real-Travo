@@ -34,6 +34,7 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -45,12 +46,13 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
       setLoading(true);
       try {
         const [profileRes, rolesRes] = await Promise.all([
-          supabase.from("profiles").select("name").eq("id", user.id).single(),
+          supabase.from("profiles").select("name, profile_picture_url").eq("id", user.id).single(),
           supabase.from("user_roles").select("role").eq("user_id", user.id)
         ]);
         
         if (profileRes.data) {
           setUserName(profileRes.data.name || "User");
+          setUserAvatar(profileRes.data.profile_picture_url || null);
         }
 
         if (rolesRes.data && rolesRes.data.length > 0) {
@@ -114,10 +116,14 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
           {/* User Profile Info */}
           {!loading && userName && (
             <div className="flex items-center gap-3 mt-4 p-3 bg-gradient-to-r from-[#008080]/5 to-transparent rounded-xl border border-[#008080]/10">
-              <div className="h-12 w-12 rounded-full bg-[#008080] flex items-center justify-center border-2 border-[#008080]/20">
-                <span className="text-white font-bold text-lg">
-                  {userName.charAt(0).toUpperCase()}
-                </span>
+              <div className="h-12 w-12 rounded-full bg-[#008080] flex items-center justify-center border-2 border-[#008080]/20 overflow-hidden">
+                {userAvatar ? (
+                  <img src={userAvatar} alt={userName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <span className="text-white font-bold text-lg">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-800 truncate">{userName}</p>

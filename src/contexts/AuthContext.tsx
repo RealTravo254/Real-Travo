@@ -59,13 +59,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const googleName = session.user.user_metadata?.full_name || 
                                    session.user.user_metadata?.name || 
                                    session.user.email?.split('@')[0] || 'User';
+                const googleAvatar = session.user.user_metadata?.avatar_url || 
+                                     session.user.user_metadata?.picture || null;
                 
                 await supabase
                   .from('profiles')
                   .update({
                     name: googleName,
                     email: session.user.email,
-                    profile_completed: true
+                    profile_completed: true,
+                    profile_picture_url: googleAvatar,
                   })
                   .eq('id', session.user.id);
               }
