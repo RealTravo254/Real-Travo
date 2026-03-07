@@ -542,6 +542,7 @@ import { useSearchParams } from "react-router-dom";
        {/* Travelers Step */}
        {currentStepId === "travelers" && (
          <div className="space-y-6">
+           <p className="text-xs text-muted-foreground">Maximum 20 people per booking. You can make multiple bookings.</p>
            <div className="flex items-center justify-between p-4 border rounded-xl">
              <div>
                <p className="font-semibold">Adults</p>
