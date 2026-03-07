@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Calendar, Globe, Phone, ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react";
+import { User, Calendar, Globe, Phone, ArrowLeft, CheckCircle2, ShieldCheck, Camera } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -33,6 +33,8 @@ const ProfileEdit = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
+  const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [uploadingPic, setUploadingPic] = useState(false);
   const [profileData, setProfileData] = useState<{
     name: string;
     gender: "male" | "female" | "other" | "prefer_not_to_say" | "";
@@ -68,6 +70,7 @@ const ProfileEdit = () => {
         .single();
 
       if (data) {
+        setProfilePicUrl(data.profile_picture_url || null);
         setProfileData({
           name: data.name || "",
           gender: data.gender || "",
