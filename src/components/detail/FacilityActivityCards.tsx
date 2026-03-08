@@ -284,6 +284,7 @@ export const ActivitiesGrid = ({
 
 const ActivityImageCard = ({ activity, itemId, itemType, accentColor = "#FF7F50" }: { activity: ActivityWithImages; itemId: string; itemType: "hotel" | "adventure_place"; accentColor?: string }) => {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   const [showGallery, setShowGallery] = useState(false);
   const hasImages = activity.images && activity.images.length > 0;
   const mainImage = hasImages ? activity.images[0] : null;
