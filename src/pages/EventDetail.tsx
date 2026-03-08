@@ -169,7 +169,7 @@ const EventDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      <Header showSearchIcon={false} />
+      <Header showSearchIcon={false} className={`transition-transform duration-300 ${scrolled ? '-translate-y-full' : 'translate-y-0'}`} />
 
       <div
         className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 py-3 mx-auto max-w-6xl inset-x-0 bg-background/95 backdrop-blur-md border-b border-border shadow-sm transition-all duration-300 md:rounded-b-2xl"

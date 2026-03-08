@@ -204,7 +204,7 @@ const HotelDetail = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       {/* Header - All Screens */}
-      <Header showSearchIcon={false} />
+      <Header showSearchIcon={false} className={`transition-transform duration-300 ${scrolled ? '-translate-y-full' : 'translate-y-0'}`} />
 
       {/* Sticky Scroll Bar */}
       <div
