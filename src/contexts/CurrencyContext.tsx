@@ -10,6 +10,7 @@ interface CurrencyContextType {
   rate: number; // KES per 1 USD
   convertPrice: (kesAmount: number) => number;
   formatPrice: (kesAmount: number) => string;
+  usdHint: (kesAmount: number) => string;
   loading: boolean;
 }
 
@@ -113,18 +114,25 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const convertPrice = useCallback((kesAmount: number) => {
-    if (currency === "KES") return kesAmount;
-    return Math.round((kesAmount / rate) * 100) / 100;
+    if (currency === "KES") return Math.ceil(kesAmount);
+    return Math.ceil((kesAmount / rate) * 100) / 100;
   }, [currency, rate]);
 
   const formatPrice = useCallback((kesAmount: number) => {
-    if (currency === "KES") return `KSh ${kesAmount.toLocaleString()}`;
-    const usd = Math.round((kesAmount / rate) * 100) / 100;
+    if (currency === "KES") return `KSh ${Math.ceil(kesAmount).toLocaleString()}`;
+    const usd = Math.ceil((kesAmount / rate) * 100) / 100;
     return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   }, [currency, rate]);
 
+  /** Show USD equivalent hint for a KES amount (useful in creation forms) */
+  const usdHint = useCallback((kesAmount: number) => {
+    if (!kesAmount || kesAmount <= 0) return "";
+    const usd = Math.ceil((kesAmount / rate) * 100) / 100;
+    return `≈ $${usd.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  }, [rate]);
+
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, rate, convertPrice, formatPrice, loading }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, rate, convertPrice, formatPrice, usdHint, loading }}>
       {children}
     </CurrencyContext.Provider>
   );

@@ -25,6 +25,7 @@ import { OperatingHoursSection } from "@/components/creation/OperatingHoursSecti
 import { ReviewStep } from "@/components/creation/ReviewStep";
 import { GeneralFacilitiesSelector } from "@/components/creation/GeneralFacilitiesSelector";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -153,6 +154,7 @@ interface FacilityBuilderProps {
 const FacilityBuilder = ({
   items, onChange, showErrors, onValidationFail, showBookingLink,
 }: FacilityBuilderProps) => {
+  const { usdHint } = useCurrency();
   const update = (id: string, patch: Partial<FacilityItem>) =>
     onChange(items.map((f) => (f.id === id ? { ...f, ...patch } : f)));
 
@@ -234,7 +236,7 @@ const FacilityBuilder = ({
                 <p className="text-[11px] text-slate-500 truncate">{item.amenities.join(", ")}</p>
                 <div className="flex gap-3 mt-0.5">
                   {item.capacity && <p className="text-[11px] text-slate-400">Capacity: {item.capacity}</p>}
-                  {item.price && <p className="text-[11px] font-bold text-[#FF7F50]">KSh {item.price}</p>}
+                  {item.price && <p className="text-[11px] font-bold text-[#FF7F50]">KSh {item.price} <span className="text-blue-500">{usdHint(parseFloat(item.price))}</span></p>}
                 </div>
                 {showBookingLink && item.bookingLink && (
                   <p className="text-[10px] text-[#008080] truncate mt-0.5">{item.bookingLink}</p>
@@ -265,6 +267,7 @@ const FacilityBuilder = ({
                   <Input type="number" value={item.price} onChange={(e) => update(item.id, { price: e.target.value })}
                     placeholder="0"
                     className={cn("rounded-xl h-10 font-bold text-sm", showErrors && !item.price.trim() && "border-red-500 bg-red-50")} />
+                  {item.price && parseFloat(item.price) > 0 && <p className="text-[9px] text-blue-500 font-bold mt-0.5">{usdHint(parseFloat(item.price))}</p>}
                 </div>
               </div>
 
@@ -380,6 +383,7 @@ interface ActivityBuilderProps {
 }
 
 const ActivityBuilder = ({ items, onChange, showErrors, onValidationFail }: ActivityBuilderProps) => {
+  const { usdHint } = useCurrency();
   const update = (id: string, patch: Partial<ActivityItem>) =>
     onChange(items.map((a) => (a.id === id ? { ...a, ...patch } : a)));
 
@@ -437,7 +441,7 @@ const ActivityBuilder = ({ items, onChange, showErrors, onValidationFail }: Acti
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-black text-sm text-slate-800 truncate">{item.name}</p>
-                {item.price && <p className="text-[11px] font-bold text-indigo-500">KSh {item.price}</p>}
+                {item.price && <p className="text-[11px] font-bold text-indigo-500">KSh {item.price} <span className="text-blue-500">{usdHint(parseFloat(item.price))}</span></p>}
               </div>
               <div className="flex gap-2 shrink-0">
                 <button type="button" onClick={() => update(item.id, { saved: false })}
@@ -463,6 +467,7 @@ const ActivityBuilder = ({ items, onChange, showErrors, onValidationFail }: Acti
                   <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Price (KSh)</Label>
                   <Input type="number" value={item.price} onChange={(e) => update(item.id, { price: e.target.value })}
                     placeholder="0" className="rounded-xl h-10 font-bold text-sm" />
+                  {item.price && parseFloat(item.price) > 0 && <p className="text-[9px] text-blue-500 font-bold mt-0.5">{usdHint(parseFloat(item.price))}</p>}
                 </div>
               </div>
 
