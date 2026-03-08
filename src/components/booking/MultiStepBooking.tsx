@@ -804,7 +804,7 @@ import { useSearchParams } from "react-router-dom";
                 {numChildren > 0 && (
                   <div className="flex justify-between">
                     <span>Children × {numChildren}</span>
-                    <span>KES {(numChildren * priceChild).toLocaleString()}</span>
+                    <span>{formatPrice(numChildren * priceChild)}</span>
                   </div>
                 )}
               </>
