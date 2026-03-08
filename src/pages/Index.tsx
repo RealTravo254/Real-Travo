@@ -577,7 +577,7 @@ const Index = () => {
 
             {/* Trips */}
             <ScrollSection
-              title="Trips & Tours" viewAllPath="/category/trips"
+              title={t('sections.tripsAndTours')} viewAllPath="/category/trips"
               accentClass="text-destructive" scrollRef={featuredTripsRef}
               onScroll={handleScroll('featuredTrips')}
               hasItems={displayTrips.length > 0} loading={loadingScrollable}
