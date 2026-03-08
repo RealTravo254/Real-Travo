@@ -840,7 +840,7 @@ import { useSearchParams } from "react-router-dom";
                 <span>
                   {a.name} × {a.numberOfPeople}
                 </span>
-                <span>KES {(a.price * a.numberOfPeople).toLocaleString()}</span>
+                <span>{formatPrice(a.price * a.numberOfPeople)}</span>
                </div>
             ))}
              <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
