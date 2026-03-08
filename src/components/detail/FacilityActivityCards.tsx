@@ -81,9 +81,9 @@ export const FacilityImageCard = ({
                 {facility.is_free || facility.price === 0 ? (
                   <span className="text-xs font-bold text-emerald-600">Free</span>
                 ) : (
-                  <span className="text-xs font-bold" style={{ color: accentColor }}>
-                    KSh {facility.price.toLocaleString()}/night
-                  </span>
+                    <span className="text-xs font-bold" style={{ color: accentColor }}>
+                      {formatPrice(facility.price)}/night
+                    </span>
                 )}
                 {facility.capacity && (
                   <span className="text-[10px] text-muted-foreground">• {facility.capacity} guests</span>
