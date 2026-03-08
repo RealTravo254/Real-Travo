@@ -18,7 +18,7 @@ const PriceText = ({ price, isUnavailable }: { price: number; isUnavailable: boo
   );
 };
 
-
+interface ListingCardProps {
   id: string;
   type: 'TRIP' | 'EVENT' | 'SPORT' | 'HOTEL' | 'ADVENTURE PLACE' | 'ACCOMMODATION' | 'ATTRACTION';
   name: string;
