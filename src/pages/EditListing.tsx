@@ -1044,8 +1044,8 @@ const EditListing = () => {
                 </div>
               ) : (
                 <>
-                  <p className="font-bold text-[#008080] capitalize">{entranceFeeType === "free" ? "Free" : `Adult: KSh ${entranceFee}`}</p>
-                  {entranceFeeType === "paid" && <p className="text-xs text-slate-500">Child: KSh {entranceFeeChild}</p>}
+                  <p className="font-bold text-[#008080] capitalize">{entranceFeeType === "free" ? "Free" : `Adult: ${formatPrice(entranceFee)}`}</p>
+                  {entranceFeeType === "paid" && <p className="text-xs text-slate-500">Child: {formatPrice(entranceFeeChild)}</p>}
                 </>
               )}
             </div>
