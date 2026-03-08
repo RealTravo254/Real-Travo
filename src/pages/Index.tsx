@@ -650,10 +650,10 @@ const Index = () => {
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
               <AlertDialogAction onClick={() => { setShowLocationDialog(false); forceRequestLocation(); }} className="w-full bg-primary hover:bg-primary/90">
-                Try Again
+                {t('location.tryAgain')}
               </AlertDialogAction>
               <AlertDialogAction onClick={() => { setShowLocationDialog(false); setListingViewMode('top_destinations'); }} className="w-full bg-muted text-muted-foreground hover:bg-muted/80">
-                Continue Without Location
+                {t('location.continueWithout')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
