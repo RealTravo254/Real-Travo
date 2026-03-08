@@ -18,45 +18,72 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 const FALLBACK_RATE = 129; // fallback KES/USD
 const CACHE_KEY = "realtravo_currency";
 const RATE_CACHE_KEY = "realtravo_exchange_rate";
-const RATE_CACHE_DURATION = 3600000; // 1 hour
+const RATE_CACHE_DURATION = 1800000; // 30 minutes for fresher rates
+
+/** Try multiple free exchange rate APIs for reliability */
+const fetchExchangeRate = async (): Promise<number> => {
+  // API 1: exchangerate-api (free, no key)
+  try {
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.rates?.KES) return data.rates.KES;
+    }
+  } catch {}
+
+  // API 2: open.er-api (free fallback)
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.rates?.KES) return data.rates.KES;
+    }
+  } catch {}
+
+  return FALLBACK_RATE;
+};
 
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [currency, setCurrencyState] = useState<Currency>(() => {
     return (localStorage.getItem(CACHE_KEY) as Currency) || "KES";
   });
-  const [rate, setRate] = useState(FALLBACK_RATE);
+  const [rate, setRate] = useState(() => {
+    const cached = localStorage.getItem(RATE_CACHE_KEY);
+    if (cached) {
+      try {
+        const { rate: r } = JSON.parse(cached);
+        return r || FALLBACK_RATE;
+      } catch {}
+    }
+    return FALLBACK_RATE;
+  });
   const [loading, setLoading] = useState(false);
 
   // Fetch live exchange rate
   useEffect(() => {
-    const fetchRate = async () => {
-      // Check cache first
+    const loadRate = async () => {
       const cached = localStorage.getItem(RATE_CACHE_KEY);
       if (cached) {
-        const { rate: cachedRate, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < RATE_CACHE_DURATION) {
-          setRate(cachedRate);
-          return;
-        }
+        try {
+          const { rate: cachedRate, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < RATE_CACHE_DURATION) {
+            setRate(cachedRate);
+            return;
+          }
+        } catch {}
       }
       
       setLoading(true);
       try {
-        const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
-        if (res.ok) {
-          const data = await res.json();
-          const kesRate = data.rates?.KES || FALLBACK_RATE;
-          setRate(kesRate);
-          localStorage.setItem(RATE_CACHE_KEY, JSON.stringify({ rate: kesRate, timestamp: Date.now() }));
-        }
-      } catch {
-        // Use fallback
+        const liveRate = await fetchExchangeRate();
+        setRate(liveRate);
+        localStorage.setItem(RATE_CACHE_KEY, JSON.stringify({ rate: liveRate, timestamp: Date.now() }));
       } finally {
         setLoading(false);
       }
     };
-    fetchRate();
+    loadRate();
   }, []);
 
   // Auto-detect from user profile country
