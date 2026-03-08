@@ -90,10 +90,18 @@ const queryClient = new QueryClient({
 });
 
 /** Suspense fallback that shows offline screen when not connected */
-const SuspenseFallback = () => {
-  const isOnline = useOnlineStatus();
-  if (!isOnline) return <OfflineFullScreen />;
-  return <TealLoader />;
+/** Forces light theme when not running as PWA */
+const PwaThemeEnforcer = () => {
+  const isPwa = useIsPwa();
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (!isPwa) {
+      setTheme("light");
+    }
+  }, [isPwa, setTheme]);
+
+  return null;
 };
 
 const App = () => {
@@ -107,7 +115,8 @@ const App = () => {
   }, []);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+    <PwaThemeEnforcer />
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
