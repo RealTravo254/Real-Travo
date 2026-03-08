@@ -441,7 +441,7 @@ const ActivityBuilder = ({ items, onChange, showErrors, onValidationFail }: Acti
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-black text-sm text-slate-800 truncate">{item.name}</p>
-                {item.price && <p className="text-[11px] font-bold text-indigo-500">KSh {item.price}</p>}
+                {item.price && <p className="text-[11px] font-bold text-indigo-500">KSh {item.price} <span className="text-blue-500">{usdHint(parseFloat(item.price))}</span></p>}
               </div>
               <div className="flex gap-2 shrink-0">
                 <button type="button" onClick={() => update(item.id, { saved: false })}
