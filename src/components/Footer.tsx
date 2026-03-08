@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   Compass,
   Instagram,
   Mail,
   Linkedin,
   Info,
-  Facebook
+  Facebook,
+  Globe,
+  RefreshCw,
 } from "lucide-react";
 
 // Official Brand Colors
@@ -52,7 +55,124 @@ const PinterestIcon = () => (
   </svg>
 );
 
+const CURRENCIES = [
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+  { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+  { code: "TZS", symbol: "TSh", name: "Tanzanian Shilling" },
+  { code: "UGX", symbol: "USh", name: "Ugandan Shilling" },
+  { code: "ZAR", symbol: "R", name: "South African Rand" },
+];
+
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "sw", name: "Kiswahili" },
+  { code: "fr", name: "Français" },
+  { code: "es", name: "Español" },
+];
+
+const CurrencyConverter = () => {
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const [baseCurrency, setBaseCurrency] = useState("USD");
+  const [targetCurrency, setTargetCurrency] = useState("KES");
+  const [amount, setAmount] = useState("1");
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState("");
+
+  const fetchRates = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
+      const data = await res.json();
+      if (data.result === "success") {
+        setRates(data.rates);
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+    } catch {
+      console.error("Failed to fetch exchange rates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRates();
+  }, [baseCurrency]);
+
+  const converted = rates[targetCurrency]
+    ? (parseFloat(amount || "0") * rates[targetCurrency]).toFixed(2)
+    : "—";
+
+  const targetInfo = CURRENCIES.find((c) => c.code === targetCurrency);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <h3 className="font-bold text-white text-xs uppercase tracking-[0.1em]">Live Currency</h3>
+        <button
+          onClick={fetchRates}
+          className="text-teal-300 hover:text-white transition-colors"
+          title="Refresh rates"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="w-20 px-2 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-teal-400"
+          min="0"
+        />
+        <select
+          value={baseCurrency}
+          onChange={(e) => setBaseCurrency(e.target.value)}
+          className="flex-1 px-2 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-teal-400 appearance-none cursor-pointer"
+        >
+          {CURRENCIES.map((c) => (
+            <option key={c.code} value={c.code} className="bg-slate-800 text-white">
+              {c.code}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="text-center text-white/50 text-xs">↓</div>
+
+      <select
+        value={targetCurrency}
+        onChange={(e) => setTargetCurrency(e.target.value)}
+        className="w-full px-2 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-teal-400 appearance-none cursor-pointer"
+      >
+        {CURRENCIES.filter((c) => c.code !== baseCurrency).map((c) => (
+          <option key={c.code} value={c.code} className="bg-slate-800 text-white">
+            {c.code} - {c.name}
+          </option>
+        ))}
+      </select>
+
+      <div className="bg-white/10 rounded-lg px-3 py-2 text-center">
+        <span className="text-teal-300 font-bold text-lg">
+          {targetInfo?.symbol}{converted}
+        </span>
+        <span className="text-white/50 text-xs ml-1">{targetCurrency}</span>
+      </div>
+
+      {lastUpdated && (
+        <p className="text-white/40 text-[10px] text-center">
+          Rates from Open Exchange • Updated {lastUpdated}
+        </p>
+      )}
+    </div>
+  );
+};
+
 export const Footer = ({ className = "" }: { className?: string }) => {
+  const [language, setLanguage] = useState("en");
+
   return (
     <footer className={`hidden md:block bg-slate-50 border-t mt-16 text-slate-900 ${className}`}>
       <div className="container px-6 py-12 mx-auto">
@@ -128,6 +248,75 @@ export const Footer = ({ className = "" }: { className?: string }) => {
           <p className="text-xs leading-relaxed text-slate-500">
             <strong>Transparency:</strong> RealTravo may earn a commission for some accommodation bookings. This commission is paid by the property and <strong>is never added to your final booking cost</strong>. This allows us to keep our platform free for travelers.
           </p>
+        </div>
+
+        {/* Language, Currency & Mobile Section */}
+        <div className="mt-10 bg-slate-800 rounded-2xl p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            {/* Language Selector */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-white text-xs uppercase tracking-[0.1em] flex items-center gap-2">
+                <Globe className="h-4 w-4 text-teal-400" />
+                Language
+              </h3>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg bg-white text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-white/40 text-[10px]">
+                More languages coming soon
+              </p>
+            </div>
+
+            {/* Currency Converter */}
+            <CurrencyConverter />
+
+            {/* Mobile App Badges */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-white text-xs uppercase tracking-[0.1em]">Mobile</h3>
+              <div className="flex flex-col gap-3">
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-black hover:bg-slate-900 text-white rounded-xl px-5 py-3 transition-all hover:scale-[1.02]"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.296l2.76 1.597-2.76 1.597-2.244-2.244 2.244-1.95zM5.864 2.658L16.8 8.991l-2.302 2.302-8.635-8.635z" />
+                  </svg>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-70">Get it on</div>
+                    <div className="font-bold text-sm -mt-0.5">Google Play</div>
+                  </div>
+                </a>
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-black hover:bg-slate-900 text-white rounded-xl px-5 py-3 transition-all hover:scale-[1.02]"
+                >
+                  <svg width="20" height="24" viewBox="0 0 17 20" fill="currentColor">
+                    <path d="M13.545 10.239c-.022-2.358 1.933-3.5 2.021-3.556-1.103-1.611-2.816-1.832-3.422-1.853-1.449-.152-2.848.868-3.587.868-.752 0-1.898-.852-3.127-.828-1.593.024-3.082.949-3.9 2.39-1.685 2.912-.43 7.198 1.187 9.557.806 1.156 1.751 2.447 2.99 2.401 1.21-.05 1.663-.773 3.122-.773 1.447 0 1.87.773 3.13.746 1.296-.02 2.113-1.162 2.891-2.327.929-1.33 1.303-2.636 1.318-2.703-.03-.01-2.508-.96-2.533-3.822h-.09zM11.16 3.18c.639-.794 1.078-1.879.955-2.98-.923.04-2.074.636-2.736 1.413-.588.691-1.114 1.815-.978 2.874 1.039.078 2.104-.525 2.759-1.307z" />
+                  </svg>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-70">Download on the</div>
+                    <div className="font-bold text-sm -mt-0.5">App Store</div>
+                  </div>
+                </a>
+              </div>
+              <p className="text-white/40 text-[10px]">
+                Coming soon to both stores
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Bottom Bar */}
