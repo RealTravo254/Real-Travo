@@ -190,7 +190,7 @@ const AdventurePlaceDetail = () => {
       <Header showSearchIcon={false} />
 
       <div
-        className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 py-3 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 py-3 mx-auto max-w-6xl inset-x-0 bg-background/95 backdrop-blur-md border-b border-border shadow-sm transition-all duration-300 md:rounded-b-2xl"
         style={{
           transform: scrolled ? "translateY(0)" : "translateY(-100%)",
           opacity: scrolled ? 1 : 0,
