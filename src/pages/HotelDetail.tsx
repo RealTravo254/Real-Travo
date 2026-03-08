@@ -219,7 +219,7 @@ const HotelDetail = () => {
         {/* Mobile Carousel View */}
         <div className="relative w-full h-[45vh] bg-slate-900 overflow-hidden md:rounded-3xl md:hidden">
           {/* Action Buttons - Overlaid on Gallery */}
-          <div className="absolute top-4 left-4 right-4 z-50 flex justify-between items-center">
+          <div className="absolute top-4 left-0 right-0 px-3 z-50 flex justify-between items-center">
             <Button 
               onClick={goBack}
               className="rounded-full w-10 h-10 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all"
