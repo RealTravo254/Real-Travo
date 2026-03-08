@@ -77,7 +77,13 @@ const Index = () => {
   const [nearbyPlacesHotels, setNearbyPlacesHotels] = useState<any[]>([]);
   const [loadingScrollable, setLoadingScrollable] = useState(true);
   const [loadingNearby, setLoadingNearby] = useState(true);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isSearchFocused, setIsSearchFocusedLocal] = useState(false);
+  const { setSearchFocused } = useSearchFocus();
+  
+  const setIsSearchFocused = useCallback((v: boolean) => {
+    setIsSearchFocusedLocal(v);
+    setSearchFocused(v);
+  }, [setSearchFocused]);
 
   // Collect all item IDs for ratings
   const allItemIds = useMemo(() => {

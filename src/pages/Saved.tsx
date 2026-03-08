@@ -137,7 +137,7 @@ const Saved = () => {
           </header>
         )}
 
-        <main className={isEmbeddedInSheet ? "space-y-3" : "lg:col-span-8 space-y-3"}>
+        <main className={isEmbeddedInSheet ? "space-y-3" : "space-y-3"}>
           {isEmbeddedInSheet && (
             <div className="mb-2 px-1">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

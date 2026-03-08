@@ -34,7 +34,14 @@ const CategoryDetail = () => {
   const { position } = useGeolocation();
   const [showSearchIcon, setShowSearchIcon] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isSearchFocusedLocal, setIsSearchFocusedLocal] = useState(false);
+  const { setSearchFocused } = useSearchFocus();
+  
+  const isSearchFocused = isSearchFocusedLocal;
+  const setIsSearchFocused = useCallback((v: boolean) => {
+    setIsSearchFocusedLocal(v);
+    setSearchFocused(v);
+  }, [setSearchFocused]);
 
   const categoryConfig: { [key: string]: any } = {
     trips: { title: "Trips", tables: ["trips"], type: "TRIP", tripType: "trip", filterType: "trips-events" },
