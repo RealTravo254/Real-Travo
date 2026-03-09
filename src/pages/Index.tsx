@@ -495,15 +495,15 @@ const Index = () => {
               {searchQuery ? t('sections.searchResults') : t('sections.allListings')}
             </h2>
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-                {[...Array(8)].map((_, i) => <ListingSkeleton key={i} />)}
+              <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+                {[...Array(6)].map((_, i) => <ListingSkeleton key={i} />)}
               </div>
             ) : sortedListings.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-muted-foreground text-sm">{t('sections.noResults')}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+              <div className="flex flex-col gap-4 max-w-3xl mx-auto">
                 {sortedListings.map((listing, index) => {
                   const itemDistance = position && listing.latitude && listing.longitude ? calculateDistance(position.latitude, position.longitude, listing.latitude, listing.longitude) : undefined;
                   const ratingData = ratings.get(listing.id);
