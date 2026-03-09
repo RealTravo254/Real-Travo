@@ -195,9 +195,9 @@ const ListingCardComponent = ({
           {formattedName}
         </h3>
 
-        {/* Subtitle: activities or description */}
+        {/* Subtitle: activities only */}
         {subtitle && (
-          <p className="line-clamp-1 sm:line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+          <p className="line-clamp-1 text-[11px] text-muted-foreground">
             {subtitle}
           </p>
         )}
