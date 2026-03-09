@@ -348,7 +348,7 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
                   {!isSearching && suggestions.length > 0 && (
                     <>
                       <p className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Top Matches</p>
-                      {suggestions.map((result) => (
+                      {suggestions.slice(0, 5).map((result) => (
                         <button
                           key={result.id}
                           onClick={() => handleSuggestionClick(result)}
