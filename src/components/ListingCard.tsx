@@ -93,7 +93,6 @@ const ListingCardComponent = ({
   const formattedName = useMemo(() => name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()), [name]);
   const locationString = useMemo(() => [place, location].filter(Boolean).join(', '), [place, location]);
 
-  // Subtitle: only activities (no description)
   const subtitle = useMemo(() => {
     if (activities && activities.length > 0) {
       const names = activities.slice(0, 3).map((a: any) => typeof a === 'string' ? a : a.name);
@@ -116,7 +115,6 @@ const ListingCardComponent = ({
     onSave?.(id, type);
   };
 
-  // Urgency badge
   const urgencyBadge = useMemo(() => {
     if (isSoldOut) return { text: "Sold out", color: "bg-destructive/10 text-destructive border-destructive/20" };
     if (isOutdated) return { text: "Passed", color: "bg-muted text-muted-foreground border-border" };
@@ -138,7 +136,8 @@ const ListingCardComponent = ({
       {/* Image */}
       <div
         ref={imageContainerRef}
-        className="relative w-[100px] sm:w-[120px] md:w-full flex-shrink-0 overflow-hidden min-h-[120px] md:aspect-[16/9] md:min-h-0"
+        // ── FIX: added md:min-h-[180px] so image never collapses in grid cells ──
+        className="relative w-[100px] sm:w-[120px] md:w-full flex-shrink-0 overflow-hidden min-h-[120px] md:min-h-[180px] md:aspect-[16/9]"
       >
         {!imageLoaded && !imageError && (
           <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
@@ -200,8 +199,9 @@ const ListingCardComponent = ({
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="line-clamp-2 text-sm sm:text-[15px] font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
+        {/* Title — 1 line on md+ to keep grid cards uniform */}
+        {/* ── FIX: md:line-clamp-1 keeps grid row heights consistent ── */}
+        <h3 className="line-clamp-2 md:line-clamp-1 text-sm sm:text-[15px] font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
           {formattedName}
         </h3>
 
@@ -221,7 +221,7 @@ const ListingCardComponent = ({
         {/* Bottom row: Rating + Date + Slots + Price */}
         <div className="flex items-center justify-between gap-2 pt-1.5 mt-auto border-t border-border/50">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            {/* Rating - always show if available */}
+            {/* Rating */}
             {avgRating != null && avgRating > 0 && (
               <div className="flex items-center gap-0.5 flex-shrink-0">
                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
