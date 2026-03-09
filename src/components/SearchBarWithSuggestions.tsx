@@ -247,7 +247,7 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
               />
               <Button
                 onClick={() => { saveToHistory(value); onSubmit(); setShowSuggestions(false); }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-10 md:h-12 px-6 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-transform active:scale-95 border-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-7 md:h-12 px-4 md:px-6 text-[10px] md:text-xs font-black uppercase tracking-widest text-white shadow-lg transition-transform active:scale-95 border-none"
                 style={{ background: `linear-gradient(135deg, ${COLORS.CORAL_LIGHT} 0%, ${COLORS.CORAL} 100%)` }}
               >
                 Search
