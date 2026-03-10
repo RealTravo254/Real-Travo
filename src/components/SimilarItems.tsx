@@ -125,7 +125,8 @@ export const SimilarItems = ({ currentItemId, itemType, location, country }: Sim
               key={item.id}
               className="group flex-shrink-0 w-72 bg-white rounded-[28px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
               onClick={() => {
-                navigate(`${item.route}/${item.id}`);
+                const type = item.route.replace('/', '');
+                navigate(createDetailPath(type, item.id, item.name, item.location));
                 window.scrollTo(0, 0);
               }}
             >
