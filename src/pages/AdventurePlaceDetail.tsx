@@ -427,8 +427,8 @@ const AdventurePlaceDetail = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <UtilityButton icon={<Navigation className="h-5 w-5" />} label="Map" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name}, ${place.location}`)}`, "_blank")} />
-                <UtilityButton icon={<Copy className="h-5 w-5" />} label="Copy" onClick={async () => { toast({ title: "Copying link..." }); const refLink = await generateReferralLink(id!, "adventure_place", id!); await navigator.clipboard.writeText(refLink); toast({ title: "Link Copied!" }); }} />
-                <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={async () => { toast({ title: "Preparing share..." }); const refLink = await generateReferralLink(id!, "adventure_place", id!); if (navigator.share) { try { await navigator.share({ title: place.name, url: refLink }); } catch (e) {} } else { await navigator.clipboard.writeText(refLink); toast({ title: "Link Copied!" }); } }} />
+                <UtilityButton icon={<Copy className="h-5 w-5" />} label="Copy" onClick={async () => { const link = getShareLink(id!, "adventure_place", place.name, place.location); await navigator.clipboard.writeText(link); toast({ title: "Link Copied!" }); }} />
+                <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={async () => { const link = getShareLink(id!, "adventure_place", place.name, place.location); if (navigator.share) { try { await navigator.share({ title: place.name, url: link }); } catch (e) {} } else { await navigator.clipboard.writeText(link); toast({ title: "Link Copied!" }); } }} />
               </div>
 
               {(place.phone_numbers?.length > 0 || place.email) && (
