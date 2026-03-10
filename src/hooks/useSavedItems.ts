@@ -149,10 +149,6 @@ export const useSavedItems = () => {
       } else {
         saveItemLocally(itemId, normalizedType);
         setSavedItems(prev => new Set([...prev, itemId]));
-        toast({ 
-          title: "Item saved", 
-          description: "Log in to sync your saved items across devices"
-        });
       }
       return;
     }

@@ -50,11 +50,7 @@ export function ReviewSection({ itemId, itemType }: ReviewSectionProps) {
 
   const handleRating = async (rating: number) => {
     if (!user) {
-      toast({
-        title: "Login required",
-        description: "Please login to rate this item",
-        variant: "destructive",
-      });
+      return;
       return;
     }
     try {
