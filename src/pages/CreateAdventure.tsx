@@ -39,16 +39,8 @@ const COLORS = {
 let _idCounter = 0;
 const makeId = () => `item-${Date.now()}-${++_idCounter}`;
 
-const generateUUID = (): string => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
+// ✅ generateUUID removed — no longer needed
+// ✅ generateFriendlySlug now serves as BOTH id and slug
 
 const generateFriendlySlug = (name: string): string => {
   const cleanName = name
@@ -515,7 +507,6 @@ const CreateAdventure = () => {
   const [formData, setFormData] = useState({
     registrationName: "", registrationNumber: "", locationName: "", place: "",
     country: "", description: "", email: "", phoneNumber: "",
-    // ✅ "00:00" / "23:59" → OperatingHoursSection reads these and starts the 24h toggle ON
     openingHours: "00:00",
     closingHours: "23:59",
     entranceFeeType: "free", adultPrice: "0", childPrice: "0",
@@ -599,7 +590,13 @@ const CreateAdventure = () => {
     if (!formData.registrationName.trim() || !formData.registrationNumber.trim() ||
         !formData.country || !formData.locationName.trim() || !formData.place.trim() ||
         !formData.latitude || !formData.description.trim() || galleryImages.length < 5) {
-      toast({ title: "Action Required", description: galleryImages.length < 5 ? "Please upload at least 5 gallery photos." : "Please fill in all mandatory fields.", variant: "destructive" });
+      toast({
+        title: "Action Required",
+        description: galleryImages.length < 5
+          ? "Please upload at least 5 gallery photos."
+          : "Please fill in all mandatory fields.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -618,7 +615,7 @@ const CreateAdventure = () => {
 
     setLoading(true);
     try {
-      const dbId = generateUUID();
+      // ✅ KEY CHANGE: friendlySlug is used as BOTH id and slug
       const friendlySlug = generateFriendlySlug(formData.registrationName);
 
       const galleryUrls = await Promise.all(galleryImages.map((f) => uploadFile(f, "gallery")));
@@ -645,7 +642,8 @@ const CreateAdventure = () => {
       const selectedDays = Object.entries(workingDays).filter(([, v]) => v).map(([k]) => k);
 
       const { error } = await supabase.from("adventure_places").insert([{
-        id: dbId,
+        // ✅ id is now the friendly slug (text), NOT a UUID
+        id: friendlySlug,
         slug: friendlySlug,
         name: formData.registrationName,
         registration_number: formData.registrationNumber,
@@ -915,7 +913,7 @@ const CreateAdventure = () => {
                 return;
               }
               setShowReview(true);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
               className="w-full py-6 rounded-2xl font-black uppercase tracking-widest text-sm text-white"
               style={{ background: `linear-gradient(135deg, ${COLORS.TEAL} 0%, #006666 100%)` }}>
