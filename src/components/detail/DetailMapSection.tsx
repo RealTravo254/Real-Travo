@@ -79,7 +79,7 @@ const otherMarkerIcon = new L.Icon({
 
 export const DetailMapSection = ({ currentItem, itemType }: DetailMapSectionProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<any>(null);
   const [nearbyItems, setNearbyItems] = useState<NearbyItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NearbyItem | null>(null);
   const navigate = useNavigate();
