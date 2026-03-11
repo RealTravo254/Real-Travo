@@ -316,11 +316,14 @@ const Index = () => {
     if (cachedData) {
       setListings(cachedData.listings || []);
       const c = cachedData.scrollableRows as any || {};
-      setScrollableRows({ trips: c.trips || [], hotels: c.hotels || [], attractions: c.attractions || [], campsites: c.campsites || [], events: c.events || [], accommodations: c.accommodations || [] });
+      const cachedRows = { trips: c.trips || [], hotels: c.hotels || [], attractions: c.attractions || [], campsites: c.campsites || [], events: c.events || [], accommodations: c.accommodations || [] };
+      setScrollableRows(cachedRows);
       setNearbyPlacesHotels(cachedData.nearbyPlacesHotels || []);
       setLoading(false); setLoadingScrollable(false); setLoadingNearby(false);
       const cacheAge = Date.now() - (cachedData.cachedAt || 0);
-      if (cacheAge < 5 * 60 * 1000) {
+      // Only skip re-fetch if cache is fresh AND has actual category data
+      const hasScrollableData = cachedRows.trips.length > 0 || cachedRows.hotels.length > 0 || cachedRows.campsites.length > 0 || cachedRows.events.length > 0;
+      if (cacheAge < 5 * 60 * 1000 && hasScrollableData) {
         getUserId().then(setUserId);
         return;
       }
@@ -331,7 +334,9 @@ const Index = () => {
   }, [cardLimit, fetchScrollableRows, fetchAllData]);
 
   useEffect(() => {
-    if (!loading && !loadingScrollable && listings.length > 0) {
+    // Only cache when we have actual category data to avoid caching empty state
+    const hasScrollableData = scrollableRows.trips.length > 0 || scrollableRows.hotels.length > 0 || scrollableRows.campsites.length > 0 || scrollableRows.events.length > 0;
+    if (!loading && !loadingScrollable && listings.length > 0 && hasScrollableData) {
       setCachedHomePageData({ scrollableRows, listings, nearbyPlacesHotels });
     }
   }, [loading, loadingScrollable, listings, scrollableRows, nearbyPlacesHotels]);
