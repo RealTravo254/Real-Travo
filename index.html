@@ -2,40 +2,71 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Oblique Assembly — Image Excavator</title>
-    <meta name="description" content="Transform images into coded text art. An instrument for digital excavation.">
-    <meta name="author" content="Oblique Assembly" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#008080">
-    <link rel="apple-touch-icon" href="/fulllogo.png">
-    
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8aa7dfdc-714a-4654-bc76-85831dabe093/id-preview-e4c8ec78--54126a3a-d2a5-47d7-8f11-cd78337ac8a4.lovable.app-1773201466689.png">
+    <meta name="theme-color" content="#f8f9fa" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Realtravo" />
+    <link rel="manifest" href="/manifest.json" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8aa7dfdc-714a-4654-bc76-85831dabe093/id-preview-e4c8ec78--54126a3a-d2a5-47d7-8f11-cd78337ac8a4.lovable.app-1773201466689.png">
-    <meta property="og:title" content="Oblique Assembly — Image Excavator">
-    <meta name="twitter:title" content="Oblique Assembly — Image Excavator">
-    <meta property="og:description" content="Transform images into coded text art. An instrument for digital excavation.">
-    <meta name="twitter:description" content="Transform images into coded text art. An instrument for digital excavation.">
+    <meta name="google-site-verification" content="-gW4v5AAxn1KmeJkWDH03jKAa1jPsQXwxBSh9CYLkJw" />
+    <title>Realtravo - Where Every Journey Begins with a Better Booking</title>
+    <meta name="description" content="Discover and book exciting trips, events, and hotels with Realtravo. Your gateway to unforgettable travel experiences." />
+    <meta name="keywords" content="Realtravo, Real Travo, travel booking, book hotels, travel experiences, adventure trips, become a host" />
+    
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://lmkxpzemfvmffxppxzky.supabase.co" crossorigin />
+
+    <meta property="og:title" content="Realtravo - Click. Pack. Go!" />
+    <meta property="og:description" content="Explore amazing travel experiences, hotels, and adventures with Realtravo." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://realtravo.com/" />
+    <meta property="og:image" content="https://realtravo.com/fulllogo.png" />
+
+    <style>
+      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background-color: #f4f7f6; }
+      #root { min-height: 100vh; }
+      .glass-effect {
+        background-color: rgba(255, 255, 255, 0.5); 
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      @media (prefers-color-scheme: dark) { 
+        body { background-color: #1a2332; } 
+        .glass-effect { background-color: rgba(26, 35, 50, 0.7); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+      }
+      /* Screen reader only class instead of display:none for better SEO accessibility */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+      }
+    </style>
   </head>
 
   <body>
+    <header class="sr-only">
+      <h1>Realtravo - Book Trips, Events, Sports, Hotels & Adventures</h1>
+      <nav>
+        <a href="https://realtravo.com/become-host">Become a Host</a>
+        <a href="https://realtravo.com/category/trips">Trips & Tours</a>
+        <a href="https://realtravo.com/category/hotels">Hotels</a>
+        <a href="https://realtravo.com/category/adventures">Adventure Places</a>
+        <a href="https://realtravo.com/category/accommodations">Accommodation</a>
+        <a href="https://realtravo.com/category/events">Events & Sports</a>
+      </nav>
+    </header>
+
     <div id="root"></div>
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Excavator SW Active'))
-            .catch(err => console.log('SW Registration Error', err));
-        });
-      }
-    </script>
-    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

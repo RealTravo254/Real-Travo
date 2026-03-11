@@ -3,15 +3,6 @@
   "short_name": "RealTravo",
   "name": "RealTravo",
   "description": "Professional adventure and travel solutions.",
-  "lang": "en-US",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "display_override": ["window-controls-overlay", "minimal-ui"],
-  "orientation": "portrait-primary",
-  "theme_color": "#008080",
-  "background_color": "#008080",
-  "categories": ["travel", "lifestyle"],
   "icons": [
     {
       "src": "favicon.ico",
@@ -37,12 +28,10 @@
       "purpose": "maskable"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "View Adventures",
-      "url": "/adventures",
-      "description": "Quickly jump to adventure listings"
-    }
-  ],
-  "prefer_related_applications": false
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#008080",
+  "background_color": "#ffffff"
 }
