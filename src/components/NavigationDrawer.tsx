@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { 
   Home, Ticket, Heart, Phone, Info, LogIn, LogOut, User, 
-  FileText, Shield, ChevronRight, Trophy, Map, Mountain, Bed, Building2 
+  FileText, Shield, ChevronRight, Trophy, Map, Mountain, Bed, Building2, Globe 
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { Capacitor } from '@capacitor/core';
 
 interface NavigationDrawerProps {
   onClose: () => void;
