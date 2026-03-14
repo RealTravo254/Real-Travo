@@ -100,19 +100,16 @@ export const DetailNavBar = ({
           </div>
         </div>
 
-        {/* Desktop sticky nav */}
+        {/* Desktop nav - always visible */}
         <div
-          className={`
+          className="
             hidden md:flex items-center justify-between
             px-6 py-3
             bg-white/80 backdrop-blur-xl
             border-b border-slate-200/60
             shadow-sm
-            transition-all duration-300 ease-in-out
-            ${scrolled
-              ? "translate-y-0 opacity-100"
-              : "-translate-y-full opacity-0 pointer-events-none"}
-          `}
+          "
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
           <button
             onClick={onBack}

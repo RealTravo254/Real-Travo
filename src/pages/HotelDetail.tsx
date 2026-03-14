@@ -276,17 +276,7 @@ const HotelDetail = () => {
 
         {/* Desktop Grid */}
         <div className="hidden md:block relative">
-          <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
-            <Button onClick={goBack} className="rounded-full w-12 h-12 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <Button
-              onClick={() => id && handleSaveItem(id, "hotel")}
-              className={`rounded-full w-12 h-12 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"}`}
-            >
-              <Heart className={`h-6 w-6 ${isSaved ? "fill-white text-white" : "text-slate-900"}`} />
-            </Button>
-          </div>
+          {/* Floating buttons removed - DetailNavBar handles back/save on desktop */}
           <div className="grid grid-cols-4 gap-2 h-[500px]">
             {allImages.length > 0 ? (
               <>
@@ -355,21 +345,7 @@ const HotelDetail = () => {
 
             {/* Operating hours moved into mobile booking card below */}
 
-            <GeneralFacilitiesDisplay facilityIds={hotel.amenities || []} />
-
-            {hotel.facilities?.length > 0 && (
-              <div id="facilities-section">
-                <FacilitiesGrid facilities={hotel.facilities} itemId={hotel.id} itemType="hotel" accentColor="#008080" useExternalLink={isAccommodationOnly} />
-              </div>
-            )}
-
-            {hotel.activities?.length > 0 && (
-              <div id="activities-section">
-                <ActivitiesGrid activities={hotel.activities} itemId={hotel.id} itemType="hotel" accentColor="#FF7F50" />
-              </div>
-            )}
-
-            {/* Mobile booking card */}
+            {/* Mobile booking card - above amenities/activities */}
             <div className="bg-white rounded-[32px] p-6 shadow-xl border border-slate-100 lg:hidden">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -380,7 +356,7 @@ const HotelDetail = () => {
                       <span className="text-[10px] font-bold text-slate-400 uppercase">/ adult</span>
                     </div>
                   ) : (
-                    <span className="text-lg font-bold text-emerald-600">Free Entry</span>
+                    <span className="text-sm font-normal text-emerald-600">Free Entry</span>
                   )}
                 </div>
                 {!isAccommodationOnly && (
@@ -408,6 +384,20 @@ const HotelDetail = () => {
                 <UtilityButton icon={<Share2 className="h-5 w-5" />} label="Share" onClick={async () => { const link = getShareLink(id!, "hotel", hotel.name, hotel.location); if (navigator.share) { try { await navigator.share({ title: hotel.name, url: link }); } catch (e) {} } else { await navigator.clipboard.writeText(link); toast({ title: "Link Copied!" }); } }} />
               </div>
             </div>
+
+            <GeneralFacilitiesDisplay facilityIds={hotel.amenities || []} />
+
+            {hotel.facilities?.length > 0 && (
+              <div id="facilities-section">
+                <FacilitiesGrid facilities={hotel.facilities} itemId={hotel.id} itemType="hotel" accentColor="#008080" useExternalLink={isAccommodationOnly} />
+              </div>
+            )}
+
+            {hotel.activities?.length > 0 && (
+              <div id="activities-section">
+                <ActivitiesGrid activities={hotel.activities} itemId={hotel.id} itemType="hotel" accentColor="#FF7F50" />
+              </div>
+            )}
 
             <div id="contact-section" className="lg:hidden">
               {(hotel.phone_numbers?.length > 0 || hotel.email) && (
@@ -441,7 +431,7 @@ const HotelDetail = () => {
                     <p className="text-[10px] font-bold text-slate-400 uppercase">per adult</p>
                   </div>
                 ) : (
-                  <h3 className="text-xl font-bold text-emerald-600 mb-2">Free Entry</h3>
+                  <h3 className="text-sm font-normal text-emerald-600 mb-2">Free Entry</h3>
                 )}
                 {!isAccommodationOnly && (
                   <div className="flex items-center justify-center gap-1.5 text-amber-500 font-black mt-2">

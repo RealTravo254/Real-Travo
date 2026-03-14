@@ -124,13 +124,6 @@ export const PaymentSuccessDialog = ({
               View My Bookings
             </Button>
             
-            <Button
-              onClick={handleClose}
-              variant="ghost"
-              className="w-full h-10 text-sm text-muted-foreground"
-            >
-              Continue Browsing
-            </Button>
           </div>
         </div>
       </DialogContent>

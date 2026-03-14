@@ -211,14 +211,7 @@ const EventDetail = () => {
         </div>
 
         <div className="hidden md:block relative">
-          <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
-            <Button onClick={goBack} className="rounded-full w-12 h-12 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <Button onClick={handleSave} className={`rounded-full w-12 h-12 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"}`}>
-              <Heart className={`h-6 w-6 ${isSaved ? "fill-white text-white" : "text-slate-900"}`} />
-            </Button>
-          </div>
+          {/* Floating buttons removed - DetailNavBar handles back/save on desktop */}
           <div className="grid grid-cols-4 gap-2 h-[550px]">
             {allImages.length > 0 ? (
               <>

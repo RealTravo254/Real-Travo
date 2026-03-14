@@ -274,17 +274,7 @@ const AdventurePlaceDetail = () => {
 
         {/* Desktop Grid */}
         <div className="hidden md:block relative">
-          <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
-            <Button onClick={goBack} className="rounded-full w-12 h-12 p-0 border-none bg-white/90 backdrop-blur-sm text-slate-900 hover:bg-white shadow-lg transition-all">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <Button
-              onClick={() => handleSaveItem(resolvedId, "adventure_place")}
-              className={`rounded-full w-12 h-12 p-0 border-none shadow-lg backdrop-blur-sm transition-all ${isSaved ? "bg-red-500 hover:bg-red-600" : "bg-white/90 text-slate-900 hover:bg-white"}`}
-            >
-              <Heart className={`h-6 w-6 ${isSaved ? "fill-white text-white" : "text-slate-900"}`} />
-            </Button>
-          </div>
+          {/* Floating buttons removed - DetailNavBar handles back/save on desktop */}
           <div className="grid grid-cols-4 gap-2 h-[500px]">
             {allImages.length > 0 ? (
               <>
@@ -351,25 +341,7 @@ const AdventurePlaceDetail = () => {
 
             {/* Operating hours moved into mobile booking card below */}
 
-            <GeneralFacilitiesDisplay facilityIds={
-              Array.isArray(place.amenities)
-                ? place.amenities.map((a: any) => typeof a === "string" ? a : a.name || "")
-                : []
-            } />
-
-            {place.facilities?.length > 0 && (
-              <div id="facilities-section">
-                <FacilitiesGrid facilities={place.facilities} itemId={resolvedId} itemType="adventure_place" accentColor="#008080" />
-              </div>
-            )}
-
-            {place.activities?.length > 0 && (
-              <div id="activities-section">
-                <ActivitiesGrid activities={place.activities} itemId={resolvedId} itemType="adventure_place" accentColor="#FF7F50" />
-              </div>
-            )}
-
-            {/* Mobile booking card */}
+            {/* Mobile booking card - above amenities/activities */}
             <div className="bg-white rounded-[32px] p-6 shadow-xl border border-slate-100 lg:hidden">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -385,7 +357,7 @@ const AdventurePlaceDetail = () => {
                       )}
                     </div>
                   ) : (
-                    <span className="text-3xl font-black text-emerald-600">Free Entry</span>
+                    <span className="text-sm font-normal text-emerald-600">Free Entry</span>
                   )}
                 </div>
                 <div className="text-right">
@@ -437,6 +409,24 @@ const AdventurePlaceDetail = () => {
               </div>
             </div>
 
+            <GeneralFacilitiesDisplay facilityIds={
+              Array.isArray(place.amenities)
+                ? place.amenities.map((a: any) => typeof a === "string" ? a : a.name || "")
+                : []
+            } />
+
+            {place.facilities?.length > 0 && (
+              <div id="facilities-section">
+                <FacilitiesGrid facilities={place.facilities} itemId={resolvedId} itemType="adventure_place" accentColor="#008080" />
+              </div>
+            )}
+
+            {place.activities?.length > 0 && (
+              <div id="activities-section">
+                <ActivitiesGrid activities={place.activities} itemId={resolvedId} itemType="adventure_place" accentColor="#FF7F50" />
+              </div>
+            )}
+
             <div id="contact-section" className="lg:hidden">
               {(place.phone_numbers?.length > 0 || place.email) && (
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-3">
@@ -472,7 +462,7 @@ const AdventurePlaceDetail = () => {
                     )}
                   </div>
                 ) : (
-                  <h3 className="text-4xl font-black text-emerald-600 mb-2">Free Entry</h3>
+                  <h3 className="text-lg font-normal text-emerald-600 mb-2">Free Entry</h3>
                 )}
                 <div className="flex items-center justify-center gap-1.5 text-amber-500 font-black mt-2">
                   <Star className="h-4 w-4 fill-current" />

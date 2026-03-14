@@ -33,9 +33,14 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
     pathname === "/host-verification" || pathname.startsWith("/booking/");
 
   // Auth page renders its own header
+  const isDetailPage =
+    pathname.startsWith("/adventure/") || pathname.startsWith("/hotel/") ||
+    pathname.startsWith("/event/") || pathname.startsWith("/trip/");
+
   const shouldHideHeader =
     pathname === "/auth" || pathname === "/reset-password" || pathname === "/forgot-password" ||
-    pathname === "/verify-email" || pathname === "/complete-profile" || pathname.startsWith("/booking/");
+    pathname === "/verify-email" || pathname === "/complete-profile" || pathname.startsWith("/booking/") ||
+    isDetailPage;
 
   // On mobile, only show header on index page
   const shouldHideHeaderOnMobile = pathname !== "/";
