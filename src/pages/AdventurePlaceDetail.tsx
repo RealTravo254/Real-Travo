@@ -419,6 +419,24 @@ const AdventurePlaceDetail = () => {
               </div>
             </div>
 
+            <GeneralFacilitiesDisplay facilityIds={
+              Array.isArray(place.amenities)
+                ? place.amenities.map((a: any) => typeof a === "string" ? a : a.name || "")
+                : []
+            } />
+
+            {place.facilities?.length > 0 && (
+              <div id="facilities-section">
+                <FacilitiesGrid facilities={place.facilities} itemId={resolvedId} itemType="adventure_place" accentColor="#008080" />
+              </div>
+            )}
+
+            {place.activities?.length > 0 && (
+              <div id="activities-section">
+                <ActivitiesGrid activities={place.activities} itemId={resolvedId} itemType="adventure_place" accentColor="#FF7F50" />
+              </div>
+            )}
+
             <div id="contact-section" className="lg:hidden">
               {(place.phone_numbers?.length > 0 || place.email) && (
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-3">
