@@ -49,7 +49,7 @@ export const PaymentSuccessDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={() => {/* Prevent closing by tapping outside */}}>
       <DialogContent className="sm:max-w-md rounded-[24px] p-6 [&>button:last-child]:hidden">
         
         <div className="text-center py-4">

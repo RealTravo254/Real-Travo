@@ -418,11 +418,14 @@ const AdventurePlaceDetail = () => {
               </div>
             </div>
 
-            <GeneralFacilitiesDisplay facilityIds={
-              Array.isArray(place.amenities)
-                ? place.amenities.map((a: any) => typeof a === "string" ? a : a.name || "")
-                : []
-            } />
+            {/* Desktop only general facilities (mobile shown above booking card) */}
+            <div className="hidden lg:block">
+              <GeneralFacilitiesDisplay facilityIds={
+                Array.isArray(place.amenities)
+                  ? place.amenities.map((a: any) => typeof a === "string" ? a : a.name || "")
+                  : []
+              } />
+            </div>
 
             {place.facilities?.length > 0 && (
               <div id="facilities-section">

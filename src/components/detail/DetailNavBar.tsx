@@ -100,52 +100,52 @@ export const DetailNavBar = ({
           </div>
         </div>
 
-        {/* Desktop nav - always visible, constrained to gallery width */}
+        {/* Desktop nav - full width bar, buttons aligned to gallery width */}
         <div
           className="
-            hidden md:flex items-center justify-between
-            max-w-6xl mx-auto
-            px-6 py-3
+            hidden md:block
+            w-full
             bg-white/80 backdrop-blur-xl
-            rounded-b-2xl
-            border-x border-b border-slate-200/60
+            border-b border-slate-200/60
             shadow-sm
           "
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
-          <button
-            onClick={onBack}
-            className="
-              flex items-center gap-2
-              px-4 py-2 rounded-xl
-              text-slate-700 text-xs font-black uppercase tracking-widest
-              bg-slate-100 hover:bg-slate-200
-              transition-all duration-150 active:scale-95
-            "
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
+          <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
+            <button
+              onClick={onBack}
+              className="
+                flex items-center gap-2
+                px-4 py-2 rounded-xl
+                text-slate-700 text-xs font-black uppercase tracking-widest
+                bg-slate-100 hover:bg-slate-200
+                transition-all duration-150 active:scale-95
+              "
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
 
-          <p className="text-sm font-black uppercase tracking-[0.1em] text-slate-800 truncate max-w-md">
-            {itemName}
-          </p>
+            <p className="text-sm font-black uppercase tracking-[0.1em] text-slate-800 truncate max-w-md">
+              {itemName}
+            </p>
 
-          <button
-            onClick={onSave}
-            className={`
-              flex items-center gap-2
-              px-4 py-2 rounded-xl
-              text-xs font-black uppercase tracking-widest
-              transition-all duration-200 active:scale-95
-              ${isSaved
-                ? "bg-red-500 text-white shadow-[0_4px_12px_rgba(239,68,68,0.3)]"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"}
-            `}
-          >
-            <Heart className={`h-4 w-4 ${isSaved ? "fill-white" : ""}`} />
-            {isSaved ? "Saved" : "Save"}
-          </button>
+            <button
+              onClick={onSave}
+              className={`
+                flex items-center gap-2
+                px-4 py-2 rounded-xl
+                text-xs font-black uppercase tracking-widest
+                transition-all duration-200 active:scale-95
+                ${isSaved
+                  ? "bg-red-500 text-white shadow-[0_4px_12px_rgba(239,68,68,0.3)]"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"}
+              `}
+            >
+              <Heart className={`h-4 w-4 ${isSaved ? "fill-white" : ""}`} />
+              {isSaved ? "Saved" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
     </>

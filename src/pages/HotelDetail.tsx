@@ -390,7 +390,10 @@ const HotelDetail = () => {
               </div>
             </div>
 
-            <GeneralFacilitiesDisplay facilityIds={hotel.amenities || []} />
+            {/* Desktop only general facilities */}
+            <div className="hidden lg:block">
+              <GeneralFacilitiesDisplay facilityIds={hotel.amenities || []} />
+            </div>
 
             {hotel.facilities?.length > 0 && (
               <div id="facilities-section">
