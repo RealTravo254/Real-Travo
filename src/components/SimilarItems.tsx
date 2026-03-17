@@ -19,6 +19,7 @@ interface SimilarItemsProps {
   itemType: "trip" | "hotel" | "adventure" | "attraction" | "event";
   location?: string;
   country?: string;
+  tripType?: string; // "trip" or "event" - to filter within trips table
 }
 
 const PriceDisplay = ({ price }: { price: number }) => {
