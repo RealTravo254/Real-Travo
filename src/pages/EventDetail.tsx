@@ -397,7 +397,7 @@ const EventDetail = () => {
         />
 
         <div className="mt-16">
-          <SimilarItems currentItemId={event.id} itemType="trip" location={event.location} country={event.country} />
+          <SimilarItems currentItemId={event.id} itemType="event" location={event.location} country={event.country} tripType="event" />
         </div>
       </main>
       <Footer />

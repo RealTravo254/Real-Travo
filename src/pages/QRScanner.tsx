@@ -34,6 +34,19 @@ interface BookingData {
   email: string;
 }
 
+interface ItemData {
+  name?: string;
+  category?: string;
+  activities?: any;
+  facilities?: any;
+  location?: string;
+  price?: number;
+  price_child?: number;
+  entry_fee?: number;
+  date?: string;
+  establishment_type?: string;
+}
+
 interface VerifiedBooking {
   id: string;
   guest_name: string;
@@ -76,6 +89,7 @@ const QRScanner = () => {
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "valid" | "invalid" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [itemName, setItemName] = useState("");
+  const [itemDetails, setItemDetails] = useState<ItemData | null>(null);
   const [isOfflineScan, setIsOfflineScan] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
@@ -205,18 +219,18 @@ const QRScanner = () => {
 
   const resolveItemData = async (bookingType: string, itemId: string) => {
     if (bookingType === "trip" || bookingType === "event") {
-      const { data } = await supabase.from("trips").select("created_by, name").eq("id", itemId).maybeSingle();
-      return data;
+      const { data } = await supabase.from("trips").select("created_by, name, type, activities, price, price_child, date, location").eq("id", itemId).maybeSingle();
+      return data ? { ...data, category: data.type === 'event' ? 'Event' : 'Trip' } : null;
     }
 
     if (bookingType === "hotel") {
-      const { data } = await supabase.from("hotels").select("created_by, name").eq("id", itemId).maybeSingle();
-      return data;
+      const { data } = await supabase.from("hotels").select("created_by, name, activities, facilities, location, establishment_type").eq("id", itemId).maybeSingle();
+      return data ? { ...data, category: data.establishment_type === 'accommodation_only' ? 'Accommodation' : 'Hotel' } : null;
     }
 
     if (["adventure_place", "adventure", "campsite", "experience"].includes(bookingType)) {
-      const { data } = await supabase.from("adventure_places").select("created_by, name").eq("id", itemId).maybeSingle();
-      return data;
+      const { data } = await supabase.from("adventure_places").select("created_by, name, activities, facilities, entry_fee, location").eq("id", itemId).maybeSingle();
+      return data ? { ...data, category: 'Experience / Attraction' } : null;
     }
 
     return null;
@@ -320,6 +334,7 @@ const QRScanner = () => {
       valid: true,
       booking,
       itemName: itemName || itemData?.name || booking.booking_details?.item_name,
+      itemData,
     };
   };
 
@@ -352,6 +367,7 @@ const QRScanner = () => {
         setVerifiedBooking(result.booking as VerifiedBooking);
         if (result.itemName) setItemName(result.itemName);
         else if (result.booking?.item_name) setItemName(result.booking.item_name);
+        setItemDetails(result.itemData || null);
         setCheckedIn(true);
         setVerificationStatus("valid");
         toast({ 
@@ -365,6 +381,7 @@ const QRScanner = () => {
       setVerifiedBooking(result.booking as VerifiedBooking);
       if (result.itemName) setItemName(result.itemName);
       else if (result.booking?.item_name) setItemName(result.booking.item_name);
+      setItemDetails(result.itemData || null);
       setVerificationStatus("valid");
     } catch (err) {
       setVerificationStatus("error");
@@ -404,6 +421,7 @@ const QRScanner = () => {
     setVerifiedBooking(null);
     setVerificationStatus("idle");
     setCheckedIn(false);
+    setItemDetails(null);
   };
 
   if (authLoading) return <div className="min-h-screen bg-[#F8F9FA] animate-pulse" />;
@@ -495,10 +513,30 @@ const QRScanner = () => {
                 </div>
 
                 <div className="space-y-5 border-y border-slate-50 py-6 mb-6">
-                    <InfoRow icon={<Calendar className="h-4 w-4" />} label="Visit Date" value={format(new Date(verifiedBooking.visit_date), "dd MMM yyyy")} />
-                    <InfoRow icon={<Users className="h-4 w-4" />} label="Group Size" value={`${verifiedBooking.slots_booked || 1} People`} />
-                    <InfoRow icon={<Mail className="h-4 w-4" />} label="Email" value={verifiedBooking.guest_email} />
+                    {itemDetails?.category && <InfoRow icon={<ChevronRight className="h-4 w-4" />} label="Category" value={itemDetails.category} />}
                     {itemName && <InfoRow icon={<ChevronRight className="h-4 w-4" />} label="Item" value={itemName} />}
+                    <InfoRow icon={<Calendar className="h-4 w-4" />} label="Visit Date" value={verifiedBooking.visit_date ? format(new Date(verifiedBooking.visit_date), "dd MMM yyyy") : 'N/A'} />
+                    <InfoRow icon={<Users className="h-4 w-4" />} label="Group Size" value={`${verifiedBooking.slots_booked || 1} People`} />
+                    <InfoRow icon={<Mail className="h-4 w-4" />} label="Email" value={verifiedBooking.guest_email || 'N/A'} />
+                    {verifiedBooking.guest_phone && <InfoRow icon={<Phone className="h-4 w-4" />} label="Phone" value={verifiedBooking.guest_phone} />}
+                    {verifiedBooking.booking_type && <InfoRow icon={<ChevronRight className="h-4 w-4" />} label="Type" value={verifiedBooking.booking_type.charAt(0).toUpperCase() + verifiedBooking.booking_type.slice(1)} />}
+                    {(() => {
+                      const activities = itemDetails?.activities || verifiedBooking.booking_details?.activities;
+                      if (activities && Array.isArray(activities) && activities.length > 0) {
+                        const names = activities.map((a: any) => typeof a === 'string' ? a : a?.name || a?.title).filter(Boolean);
+                        if (names.length > 0) return <InfoRow icon={<ChevronRight className="h-4 w-4" />} label="Activities" value={names.join(', ')} />;
+                      }
+                      return null;
+                    })()}
+                    {(() => {
+                      const facilities = itemDetails?.facilities || verifiedBooking.booking_details?.facilities;
+                      if (facilities && Array.isArray(facilities) && facilities.length > 0) {
+                        const names = facilities.map((f: any) => typeof f === 'string' ? f : f?.name || f?.title).filter(Boolean);
+                        if (names.length > 0) return <InfoRow icon={<ChevronRight className="h-4 w-4" />} label="Facilities" value={names.join(', ')} />;
+                      }
+                      return null;
+                    })()}
+                    {itemDetails?.location && <InfoRow icon={<ChevronRight className="h-4 w-4" />} label="Location" value={itemDetails.location} />}
                 </div>
 
                 <div className="flex justify-between items-end mb-8">
