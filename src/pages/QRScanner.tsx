@@ -320,6 +320,7 @@ const QRScanner = () => {
       valid: true,
       booking,
       itemName: itemName || itemData?.name || booking.booking_details?.item_name,
+      itemData,
     };
   };
 
