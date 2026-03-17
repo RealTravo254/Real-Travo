@@ -216,9 +216,15 @@ export const downloadBookingAsPDF = async (
 
 // Re-export the QR code generator from bookingDownload
 export const generateQRCodeData = (booking: BookingPDFData): string => {
+  // Normalize visitDate to YYYY-MM-DD for consistent QR scanning
+  let normalizedDate = booking.visitDate;
+  try {
+    normalizedDate = booking.visitDate.split('T')[0]; // Strip time component
+  } catch {}
+  
   return JSON.stringify({
     bookingId: booking.bookingId,
-    visitDate: booking.visitDate,
+    visitDate: normalizedDate,
     email: booking.guestEmail,
   });
 };

@@ -100,7 +100,23 @@ export const usePaystackPopup = (options: PaystackPopupOptions = {}) => {
           } catch (err) {
             console.error('Error verifying payment:', err);
             // Still consider it success since payment went through
-            options.onSuccess?.(transaction.reference, bookingDataWithReferral);
+            // Pass booking data with correct field names for PDF generation
+            options.onSuccess?.(transaction.reference, {
+              bookingId: transaction.reference,
+              guestName: bookingDataWithReferral.guest_name,
+              guestEmail: bookingDataWithReferral.guest_email,
+              guestPhone: bookingDataWithReferral.guest_phone,
+              itemName: bookingDataWithReferral.emailData?.itemName || bookingDataWithReferral.booking_details?.item_name || 'Booking',
+              bookingType: bookingDataWithReferral.booking_type,
+              visitDate: bookingDataWithReferral.visit_date,
+              amount: bookingDataWithReferral.total_amount,
+              slotsBooked: bookingDataWithReferral.slots_booked,
+              adults: bookingDataWithReferral.booking_details?.adults,
+              children: bookingDataWithReferral.booking_details?.children,
+              facilities: bookingDataWithReferral.booking_details?.facilities,
+              activities: bookingDataWithReferral.booking_details?.activities,
+              isSuccessful: true,
+            });
           }
         },
         onCancel: () => {
