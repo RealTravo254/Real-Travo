@@ -1,11 +1,23 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 export const isNative = () => Capacitor.isNativePlatform();
 
+// Lazy reference to the native GoogleAuth plugin (only works on native)
+let _googleAuth: any = null;
+function getGoogleAuth() {
+  if (!_googleAuth) {
+    // Access via the global Capacitor plugins registry
+    _googleAuth = (window as any).Capacitor?.Plugins?.GoogleAuth;
+  }
+  if (!_googleAuth) {
+    throw new Error('GoogleAuth plugin not available. Ensure @codetrix-studio/capacitor-google-auth is installed and synced.');
+  }
+  return _googleAuth;
+}
+
 export async function signInWithGoogleNative() {
   if (!isNative()) {
-    // Web fallback — use standard OAuth redirect
     const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -18,9 +30,7 @@ export async function signInWithGoogleNative() {
     return null;
   }
 
-  // Native flow — use registerPlugin to access the Capacitor plugin
-  // without importing the npm package (which breaks web builds)
-  const GoogleAuth: any = registerPlugin('GoogleAuth');
+  const GoogleAuth = getGoogleAuth();
 
   try {
     await GoogleAuth.initialize({
