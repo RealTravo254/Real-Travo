@@ -1,18 +1,23 @@
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Native Google Sign-In for Capacitor (Android/iOS).
- * Uses @codetrix-studio/capacitor-google-auth to get an ID token,
- * then passes it to Supabase's signInWithIdToken().
- * 
- * Falls back to OAuth redirect for web.
- */
 export const isNative = () => Capacitor.isNativePlatform();
+
+// Lazy reference to the native GoogleAuth plugin (only works on native)
+let _googleAuth: any = null;
+function getGoogleAuth() {
+  if (!_googleAuth) {
+    // Access via the global Capacitor plugins registry
+    _googleAuth = (window as any).Capacitor?.Plugins?.GoogleAuth;
+  }
+  if (!_googleAuth) {
+    throw new Error('GoogleAuth plugin not available. Ensure @codetrix-studio/capacitor-google-auth is installed and synced.');
+  }
+  return _googleAuth;
+}
 
 export async function signInWithGoogleNative() {
   if (!isNative()) {
-    // Web fallback — use standard OAuth redirect
     const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -22,14 +27,12 @@ export async function signInWithGoogleNative() {
       },
     });
     if (error) throw error;
-    return null; // redirect will happen
+    return null;
   }
 
-  // Native flow - dynamic import for Capacitor plugin (only available on native)
-  const GoogleAuth = (await import(/* @vite-ignore */ '@codetrix-studio/capacitor-google-auth' as any)).GoogleAuth;
+  const GoogleAuth = getGoogleAuth();
 
   try {
-    // Initialize on first call (safe to call multiple times)
     await GoogleAuth.initialize({
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
       scopes: ['profile', 'email'],
@@ -37,13 +40,11 @@ export async function signInWithGoogleNative() {
     });
 
     const googleUser = await GoogleAuth.signIn();
-
     const idToken = googleUser.authentication?.idToken;
     if (!idToken) {
       throw new Error('No ID token received from Google Sign-In');
     }
 
-    // Exchange the Google ID token for a Supabase session
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: idToken,
@@ -52,7 +53,6 @@ export async function signInWithGoogleNative() {
     if (error) throw error;
     return data;
   } catch (err: any) {
-    // User cancelled sign-in
     if (err?.message?.includes('popup_closed') || err?.message?.includes('canceled')) {
       return null;
     }
