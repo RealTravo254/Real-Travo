@@ -442,50 +442,6 @@ const Index = () => {
         }}
       />
 
-      {/* ─── Fixed top bar: icons always visible, pill bg appears behind them on scroll ── */}
-      {!isSearchFocused && (
-        <div
-          className="fixed top-0 left-0 right-0 z-[100] md:hidden flex items-center justify-between px-4 pointer-events-none"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
-        >
-          {/* Left: Menu icon — pill bg always visible */}
-          <div
-            className="pointer-events-auto rounded-xl"
-            style={{
-              backgroundColor: 'rgba(0,0,0,0.65)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-            }}
-          >
-            <Sheet open={isIndexDrawerOpen} onOpenChange={setIsIndexDrawerOpen}>
-              <SheetTrigger asChild>
-                <button
-                  className="h-9 w-9 rounded-xl flex items-center justify-center text-white transition-all active:scale-95"
-                  aria-label="Open Menu"
-                >
-                  <Menu className="h-5 w-5 stroke-[2.5]" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-full sm:w-72 p-0 h-screen border-none">
-                <NavigationDrawer onClose={() => setIsIndexDrawerOpen(false)} />
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Right: Notification bell — pill bg always visible */}
-          <div
-            className="pointer-events-auto rounded-xl [&_button]:h-9 [&_button]:w-9 [&_button]:text-white"
-            style={{
-              backgroundColor: 'rgba(0,0,0,0.65)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-            }}
-          >
-            <NotificationBell />
-          </div>
-        </div>
-      )}
-
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       {!isSearchFocused && (
         <div ref={searchRef} className="relative w-full h-[52vh] md:h-[44vh] overflow-hidden">
