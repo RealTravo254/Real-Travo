@@ -47,6 +47,7 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -181,10 +182,32 @@ serve(async (req) => {
 
     // Manual withdrawal request with M-Pesa or Bank
     if (action === 'withdraw') {
-      const { user_id, amount, payout_type, payment_method, mpesa_number, bank_code, account_number, account_name } = body;
+      // Authenticate the caller via JWT
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-      if (!user_id || !amount) {
-        throw new Error("user_id and amount are required");
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await authClient.auth.getUser();
+      if (claimsError || !claimsData?.user) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Use authenticated user ID instead of body-supplied user_id
+      const user_id = claimsData.user.id;
+      const { amount, payout_type, payment_method, mpesa_number, bank_code, account_number, account_name } = body;
+
+      if (!amount) {
+        throw new Error("amount is required");
       }
 
       if (!payment_method || !['mpesa', 'bank'].includes(payment_method)) {
