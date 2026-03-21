@@ -10,7 +10,7 @@ const escapeHtml = (unsafe: string | undefined | null): string => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 };
-
+ 
 export interface FacilityDetail {
   name: string;
   price: number;
