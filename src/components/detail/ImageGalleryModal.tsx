@@ -24,7 +24,7 @@ export const ImageGalleryModal = ({ images, name }: ImageGalleryModalProps) => {
           See All ({images.length})
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0 bg-white rounded-3xl border-none">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto p-0 bg-white rounded-none border-none">
         <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm p-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-lg font-black uppercase tracking-tight text-slate-900">
             {name} - Gallery ({images.length} photos)
@@ -44,7 +44,7 @@ export const ImageGalleryModal = ({ images, name }: ImageGalleryModalProps) => {
             {images.map((img, idx) => (
               <div 
                 key={idx} 
-                className="aspect-square rounded-xl overflow-hidden cursor-pointer group relative"
+                className="aspect-square rounded-none overflow-hidden cursor-pointer group relative"
                 onClick={() => setSelectedImage(img)}
               >
                 <img 
@@ -74,7 +74,7 @@ export const ImageGalleryModal = ({ images, name }: ImageGalleryModalProps) => {
             <img 
               src={selectedImage} 
               alt={name}
-              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              className="max-w-full max-h-[85vh] object-contain rounded-none"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
