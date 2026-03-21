@@ -62,12 +62,18 @@ const CreateTripEvent = () => {
   const [workingDays, setWorkingDays] = useState<WorkingDays>({ Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: true, Sun: true });
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
 
+  const [isCompanyHost, setIsCompanyHost] = useState(false);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('country, email, name, phone_number').eq('id', user.id).single();
         if (profile?.country) setFormData(prev => ({ ...prev, country: profile.country, email: profile.email || user.email || '' }));
         else if (user.email) setFormData(prev => ({ ...prev, email: user.email || '' }));
+
+        // Check if user is a verified company
+        const { data: company } = await supabase.from('companies').select('verification_status').eq('user_id', user.id).maybeSingle();
+        if (company?.verification_status === 'approved') setIsCompanyHost(true);
       }
     };
     fetchUserProfile();
@@ -205,7 +211,7 @@ const CreateTripEvent = () => {
         email: formData.email, phone_number: formData.phone_number, map_link: formData.map_link,
         opening_hours: formData.opening_hours || null, closing_hours: formData.closing_hours || null,
         days_opened: daysOpened.length > 0 ? daysOpened : null,
-        created_by: user.id, approval_status: approvalStatusSchema.parse("pending"),
+        created_by: user.id, approval_status: isCompanyHost ? "approved" : approvalStatusSchema.parse("pending"),
         flexible_end_date: flexibleEndDate,
       }]);
 
