@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Calendar, Globe, Phone, ArrowLeft, CheckCircle2, ShieldCheck, Camera } from "lucide-react";
+import { User, Calendar, Globe, Phone, ArrowLeft, CheckCircle2, ShieldCheck, Camera, KeyRound } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -54,7 +54,9 @@ const ProfileEdit = () => {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [originalPhone, setOriginalPhone] = useState("");
-
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   useEffect(() => {
     if (!user) {
       navigate("/auth");
@@ -349,6 +351,35 @@ const ProfileEdit = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Change Password Section */}
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#008080]/10 p-2.5 rounded-xl">
+                  <KeyRound className="h-5 w-5 text-[#008080]" />
+                </div>
+                <Label className="text-[10px] font-black text-[#008080] uppercase tracking-[0.2em]">Change Password</Label>
+              </div>
+              <div className="space-y-3">
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password (leave empty to keep current)"
+                  className="bg-slate-50 border-none rounded-2xl h-14 px-6 font-bold focus-visible:ring-1 focus-visible:ring-[#008080]"
+                />
+                {newPassword && (
+                  <Input
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    className="bg-slate-50 border-none rounded-2xl h-14 px-6 font-bold focus-visible:ring-1 focus-visible:ring-[#008080]"
+                  />
+                )}
+                {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
+              </div>
             </div>
 
             <div className="pt-6 flex flex-col md:flex-row gap-4">
