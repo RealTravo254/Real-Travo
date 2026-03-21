@@ -1,0 +1,1 @@
+UPDATE host_verifications SET status = 'pending', reviewed_at = NULL, reviewed_by = NULL WHERE user_id = '970b3fec-4793-476e-9968-7ff6ebdd3ce7';
