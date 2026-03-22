@@ -23,7 +23,12 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col">
+      {/* Header visible on large screens */}
+      <div className="hidden lg:block">
+        <Header />
+      </div>
+      <div className="flex-1 flex flex-col lg:flex-row">
       <SEOHead
         title="Sign In or Sign Up | Realtravo"
         description="Create an account or sign in to Realtravo to book trips, save favorites, and manage your travel experiences."
