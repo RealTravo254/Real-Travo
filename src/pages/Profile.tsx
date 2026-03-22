@@ -124,7 +124,7 @@ const Profile = () => {
     try {
       const { error } = await supabase.from("profiles").update({
         name: profileData.name,
-        gender: profileData.gender || null,
+        gender: (profileData.gender || null) as any,
         date_of_birth: profileData.date_of_birth || null,
         country: profileData.country || null,
       }).eq("id", user.id);
