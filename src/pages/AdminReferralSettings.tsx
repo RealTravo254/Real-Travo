@@ -180,14 +180,8 @@ export default function AdminReferralSettings() {
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/account")}
-              className="p-0 hover:bg-transparent text-slate-500 hover:text-[#008080] transition-colors mb-2"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Back to Account</span>
-            </Button>
+
+
             <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter leading-none flex items-center gap-3">
               <Settings className="h-8 w-8 text-[#008080]" />
               Referral Control

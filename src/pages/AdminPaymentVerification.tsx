@@ -288,13 +288,8 @@ export default function AdminPaymentVerification() {
       {/* Hero Header */}
       <div className="bg-[#008080] pt-12 pb-24 px-4">
         <div className="mx-auto container px-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/account")} 
-            className="text-white/80 hover:text-white hover:bg-white/10 mb-6 rounded-full"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" /> <span className="text-[10px] font-black uppercase tracking-widest">Back to Admin</span>
-          </Button>
+
+
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-2">
             Payment Control
           </h1>

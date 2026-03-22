@@ -251,14 +251,8 @@ const MyListing = () => {
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
         <header className="mb-10">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/become-host")}
-              className="mb-3 rounded-lg text-[9px] font-bold uppercase tracking-widest px-3 h-7"
-            >
-              <ArrowLeft className="mr-1 h-3 w-3" /> Host Dashboard
-            </Button>
+
+
             <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-xl bg-white shadow-sm">
                     <LayoutDashboard className="h-5 w-5" style={{ color: COLORS.TEAL }} />

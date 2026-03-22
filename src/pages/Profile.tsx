@@ -146,13 +146,7 @@ const ProfileEdit = () => {
       
       <main className="container px-4 py-8 mx-auto">
         <div className="flex items-center gap-4 mb-8">
-          <Button 
-            onClick={() => navigate(-1)} 
-            variant="ghost" 
-            className="rounded-full bg-white shadow-sm border border-slate-100 w-10 h-10 p-0"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+
           <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: COLORS.TEAL }}>
             Edit Profile
           </h1>

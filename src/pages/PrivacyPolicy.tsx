@@ -9,15 +9,8 @@ const PrivacyPolicy = () => {
   return (
     <PageLayout>
       <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+
+
 
         <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
         

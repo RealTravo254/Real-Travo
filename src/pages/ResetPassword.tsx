@@ -77,12 +77,8 @@ const ResetPassword = () => {
         <div className="absolute inset-0 opacity-20" 
              style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '24px 24px' }} 
         />
-        <Button 
-          onClick={() => navigate(-1)} 
-          className="absolute top-6 left-6 rounded-full bg-black/20 hover:bg-black/40 text-white border-none w-10 h-10 p-0"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+
+
         <div className="relative z-10 text-center">
             <Badge className="bg-[#FF7F50] text-white uppercase font-black tracking-widest text-[10px] mb-3 border-none">Security</Badge>
             <h1 className="text-4xl font-black uppercase tracking-tighter text-white">Reset Access</h1>

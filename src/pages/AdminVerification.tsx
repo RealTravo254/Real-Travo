@@ -113,14 +113,8 @@ const AdminVerification = () => {
 
       <main className="flex-1 container mx-auto px-4 pt-8 md:pt-12">
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-6 rounded-full bg-white shadow-sm border border-slate-200 hover:bg-slate-50 px-6 font-black uppercase text-[10px] tracking-widest"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+
+
 
           <div className="flex flex-col space-y-2">
             <div className="flex items-center gap-2">

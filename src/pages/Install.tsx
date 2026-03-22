@@ -112,12 +112,8 @@ export default function Install() {
     <div className="min-h-screen bg-[#F8F9FA] pb-20">
       {/* Header with Back Button */}
       <div className="p-6 flex justify-between items-center">
-        <Button 
-          onClick={() => navigate(-1)} 
-          className="rounded-full bg-white shadow-md text-slate-800 border-none w-10 h-10 p-0 hover:bg-slate-50"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+
+
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Setup App</span>
       </div>
 
