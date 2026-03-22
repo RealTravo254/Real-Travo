@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountrySelector } from "@/components/creation/CountrySelector";
 import { ArrowLeft, Building2, Camera, Loader2, CheckCircle2 } from "lucide-react";
+import { getCountryPhoneCode } from "@/lib/countryHelpers";
 
 const COLORS = { TEAL: "#008080", CORAL: "#FF7F50", CORAL_LIGHT: "#FF9E7A" };
 
@@ -20,7 +21,6 @@ const CompanyRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [existingCompany, setExistingCompany] = useState<any>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
@@ -47,19 +47,40 @@ const CompanyRegistration = () => {
           return;
         }
       }
-      // Pre-fill email
       const { data: profile } = await supabase.from("profiles").select("email, country").eq("id", user.id).single();
       if (profile) {
+        const country = profile.country || "";
+        const code = country ? getCountryPhoneCode(country) : "";
         setFormData(prev => ({
           ...prev,
           email: profile.email || user.email || "",
-          country: profile.country || "",
+          country,
+          phone_number: code,
         }));
       }
       setChecking(false);
     };
     check();
   }, [user, navigate]);
+
+  const handleCountryChange = (country: string) => {
+    const code = getCountryPhoneCode(country);
+    setFormData(prev => ({
+      ...prev,
+      country,
+      phone_number: code,
+    }));
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const code = getCountryPhoneCode(formData.country);
+    let val = e.target.value;
+    // Ensure the country code prefix stays
+    if (!val.startsWith(code)) {
+      val = code;
+    }
+    setFormData({ ...formData, phone_number: val });
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,7 +93,6 @@ const CompanyRegistration = () => {
     e.preventDefault();
     if (!user) return;
 
-    // Validate
     if (!formData.company_name.trim()) {
       toast({ title: "Error", description: "Company name is required", variant: "destructive" });
       return;
@@ -81,8 +101,9 @@ const CompanyRegistration = () => {
       toast({ title: "Error", description: "Registration number is required", variant: "destructive" });
       return;
     }
-    if (!formData.phone_number.trim() || formData.phone_number.replace(/\D/g, '').length < 10) {
-      toast({ title: "Error", description: "Valid phone number (10 digits) is required", variant: "destructive" });
+    const phoneDigits = formData.phone_number.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      toast({ title: "Error", description: "Valid phone number is required", variant: "destructive" });
       return;
     }
     if (!formData.email.trim()) {
@@ -105,22 +126,29 @@ const CompanyRegistration = () => {
         photoUrl = publicUrl;
       }
 
-      const companyData = {
-        user_id: user.id,
-        company_name: formData.company_name.trim(),
-        registration_number: formData.registration_number.trim(),
-        phone_number: formData.phone_number.trim(),
-        email: formData.email.trim(),
-        country: formData.country,
-        profile_photo_url: photoUrl,
-        verification_status: "pending",
-      };
-
       if (existingCompany) {
-        const { error } = await supabase.from("companies").update(companyData).eq("id", existingCompany.id);
+        const updateData: any = {
+          company_name: formData.company_name.trim(),
+          registration_number: formData.registration_number.trim(),
+          phone_number: formData.phone_number.trim(),
+          email: formData.email.trim(),
+          country: formData.country,
+          verification_status: "pending",
+        };
+        if (photoUrl) updateData.profile_photo_url = photoUrl;
+        const { error } = await supabase.from("companies").update(updateData).eq("id", existingCompany.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("companies").insert(companyData);
+        const insertData: any = {
+          user_id: user.id,
+          company_name: formData.company_name.trim(),
+          registration_number: formData.registration_number.trim(),
+          phone_number: formData.phone_number.trim(),
+          email: formData.email.trim(),
+          country: formData.country,
+        };
+        if (photoUrl) insertData.profile_photo_url = photoUrl;
+        const { error } = await supabase.from("companies").insert(insertData);
         if (error) throw error;
       }
 
@@ -158,9 +186,6 @@ const CompanyRegistration = () => {
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header />
       <main className="container px-4 py-8 mx-auto">
-
-
-
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 rounded-2xl bg-[#008080]/10">
@@ -223,21 +248,29 @@ const CompanyRegistration = () => {
               />
             </div>
 
-            {/* Phone Number */}
+            {/* Country - moved before phone */}
             <div className="space-y-2">
-              <Label className="text-[10px] font-black text-[#008080] uppercase tracking-[0.2em]">Phone Number (10 digits) *</Label>
+              <Label className="text-[10px] font-black text-[#008080] uppercase tracking-[0.2em]">Country *</Label>
+              <div className="bg-slate-50 rounded-2xl p-2 px-4">
+                <CountrySelector value={formData.country} onChange={handleCountryChange} />
+              </div>
+            </div>
+
+            {/* Phone Number - now with country code */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-[#008080] uppercase tracking-[0.2em]">Phone Number *</Label>
               <Input
                 type="tel"
                 value={formData.phone_number}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                  setFormData({ ...formData, phone_number: val });
-                }}
-                placeholder="0712345678"
-                maxLength={10}
+                onChange={handlePhoneChange}
+                placeholder={formData.country ? getCountryPhoneCode(formData.country) + "..." : "Select country first"}
                 className="bg-slate-50 border-none rounded-2xl h-14 px-6 font-bold focus-visible:ring-1 focus-visible:ring-[#008080]"
                 required
+                disabled={!formData.country}
               />
+              {!formData.country && (
+                <p className="text-xs text-muted-foreground">Please select a country first</p>
+              )}
             </div>
 
             {/* Email */}
@@ -251,14 +284,6 @@ const CompanyRegistration = () => {
                 className="bg-slate-50 border-none rounded-2xl h-14 px-6 font-bold focus-visible:ring-1 focus-visible:ring-[#008080]"
                 required
               />
-            </div>
-
-            {/* Country */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-[#008080] uppercase tracking-[0.2em]">Country *</Label>
-              <div className="bg-slate-50 rounded-2xl p-2 px-4">
-                <CountrySelector value={formData.country} onChange={(v) => setFormData({ ...formData, country: v })} />
-              </div>
             </div>
 
             <Button

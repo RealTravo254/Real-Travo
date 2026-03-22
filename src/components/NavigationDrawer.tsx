@@ -197,11 +197,6 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
         )}
       </div>
       
-      <div className="p-4 border-t border-border">
-        <p className="text-center text-[10px] text-muted-foreground">
-          © {new Date().getFullYear()} Realtravo. All rights reserved.
-        </p>
-      </div>
     </div>
   );
 };
