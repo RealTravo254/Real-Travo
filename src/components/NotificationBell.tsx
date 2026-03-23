@@ -54,7 +54,7 @@ const categorizeNotifications = (notifications: Notification[]) => {
   return Object.keys(groups).map(title => ({ title, notifications: groups[title] }));
 };
 
-export const NotificationBell = () => {
+export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
