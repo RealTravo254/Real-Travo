@@ -6,6 +6,7 @@ import { useSearchFocus } from "@/components/PageLayout";
 import { ListingCard } from "@/components/ListingCard";
 import { FilterBar, FilterValues } from "@/components/FilterBar";
 import { TealLoader } from "@/components/ui/teal-loader";
+import { CategoryDetailSkeleton } from "@/components/CategoryDetailSkeleton";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
