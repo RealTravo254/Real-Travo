@@ -41,11 +41,6 @@ const Auth = () => {
         <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary-foreground/5" />
         <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-primary-foreground/5" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-primary-foreground/[0.03]" />
-        <img
-          src={brandPaletteImage}
-          alt="Realtravo brand palette"
-          className="absolute right-0 top-16 h-[420px] w-[420px] object-cover opacity-30 mix-blend-screen"
-        />
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           {/* Logo */}
