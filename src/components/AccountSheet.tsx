@@ -15,6 +15,7 @@ import {
   LogOut, UserCog,
   CalendarCheck, Settings, LayoutDashboard 
 } from "lucide-react";
+import { useOverlayClose } from "@/components/OverlayCloseContext";
 
 interface AccountSheetProps {
   children: React.ReactNode;
@@ -28,6 +29,11 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const { subscribe } = useOverlayClose();
+
+  useEffect(() => {
+    return subscribe(() => setIsOpen(false));
+  }, [subscribe]);
 
   // IMMEDIATE DATA LOADING - Fetch as soon as user is available, not just when sheet opens
   useEffect(() => {

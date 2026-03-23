@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { format, isToday, isYesterday } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useOverlayClose } from "@/components/OverlayCloseContext";
 
 interface Notification {
   id: string;
@@ -61,6 +62,11 @@ export const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { subscribe } = useOverlayClose();
+
+  useEffect(() => {
+    return subscribe(() => setIsOpen(false));
+  }, [subscribe]);
 
   const isIndexPage = location.pathname === '/';
 

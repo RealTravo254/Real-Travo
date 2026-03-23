@@ -8,6 +8,7 @@ import { NavigationDrawer } from "./NavigationDrawer";
 import { Link, useNavigate } from "react-router-dom";
 import { NotificationBell } from "./NotificationBell";
 import { AccountSheet } from "./AccountSheet";
+import { useOverlayClose } from "@/components/OverlayCloseContext";
 
 export interface HeaderProps {
   onSearchClick?: () => void;
@@ -22,6 +23,11 @@ export const Header = ({ onSearchClick, showSearchIcon = true, className, __from
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { subscribe } = useOverlayClose();
+
+  useEffect(() => {
+    return subscribe(() => setIsDrawerOpen(false));
+  }, [subscribe]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
