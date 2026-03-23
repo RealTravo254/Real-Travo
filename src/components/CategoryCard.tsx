@@ -33,7 +33,7 @@ export const CategoryCard = ({
           <Icon className="h-4 w-4" />
         </div>
         <div>
-          <h3 className="font-bold text-xs text-foreground">{title}</h3>
+          <h3 className="font-extrabold text-sm sm:text-base text-foreground">{title}</h3>
         </div>
       </div>
     </Card>
