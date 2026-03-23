@@ -73,6 +73,35 @@ const CompanyReview = () => {
     }
   };
 
+  const handleToggleHideCompany = async (company: any) => {
+    const isCurrentlyHidden = company.verification_status === "hidden";
+    const newStatus = isCurrentlyHidden ? "approved" : "hidden";
+    
+    // Update company status
+    const { error: companyError } = await supabase
+      .from("companies")
+      .update({ verification_status: newStatus })
+      .eq("id", company.id);
+
+    if (companyError) {
+      toast({ title: "Error", description: companyError.message, variant: "destructive" });
+      return;
+    }
+
+    // Hide/unhide all trips and events by this company's user
+    const { error: tripsError } = await supabase
+      .from("trips")
+      .update({ is_hidden: !isCurrentlyHidden })
+      .eq("created_by", company.user_id);
+
+    if (tripsError) {
+      toast({ title: "Warning", description: "Company updated but failed to update items", variant: "destructive" });
+    } else {
+      toast({ title: isCurrentlyHidden ? "Company & items unhidden" : "Company & all items hidden from public" });
+    }
+    fetchCompanies();
+  };
+
   const filtered = useMemo(() => companies.filter(c => {
     if (filter !== "all" && c.verification_status !== filter) return false;
     if (searchQuery && !c.company_name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -82,7 +111,7 @@ const CompanyReview = () => {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Search suggestions
+  // Search suggestions - max 5
   const suggestions = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return [];
     const q = searchQuery.toLowerCase();
@@ -176,6 +205,7 @@ const CompanyReview = () => {
                       className={`text-[10px] uppercase ${
                         company.verification_status === "approved" ? "bg-green-100 text-green-700" :
                         company.verification_status === "rejected" ? "bg-red-100 text-red-700" :
+                        company.verification_status === "hidden" ? "bg-gray-100 text-gray-700" :
                         "bg-yellow-100 text-yellow-700"
                       }`}
                     >
@@ -201,6 +231,24 @@ const CompanyReview = () => {
                         size="sm"
                       >
                         <XCircle className="h-4 w-4 mr-1" /> Reject
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Hide/Unhide company button for approved or hidden companies */}
+                  {(company.verification_status === "approved" || company.verification_status === "hidden") && (
+                    <div className="mb-3">
+                      <Button
+                        onClick={() => handleToggleHideCompany(company)}
+                        variant="outline"
+                        size="sm"
+                        className={`rounded-xl w-full ${company.verification_status === "hidden" ? "border-green-300 text-green-700" : "border-red-300 text-red-700"}`}
+                      >
+                        {company.verification_status === "hidden" ? (
+                          <><Eye className="h-4 w-4 mr-1" /> Unhide Company & Items</>
+                        ) : (
+                          <><EyeOff className="h-4 w-4 mr-1" /> Hide Company & All Items</>
+                        )}
                       </Button>
                     </div>
                   )}
