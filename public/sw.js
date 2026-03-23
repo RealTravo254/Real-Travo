@@ -17,9 +17,6 @@ const PRECACHE_ASSETS = [
   '/images/category-trips.webp',
   '/images/category-events.webp',
   '/images/hero-background.webp',
-
-  // Audio
-  '/audio/notification.mp3',
 ];
 
 const IMAGE_PATTERNS = [

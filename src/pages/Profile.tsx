@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Camera, Pencil, ArrowLeft, Mail, Lock } from "lucide-react";
+import { Camera, Pencil, ArrowLeft, Mail, Lock, Check, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -23,10 +22,10 @@ const Profile = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [savingField, setSavingField] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
     name: "",
     gender: "" as string,
@@ -36,13 +35,10 @@ const Profile = () => {
     email: "",
     profile_picture_url: null as string | null,
   });
-  const [originalData, setOriginalData] = useState(profileData);
+  const [editValue, setEditValue] = useState<string>("");
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
+    if (!user) { navigate("/auth"); return; }
     fetchProfile();
   }, [user, navigate]);
 
@@ -56,7 +52,7 @@ const Profile = () => {
       .single();
 
     if (data) {
-      const pd = {
+      setProfileData({
         name: data.name || "",
         gender: data.gender || "",
         date_of_birth: data.date_of_birth || "",
@@ -64,9 +60,7 @@ const Profile = () => {
         phone_number: data.phone_number || "",
         email: data.email || user.email || "",
         profile_picture_url: data.profile_picture_url || null,
-      };
-      setProfileData(pd);
-      setOriginalData(pd);
+      });
     }
     setFetchingProfile(false);
   };
@@ -74,38 +68,21 @@ const Profile = () => {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-
     if (file.size > 5 * 1024 * 1024) {
       toast({ title: "File too large", description: "Max 5MB allowed", variant: "destructive" });
       return;
     }
-
     setUploadingPhoto(true);
     try {
       const ext = file.name.split(".").pop();
       const filePath = `${user.id}/avatar.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("profile-photos")
-        .upload(filePath, file, { upsert: true });
-
+      const { error: uploadError } = await supabase.storage.from("profile-photos").upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("profile-photos")
-        .getPublicUrl(filePath);
-
+      const { data: urlData } = supabase.storage.from("profile-photos").getPublicUrl(filePath);
       const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ profile_picture_url: publicUrl })
-        .eq("id", user.id);
-
+      const { error: updateError } = await supabase.from("profiles").update({ profile_picture_url: publicUrl }).eq("id", user.id);
       if (updateError) throw updateError;
-
       setProfileData(prev => ({ ...prev, profile_picture_url: publicUrl }));
-      setOriginalData(prev => ({ ...prev, profile_picture_url: publicUrl }));
       toast({ title: "Photo updated!" });
     } catch (error: any) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
@@ -114,29 +91,39 @@ const Profile = () => {
     }
   };
 
-  const handleSave = async () => {
+  const startEdit = (field: string) => {
+    setEditingField(field);
+    setEditValue((profileData as any)[field] || "");
+  };
+
+  const cancelEdit = () => {
+    setEditingField(null);
+    setEditValue("");
+  };
+
+  const saveField = async (field: string) => {
     if (!user) return;
-    if (/\d/.test(profileData.name)) {
+    if (field === "name" && /\d/.test(editValue)) {
       toast({ title: "Invalid Name", description: "Name cannot contain numbers", variant: "destructive" });
       return;
     }
-    setLoading(true);
+    setSavingField(field);
     try {
-      const { error } = await supabase.from("profiles").update({
-        name: profileData.name,
-        gender: (profileData.gender || null) as any,
-        date_of_birth: profileData.date_of_birth || null,
-        country: profileData.country || null,
-      }).eq("id", user.id);
-
+      const updateData: Record<string, any> = {};
+      if (field === "gender") {
+        updateData.gender = (editValue || null) as any;
+      } else {
+        updateData[field] = editValue || null;
+      }
+      const { error } = await supabase.from("profiles").update(updateData).eq("id", user.id);
       if (error) throw error;
-      setOriginalData(profileData);
-      setIsEditing(false);
-      toast({ title: "Profile saved" });
+      setProfileData(prev => ({ ...prev, [field]: editValue }));
+      setEditingField(null);
+      toast({ title: "Saved" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
-      setLoading(false);
+      setSavingField(null);
     }
   };
 
@@ -154,11 +141,6 @@ const Profile = () => {
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-  };
-
-  const handleCancel = () => {
-    setProfileData(originalData);
-    setIsEditing(false);
   };
 
   if (fetchingProfile) {
@@ -184,28 +166,7 @@ const Profile = () => {
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
         <h1 className="text-base font-bold text-foreground">My Profile</h1>
-        {!isEditing ? (
-          <button 
-            onClick={() => setIsEditing(true)} 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all active:scale-95"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
-          </button>
-        ) : (
-          <div className="flex items-center gap-2">
-            <button onClick={handleCancel} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-muted transition-all">
-              Cancel
-            </button>
-            <button 
-              onClick={handleSave} 
-              disabled={loading}
-              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:brightness-110 transition-all active:scale-95 disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "Save"}
-            </button>
-          </div>
-        )}
+        <div className="w-10" />
       </div>
 
       <div className="px-4 pt-6 max-w-lg mx-auto space-y-6">
@@ -228,13 +189,7 @@ const Profile = () => {
             >
               <Camera className="h-4 w-4" />
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoUpload}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-foreground">{profileData.name || "Traveler"}</p>
@@ -242,31 +197,54 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Fields */}
+        {/* Profile Fields - each with its own edit button */}
         <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
-          <ProfileField label="Full Name" value={profileData.name} editing={isEditing}>
+          <EditableProfileField
+            label="Full Name"
+            value={profileData.name}
+            isEditing={editingField === "name"}
+            isSaving={savingField === "name"}
+            onEdit={() => startEdit("name")}
+            onSave={() => saveField("name")}
+            onCancel={cancelEdit}
+          >
             <Input
-              value={profileData.name}
-              onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
               className="border-none shadow-none p-0 h-auto text-sm font-medium text-foreground focus-visible:ring-0 bg-transparent"
               placeholder="Your name"
+              autoFocus
             />
-          </ProfileField>
+          </EditableProfileField>
 
-          <ProfileField label="Date of Birth" value={profileData.date_of_birth || "Not set"} editing={isEditing}>
+          <EditableProfileField
+            label="Date of Birth"
+            value={profileData.date_of_birth || "Not set"}
+            isEditing={editingField === "date_of_birth"}
+            isSaving={savingField === "date_of_birth"}
+            onEdit={() => startEdit("date_of_birth")}
+            onSave={() => saveField("date_of_birth")}
+            onCancel={cancelEdit}
+          >
             <Input
               type="date"
-              value={profileData.date_of_birth}
-              onChange={(e) => setProfileData({ ...profileData, date_of_birth: e.target.value })}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
               className="border-none shadow-none p-0 h-auto text-sm font-medium text-foreground focus-visible:ring-0 bg-transparent"
+              autoFocus
             />
-          </ProfileField>
+          </EditableProfileField>
 
-          <ProfileField label="Gender" value={profileData.gender ? profileData.gender.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Not set"} editing={isEditing}>
-            <Select 
-              value={profileData.gender} 
-              onValueChange={(v) => setProfileData({ ...profileData, gender: v })}
-            >
+          <EditableProfileField
+            label="Gender"
+            value={profileData.gender ? profileData.gender.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Not set"}
+            isEditing={editingField === "gender"}
+            isSaving={savingField === "gender"}
+            onEdit={() => startEdit("gender")}
+            onSave={() => saveField("gender")}
+            onCancel={cancelEdit}
+          >
+            <Select value={editValue} onValueChange={setEditValue}>
               <SelectTrigger className="border-none shadow-none p-0 h-auto text-sm font-medium text-foreground focus:ring-0 bg-transparent">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -277,14 +255,22 @@ const Profile = () => {
                 <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
               </SelectContent>
             </Select>
-          </ProfileField>
+          </EditableProfileField>
 
-          <ProfileField label="Country" value={profileData.country || "Not set"} editing={isEditing}>
+          <EditableProfileField
+            label="Country"
+            value={profileData.country || "Not set"}
+            isEditing={editingField === "country"}
+            isSaving={savingField === "country"}
+            onEdit={() => startEdit("country")}
+            onSave={() => saveField("country")}
+            onCancel={cancelEdit}
+          >
             <CountrySelector
-              value={profileData.country}
-              onChange={(v) => setProfileData({ ...profileData, country: v })}
+              value={editValue}
+              onChange={setEditValue}
             />
-          </ProfileField>
+          </EditableProfileField>
         </div>
 
         {/* Security Section */}
@@ -323,10 +309,48 @@ const Profile = () => {
   );
 };
 
-const ProfileField = ({ label, value, editing, children }: { label: string; value: string; editing: boolean; children: React.ReactNode }) => (
+interface EditableProfileFieldProps {
+  label: string;
+  value: string;
+  isEditing: boolean;
+  isSaving: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  children: React.ReactNode;
+}
+
+const EditableProfileField = ({ label, value, isEditing, isSaving, onEdit, onSave, onCancel, children }: EditableProfileFieldProps) => (
   <div className="px-4 py-3.5">
-    <p className="text-xs text-muted-foreground mb-1">{label}</p>
-    {editing ? (
+    <div className="flex items-center justify-between mb-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      {!isEditing ? (
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1 text-xs text-primary font-medium hover:underline active:scale-95 transition-all"
+        >
+          <Pencil className="h-3 w-3" />
+          Edit
+        </button>
+      ) : (
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={onCancel}
+            className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            className="p-1 rounded-lg hover:bg-primary/10 transition-colors text-primary disabled:opacity-50"
+          >
+            <Check className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+    {isEditing ? (
       <div>{children}</div>
     ) : (
       <p className="text-sm font-medium text-foreground">{value}</p>
