@@ -21,7 +21,7 @@ import { getShareLink } from "@/lib/shareUtils";
 import { extractIdFromSlug } from "@/lib/slugUtils";
 import { DetailNavBar } from "@/components/detail/DetailNavBar";
 import { ImageGalleryModal } from "@/components/detail/ImageGalleryModal";
-import { QuickNavigationBar } from "@/components/detail/QuickNavigationBar";
+import { DetailPageSkeleton } from "@/components/detail/DetailPageSkeleton";
 import { GeneralFacilitiesDisplay } from "@/components/detail/GeneralFacilitiesDisplay";
 import { DetailMapSection } from "@/components/detail/DetailMapSection";
 import { TealLoader } from "@/components/ui/teal-loader";
