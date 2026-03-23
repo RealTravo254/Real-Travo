@@ -235,6 +235,7 @@ const App = () => {
                 </div>
               </Suspense>
             </PageLayout>
+            </OverlayCloseProvider>
             </CurrencyProvider>
           </AuthProvider>
         </BrowserRouter>
