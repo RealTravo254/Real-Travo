@@ -207,6 +207,7 @@ export const useMpesaPayment = (options: MpesaPaymentOptions = {}) => {
   ) => {
     setPaymentStatus('waiting');
     setErrorMessage('');
+    currentBookingData.current = bookingData;
 
     try {
       // M-Pesa limits: accountReference max 12 chars, transactionDesc max 13 chars
