@@ -22,7 +22,6 @@ import { useRatings, sortByRating } from "@/hooks/useRatings";
 import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 import { useResponsiveLimit } from "@/hooks/useResponsiveLimit";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-import brandPaletteImage from "@/assets/brand-palette-card.png";
 
 // ─── Memoized horizontal scroll section ─────────────────────────────────────
 interface ScrollSectionProps {
