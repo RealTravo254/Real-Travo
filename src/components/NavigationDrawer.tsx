@@ -62,24 +62,24 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
         if (path) window.location.href = path;
         onClose();
       }}
-      className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-all active:scale-[0.98] group"
+      className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-accent/5 transition-all active:scale-[0.98] group"
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-muted group-hover:bg-primary transition-colors">
-          <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary-foreground" />
+        <div className="brand-icon-wrap p-2 rounded-xl group-hover:scale-105 transition-transform">
+          <Icon className="h-4 w-4" />
         </div>
-        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-sm font-semibold text-foreground">{label}</span>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-accent transition-colors" />
     </button>
   );
 
   const currentLangName = LANGUAGES.find(l => l.code === language)?.name || "English";
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="brand-shell flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-border flex items-center justify-between flex-shrink-0">
+      <div className="px-5 pt-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground">
         <Link to="/" onClick={onClose} className="flex items-center gap-2">
           <img src="/fulllogo.png" alt="Realtravo" className="h-7" />
         </Link>
@@ -89,23 +89,23 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
         {/* User Section */}
         <div className="p-4">
           {user ? (
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border">
-              <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            <div className="brand-panel flex items-center gap-3 p-3 rounded-2xl">
+              <div className="h-11 w-11 rounded-full brand-icon-wrap flex items-center justify-center overflow-hidden">
                 {userAvatar ? (
                   <img src={userAvatar} alt={userName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <User className="h-5 w-5 text-primary" />
+                  <User className="h-5 w-5" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{userName || "Traveler"}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
             </div>
           ) : (
             <Link
               to="/auth" onClick={onClose}
-              className="flex items-center justify-center w-full py-3 rounded-xl bg-primary text-primary-foreground hover:brightness-110 transition-all"
+              className="brand-card-strong flex items-center justify-center w-full py-3 rounded-xl hover:brightness-110 transition-all"
             >
               <LogIn className="h-4 w-4 mr-2" />
               <span className="text-sm font-semibold">{t('nav.loginRegister')}</span>
@@ -115,16 +115,16 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
         {/* Companies */}
         <div className="px-2">
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Companies</p>
-          <div className="rounded-xl overflow-hidden border border-border mx-2">
+          <p className="px-4 pt-2 pb-1 text-[10px] font-black text-primary uppercase tracking-[0.22em]">Companies</p>
+          <div className="brand-panel rounded-xl overflow-hidden mx-2">
             <NavItem icon={Building2} label="Browse Companies" path="/company" />
           </div>
         </div>
 
         {/* Support & Legal */}
         <div className="px-2 mt-4">
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('drawer.supportLegal')}</p>
-          <div className="rounded-xl overflow-hidden border border-border mx-2 divide-y divide-border">
+          <p className="px-4 pt-2 pb-1 text-[10px] font-black text-primary uppercase tracking-[0.22em]">{t('drawer.supportLegal')}</p>
+          <div className="brand-panel rounded-xl overflow-hidden mx-2 divide-y divide-border/70">
             <NavItem icon={Phone} label={t('drawer.contact')} path="/contact" />
             <NavItem icon={Info} label={t('drawer.about')} path="/about" />
             <NavItem icon={FileText} label={t('drawer.terms')} path="/terms-of-service" />
@@ -134,11 +134,11 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
         {/* Preferences */}
         <div className="px-2 mt-4">
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferences</p>
-          <div className="rounded-xl overflow-hidden border border-border mx-2 divide-y divide-border">
+          <p className="px-4 pt-2 pb-1 text-[10px] font-black text-primary uppercase tracking-[0.22em]">Preferences</p>
+          <div className="brand-panel rounded-xl overflow-hidden mx-2 divide-y divide-border/70">
             <NavItem icon={Languages} label={`Language: ${currentLangName}`} onClick={() => setShowLangPicker(!showLangPicker)} />
             {showLangPicker && (
-              <div className="p-3 bg-muted/30 grid grid-cols-2 gap-1.5">
+              <div className="p-3 bg-background/70 grid grid-cols-2 gap-1.5">
                 {LANGUAGES.map((l) => (
                   <button
                     key={l.code}
@@ -146,7 +146,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
                     className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                       language === l.code 
                         ? "bg-primary text-primary-foreground" 
-                        : "bg-background text-foreground hover:bg-muted border border-border"
+                        : "bg-card text-foreground hover:bg-muted border border-border"
                     }`}
                   >
                     {l.name}
@@ -156,15 +156,15 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
             )}
             <NavItem icon={Coins} label={`Currency: ${currency}`} onClick={() => setShowCurrencyPicker(!showCurrencyPicker)} />
             {showCurrencyPicker && (
-              <div className="p-3 bg-muted/30 flex gap-2">
+              <div className="p-3 bg-background/70 flex gap-2">
                 {["KES", "USD"].map((cur) => (
                   <button
                     key={cur}
                     onClick={() => { setCurrency(cur as any); setShowCurrencyPicker(false); }}
                     className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                       currency === cur 
-                        ? "bg-primary text-primary-foreground" 
-                        : "bg-background text-foreground hover:bg-muted border border-border"
+                        ? "bg-accent text-accent-foreground" 
+                        : "bg-card text-foreground hover:bg-muted border border-border"
                     }`}
                   >
                     {cur === "KES" ? "KSh (KES)" : "$ (USD)"}
@@ -180,7 +180,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           <div className="px-4 mt-4 mb-4">
             <button 
               onClick={() => { signOut(); onClose(); }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-destructive/20 text-destructive hover:bg-destructive/5 transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-accent/20 text-accent hover:bg-accent/5 transition-all active:scale-[0.98] bg-card/80"
             >
               <LogOut className="h-4 w-4" />
               <span className="text-sm font-semibold">Log Out</span>
