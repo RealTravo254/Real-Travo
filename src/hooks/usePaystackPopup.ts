@@ -107,7 +107,7 @@ export const usePaystackPopup = (options: PaystackPopupOptions = {}) => {
             console.error('Error verifying payment:', err);
             // Still consider it success since payment went through
             // Pass booking data with correct field names for PDF generation
-            options.onSuccess?.(transaction.reference, {
+            optionsRef.current.onSuccess?.(transaction.reference, {
               bookingId: transaction.reference,
               guestName: bookingDataWithReferral.guest_name,
               guestEmail: bookingDataWithReferral.guest_email,
