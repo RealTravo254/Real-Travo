@@ -102,7 +102,7 @@ export const usePaystackPopup = (options: PaystackPopupOptions = {}) => {
             sessionStorage.removeItem('paystack_reference');
             sessionStorage.removeItem('paystack_booking_data');
 
-            options.onSuccess?.(transaction.reference, verifyData?.data);
+            optionsRef.current.onSuccess?.(transaction.reference, verifyData?.data);
           } catch (err) {
             console.error('Error verifying payment:', err);
             // Still consider it success since payment went through
