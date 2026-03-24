@@ -106,7 +106,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const isPaid = paymentStatus === 'paid' || paymentStatus === 'completed' || booking.payment_status === 'paid' || booking.payment_status === 'completed';
     const typeDisplay = safeBookingType.charAt(0).toUpperCase() + safeBookingType.slice(1);
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(bookingId)}`;
+    const qrData = JSON.stringify({ bookingId, visitDate: visitDate ? String(visitDate).split('T')[0] : '', email: recipientEmail });
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
 
     // Generate detailed breakdown HTML
     let detailsHTML = '';
