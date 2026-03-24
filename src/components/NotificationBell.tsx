@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Bell, CheckCircle2, Trash2, Clock, ChevronRight } from "lucide-react";
+import { Bell, CheckCircle2, Trash2, Clock, ChevronRight, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -26,16 +26,6 @@ interface Notification {
   is_read: boolean;
   created_at: string;
 }
-
-const COLORS = {
-  TEAL: "#008080",
-  CORAL: "#FF7F50",
-  CORAL_LIGHT: "#FF9E7A",
-  KHAKI: "#F0E68C",
-  KHAKI_DARK: "#857F3E",
-  RED: "#FF0000",
-  SOFT_GRAY: "#F8F9FA"
-};
 
 const NOTIFICATION_SOUND_URL = "/audio/notification.mp3";
 
@@ -70,12 +60,13 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
 
   const isIndexPage = location.pathname === '/';
 
+  // Matches the circular/squircle icon wrapping in the drawer
   const headerIconStyles = `
-    h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
+    h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-200 
     active:scale-90 relative group overflow-visible
     ${forceDark 
       ? 'bg-transparent text-foreground' 
-      : `bg-transparent text-white md:shadow-sm md:border md:border-slate-200 ${isIndexPage ? 'md:text-slate-800 md:bg-white/90 md:hover:bg-white' : 'md:text-slate-700 md:bg-slate-50 md:hover:bg-slate-100'}`}
+      : `bg-white/10 text-white hover:bg-white/20 md:border md:border-white/10 shadow-sm`}
   `;
 
   const getNotificationDeepLink = useCallback((notification: Notification): string | null => {
@@ -84,8 +75,7 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
       case 'host_verification': return '/verification-status';
       case 'payment_verification': return '/account';
       case 'withdrawal_success':
-      case 'withdrawal_failed':
-        return '/payment';
+      case 'withdrawal_failed': return '/payment';
       case 'new_booking':
         if (data?.item_id && data?.booking_type) return `/host-bookings/${data.booking_type}/${data.item_id}`;
         return '/host-bookings';
@@ -176,19 +166,11 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
     <div className="relative overflow-visible z-20">
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <button 
-            className={headerIconStyles} 
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5 stroke-[2.5px] transition-transform group-hover:rotate-12" />
+          <button className={headerIconStyles} aria-label="Notifications">
+            <Bell className="h-5 w-5 stroke-[2.5px]" />
             {unreadCount > 0 && (
               <Badge
-                className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white text-[10px] font-black z-[50]"
-                style={{ 
-                  backgroundColor: COLORS.RED, 
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                  pointerEvents: 'none'
-                }}
+                className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-primary bg-accent text-[10px] font-black z-[50] text-accent-foreground"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Badge>
@@ -196,104 +178,86 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
           </button>
         </SheetTrigger>
         
-        <SheetContent className="w-full sm:max-w-md p-0 pb-24 border-none bg-background [&>button]:hidden">
-          <div className="p-6 bg-white border-b border-slate-100">
-            <SheetHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-black text-[#FF7F50] uppercase tracking-[0.2em] mb-1">Stay Updated</p>
-                  <SheetTitle className="text-2xl font-black uppercase tracking-tighter" style={{ color: COLORS.TEAL }}>
-                    Inbox
-                  </SheetTitle>
-                </div>
-                <div className="flex items-center gap-2">
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={markAllAsRead}
-                      className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#008080] hover:bg-[#008080]/10"
-                    >
-                      Clear All
-                    </Button>
-                  )}
-                  <button onClick={() => setIsOpen(false)} className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </SheetHeader>
+        <SheetContent className="w-full sm:max-w-md p-0 border-none bg-background [&>button]:hidden flex flex-col h-full overflow-hidden">
+          {/* Header styled like Navigation Drawer Header */}
+          <div className="px-5 pt-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80 mb-0.5">Alerts</p>
+              <SheetTitle className="text-xl font-black uppercase tracking-tighter text-white">
+                Inbox
+              </SheetTitle>
+            </div>
+            <button onClick={() => setIsOpen(false)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
-          <ScrollArea className="h-[calc(100vh-100px)] p-6">
+          <ScrollArea className="flex-1 px-2 py-4 [&::-webkit-scrollbar]:hidden">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="bg-white p-6 rounded-[28px] shadow-sm mb-4">
-                  <Bell className="h-10 w-10 text-slate-200" />
+                <div className="bg-muted p-6 rounded-[24px] mb-4">
+                  <Bell className="h-10 w-10 text-muted-foreground/30" />
                 </div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">All caught up!</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">All caught up!</p>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {categorizedNotifications.map(group => (
-                  <div key={group.title} className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
-                        {group.title}
-                      </h3>
-                      <div className="h-[1px] w-full bg-slate-100" />
-                    </div>
+                  <div key={group.title} className="space-y-2">
+                    <p className="px-4 text-[10px] font-black text-primary uppercase tracking-[0.22em]">
+                      {group.title}
+                    </p>
                     
-                    <div className="space-y-3">
+                    {/* Brand Panel Container like drawer */}
+                    <div className="brand-panel rounded-2xl overflow-hidden mx-2 divide-y divide-border/50 border border-border/40">
                       {group.notifications.map((notification) => {
                         const hasDeepLink = !!getNotificationDeepLink(notification);
                         return (
                           <button
                             key={notification.id}
                             onClick={() => handleNotificationClick(notification)}
-                            className={`w-full text-left p-5 rounded-[24px] border transition-all duration-300 group relative overflow-hidden ${
-                              notification.is_read
-                                ? "bg-white border-slate-100 hover:border-[#008080]/30"
-                                : "bg-white border-transparent shadow-md"
+                            className={`w-full text-left p-4 transition-all duration-200 group relative flex items-start gap-3 hover:bg-accent/5 active:bg-accent/10 ${
+                              notification.is_read ? "opacity-70" : "bg-card/30"
                             }`}
                           >
-                            {!notification.is_read && (
-                              <div 
-                                className="absolute top-0 left-0 w-1.5 h-full" 
-                                style={{ background: `linear-gradient(to bottom, ${COLORS.CORAL}, ${COLORS.RED})` }}
-                              />
-                            )}
+                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${notification.is_read ? 'bg-muted-foreground/30' : 'bg-accent shadow-[0_0_8px_rgba(255,127,80,0.5)]'}`} />
                             
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="space-y-1 flex-1">
-                                <h4 className={`text-sm font-black uppercase tracking-tight ${notification.is_read ? 'text-slate-600' : 'text-[#008080]'}`}>
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">
                                   {notification.title}
                                 </h4>
-                                <p className="text-xs font-medium text-slate-500 leading-relaxed">
-                                  {notification.message}
-                                </p>
-                              </div>
-                              <div className="flex flex-col items-end gap-2">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter whitespace-nowrap">
+                                <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-tighter whitespace-nowrap">
                                   {format(new Date(notification.created_at), 'h:mm a')}
                                 </span>
-                                {!notification.is_read ? (
-                                  <div className="p-1.5 rounded-lg bg-[#FF7F50]/10 text-[#FF7F50]">
-                                    <Clock className="h-3 w-3" />
-                                  </div>
-                                ) : hasDeepLink && (
-                                  <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-[#008080]/10 group-hover:text-[#008080] transition-colors">
-                                    <ChevronRight className="h-3 w-3" />
-                                  </div>
-                                )}
                               </div>
+                              <p className="text-xs font-medium text-muted-foreground leading-snug line-clamp-2">
+                                {notification.message}
+                              </p>
                             </div>
+
+                            {hasDeepLink && (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground/40 mt-1 group-hover:text-primary transition-colors" />
+                            )}
                           </button>
                         );
                       })}
                     </div>
                   </div>
                 ))}
+
+                {/* Clear All Button - matching drawer logout/action style */}
+                {unreadCount > 0 && (
+                  <div className="px-4 pt-2">
+                    <button 
+                      onClick={markAllAsRead}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-primary/10 text-primary hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Mark all as read
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </ScrollArea>
