@@ -2,27 +2,27 @@
   "id": "/?source=pwa",
   "short_name": "RealTravo",
   "name": "RealTravo",
-  "description": "Professional adventure and travel solutions.",
+  "description": "Professional adventure and travel solutions for trips, hotels, and hidden gems.",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "fulllogo.png",
+      "src": "/fulllogo.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "fulllogo.png",
+      "src": "/fulllogo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "fulllogo.png",
+      "src": "/fulllogo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"

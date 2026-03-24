@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +7,6 @@ import { getUserId } from "@/lib/sessionManager";
 import { useLocation } from "react-router-dom";
 import { Trash2, MapPin, ChevronRight, Loader2, Lock } from "lucide-react";
 import { createDetailPath } from "@/lib/slugUtils";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SavedItemsSkeleton } from "@/components/SavedItemsSkeleton";
 import { Button } from "@/components/ui/button";
 import { useSavedItems } from "@/hooks/useSavedItems";
@@ -154,7 +152,6 @@ const Saved = () => {
   };
 
   const handleRemoveSingle = async (itemId: string, e: React.MouseEvent) => {
-    // Stop the click from bubbling to the anchor card
     e.preventDefault();
     e.stopPropagation();
     if ((!user && deletingRef.current === itemId) || (user && !userId) || deletingRef.current === itemId) return;
@@ -201,7 +198,7 @@ const Saved = () => {
           </header>
         )}
 
-        <main className={isEmbeddedInSheet ? "space-y-3" : "space-y-3"}>
+        <main className="space-y-3">
           {isEmbeddedInSheet && (
             <div className="mb-2 px-1">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -230,11 +227,6 @@ const Saved = () => {
 
                 return (
                   <div key={item.id} className="flex items-center gap-2">
-
-                    {/* ── Delete button ──────────────────────────────────────────
-                        Sits OUTSIDE the anchor so its click never triggers navigation.
-                        Uses both onClick AND onTouchEnd so it fires on every platform.
-                    ────────────────────────────────────────────────────────────── */}
                     <button
                       onClick={(e) => handleRemoveSingle(item.id, e)}
                       disabled={deletingId === item.id}
@@ -253,21 +245,6 @@ const Saved = () => {
                       }
                     </button>
 
-                    {/* ── Card ───────────────────────────────────────────────────
-                        Uses a REAL <a> tag (not div, not Link).
-
-                        Why: Inside a Sheet with overflow-y-auto + touchAction:pan-y,
-                        the browser claims all touch events for scroll detection.
-                        Synthetic React events (onClick on div, onTouchEnd) get
-                        swallowed or delayed. Native <a> elements are the ONE exception
-                        — browsers ALWAYS dispatch click on <a> regardless of scroll
-                        containers because it's a native interactive element.
-
-                        href points to the detail route; React Router's history is NOT
-                        used here intentionally — the browser handles navigation via the
-                        href, which triggers a normal client-side route change through
-                        the app's router because it's a SPA with a catch-all route.
-                    ────────────────────────────────────────────────────────────── */}
                     <a
                       href={user ? href : "#"}
                       onClick={(e) => {
@@ -317,40 +294,35 @@ const Saved = () => {
                          {!user ? <Lock size={14} /> : <ChevronRight size={16} />}
                       </div>
                     </a>
-
                   </div>
                 );
               })}
             </div>
           )}
-            {user && hasMore && savedListings.length > 0 && (
-              <div className="flex justify-center mt-6">
-                <Button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  variant="outline"
-                  className="rounded-2xl font-bold text-xs h-10 px-6"
-                >
-                  {loadingMore ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load More"
-                  )}
-                </Button>
-              </div>
-            )}
+          
+          {user && hasMore && savedListings.length > 0 && (
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={loadMore}
+                disabled={loadingMore}
+                variant="outline"
+                className="rounded-2xl font-bold text-xs h-10 px-6"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </Button>
+            </div>
+          )}
         </main>
       </div>
 
-      {!isEmbeddedInSheet && (
-        <>
-          <Footer />
-          <MobileBottomBar />
-        </>
-      )}
+      {!isEmbeddedInSheet && <MobileBottomBar />}
     </div>
   );
 };
