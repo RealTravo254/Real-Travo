@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Bell, CheckCircle2, Trash2, Clock, ChevronRight } from "lucide-react";
+import { Bell, Clock, ChevronRight } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -7,7 +7,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,8 +27,6 @@ interface Notification {
 }
 
 const COLORS = {
-  TEAL: "#008080",
-  CORAL: "#FF7F50",
   RED: "#FF0000",
 };
 
@@ -66,13 +63,20 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
 
   const isIndexPage = location.pathname === '/';
 
-  // Keeping original icon styles as requested
+  /**
+   * STYLING LOGIC:
+   * Mobile: text-white (to pop against mobile nav)
+   * Big Screen (md): md:text-black
+   */
   const headerIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
     active:scale-90 relative group overflow-visible
     ${forceDark 
       ? 'bg-transparent text-foreground' 
-      : `bg-transparent text-white md:shadow-sm md:border md:border-slate-200 ${isIndexPage ? 'md:text-slate-800 md:bg-white/90 md:hover:bg-white' : 'md:text-slate-700 md:bg-slate-50 md:hover:bg-slate-100'}`}
+      : `bg-transparent text-white md:text-black md:shadow-sm md:border md:border-slate-200 ${
+          isIndexPage ? 'md:bg-white/90 md:hover:bg-white' : 'md:bg-slate-50 md:hover:bg-slate-100'
+        }`
+    }
   `;
 
   const getNotificationDeepLink = useCallback((notification: Notification): string | null => {
@@ -219,7 +223,7 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
                         {group.title}
                       </p>
                       
-                      <div className="brand-panel rounded-xl overflow-hidden divide-y divide-border/70">
+                      <div className="brand-panel rounded-xl overflow-hidden divide-y divide-border/70 shadow-sm border border-border/40">
                         {group.notifications.map((notification) => {
                           const hasDeepLink = !!getNotificationDeepLink(notification);
                           return (
@@ -227,11 +231,10 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
                               key={notification.id}
                               onClick={() => handleNotificationClick(notification)}
                               className={`w-full flex items-center justify-between px-4 py-4 hover:bg-accent/5 transition-all active:scale-[0.98] group relative ${
-                                !notification.is_read ? "bg-accent/[0.02]" : ""
+                                !notification.is_read ? "bg-primary/[0.03]" : "bg-card"
                               }`}
                             >
                               <div className="flex items-start gap-3 flex-1 min-w-0">
-                                {/* Dot indicator for unread */}
                                 {!notification.is_read && (
                                     <div className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                                 )}
@@ -250,8 +253,8 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
                               
                               <div className="flex items-center gap-2 ml-4">
                                 {hasDeepLink && (
-                                  <div className="brand-icon-wrap p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-                                    <ChevronRight className="h-3.5 w-3.5" />
+                                  <div className="brand-icon-wrap p-1.5 rounded-lg group-hover:scale-110 transition-transform bg-accent/5">
+                                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                                   </div>
                                 )}
                               </div>
