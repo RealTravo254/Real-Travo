@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu, Heart, Ticket, Home, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationDrawer } from "./NavigationDrawer";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { NotificationBell } from "./NotificationBell";
 import { AccountSheet } from "./AccountSheet";
 import { useOverlayClose } from "@/components/OverlayCloseContext";
@@ -18,9 +18,8 @@ export interface HeaderProps {
   __fromLayout?: boolean;
 }
 
-export const Header = ({ className, __fromLayout }: HeaderProps) => {
+export const Header = ({ onSearchClick, showSearchIcon = true, className, __fromLayout }: HeaderProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -33,91 +32,57 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user) return;
-      await supabase.from('profiles').select('name').eq('id', user.id).maybeSingle();
+      const { error } = await supabase.from('profiles').select('name').eq('id', user.id).maybeSingle();
+      if (error) console.error("Error fetching profile:", error.message);
     };
     fetchUserProfile();
   }, [user]);
 
+  // Skip rendering if this is a page-level Header (PageLayout already renders one)
   if (!__fromLayout) return null;
 
-  // --- STYLING CONSTANTS ---
-  // Large screen: White background, border bottom, higher padding
-  const desktopHeaderClasses = "md:bg-white md:border-b md:border-slate-100 md:shadow-sm md:py-4";
-  
-  // Icon Button Styles (Matching NotificationBell logic)
-  // Mobile: Black/20 background, White icon
-  // Big Screen: Transparent background, Black icon, slate border
-  const headerIconStyles = `
-    h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-90 
-    text-white bg-black/20 hover:bg-white/20
-    md:text-black md:bg-white md:border md:border-slate-200 md:shadow-sm md:hover:bg-slate-50
-  `;
-
-  const navItemClasses = (path: string) => `
-    flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200
-    text-[10px] font-black uppercase tracking-[0.2em]
-    ${location.pathname === path 
-      ? 'text-[#008080] bg-[#008080]/5' 
-      : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}
-  `;
+  const mobileHeaderClasses = "fixed top-0 left-0 right-0 flex bg-transparent md:bg-background md:border-b md:border-border md:shadow-sm py-3 pt-3";
+  const headerIconStyles = "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-90 text-white md:text-foreground bg-black/20 md:bg-transparent hover:bg-white/20 md:hover:bg-muted";
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all ${desktopHeaderClasses} ${className || ''}`}>
-      <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16">
-        
-        {/* Left Section: Menu & Logo */}
-        <div className="flex items-center gap-3">
+    <header className={`z-[100] items-center ${mobileHeaderClasses} ${className || ''}`}>
+      <div className="container mx-auto px-4 flex items-center justify-between h-full">
+        <div className="flex items-center gap-2">
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <SheetTrigger asChild>
               <button className={headerIconStyles} aria-label="Open Menu">
-                <Menu className="h-6 w-6 stroke-[2.5]" />
+                <Menu className="h-7 w-7 stroke-[2.5]" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-80 p-0 border-none">
+            <SheetContent side="left" className="w-full sm:w-72 p-0 pb-24 h-screen border-none">
               <NavigationDrawer onClose={() => setIsDrawerOpen(false)} />
             </SheetContent>
           </Sheet>
-          
-          <Link to="/" className="flex items-center gap-2 group">
-            <span className="hidden md:inline text-xl font-black uppercase tracking-tighter text-[#008080]">
-              RealTravo
-            </span>
+          <Link to="/" className="flex items-center gap-2 group ml-1">
+            <span className="hidden md:inline font-bold text-lg tracking-tight italic" style={{ background: "linear-gradient(to right, #1a365d, #2b6cb0, #4fd1c5)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>RealTravo</span>
           </Link>
         </div>
-
-        {/* Center Section: Desktop Navigation (Styled like Drawer items) */}
-        <nav className="hidden lg:flex items-center gap-2 bg-slate-50/50 p-1 rounded-2xl border border-slate-100">
-          <Link to="/" className={navItemClasses('/')}>
-            <Home className="h-3.5 w-3.5" /> <span>{t('nav.home')}</span>
-          </Link>
-          <Link to="/bookings" className={navItemClasses('/bookings')}>
-            <Ticket className="h-3.5 w-3.5" /> <span>{t('nav.bookings')}</span>
-          </Link>
-          <Link to="/saved" className={navItemClasses('/saved')}>
-            <Heart className="h-3.5 w-3.5" /> <span>{t('nav.wishlist')}</span>
-          </Link>
+        <nav className="hidden lg:flex items-center gap-8">
+          {[{ to: "/", icon: <Home className="h-4 w-4" />, label: t('nav.home') }, { to: "/bookings", icon: <Ticket className="h-4 w-4" />, label: t('nav.bookings') }, { to: "/saved", icon: <Heart className="h-4 w-4" />, label: t('nav.wishlist') }].map(item => (
+            <Link key={item.to} to={item.to} className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
+              {item.icon}<span>{item.label}</span>
+            </Link>
+          ))}
         </nav>
-
-        {/* Right Section: Actions */}
-        <div className="flex items-center gap-3">
-          <NotificationBell />
-
-          <div className="h-8 w-[1px] bg-slate-100 hidden md:block mx-1" />
-
+        <div className="flex items-center gap-2 sm:gap-2">
+          {/* Notification bell — matches menu button style on mobile */}
+          <div className={`${headerIconStyles} [&>*]:flex [&>*]:items-center [&>*]:justify-center`}>
+            <NotificationBell />
+          </div>
           {user ? (
             <AccountSheet>
-              <button className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white bg-[#008080] hover:brightness-110 shadow-md shadow-[#008080]/20">
-                <User className="h-4 w-4" />
-                <span>{t('nav.profile')}</span>
+              <button className="hidden md:flex h-10 px-4 rounded-xl items-center gap-2 transition-all font-semibold text-xs text-primary-foreground bg-primary hover:brightness-110">
+                <User className="h-4 w-4" /><span>{t('nav.profile')}</span>
               </button>
             </AccountSheet>
           ) : (
-            <button 
-              onClick={() => navigate('/auth')} 
-              className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white bg-[#FF7F50] hover:brightness-110 shadow-md shadow-[#FF7F50]/20"
-            >
-              <LogIn className="h-4 w-4" />
-              <span>{t('nav.login')}</span>
+            <button onClick={() => navigate('/auth')} className="hidden md:flex h-10 px-4 rounded-xl items-center gap-2 transition-all font-semibold text-xs text-primary-foreground bg-primary hover:brightness-110">
+              <User className="h-4 w-4" /><span>{t('nav.login')}</span>
             </button>
           )}
         </div>
