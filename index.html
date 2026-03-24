@@ -11,7 +11,7 @@
     <title>RealTravo | Book Trips, Hotels, Adventures & Hidden Gems</title>
     <meta name="description" content="RealTravo is your ultimate travel booking platform. Discover and book trips, hotels, accommodations, events, experiences, activities, campsites, adventures, and hidden gems worldwide." />
     <meta name="author" content="RealTravo" />
-    <meta name="keywords" content="RealTravo, travel booking, trips, hotels, accommodations, adventures, hidden gems, campsites, travel experiences, activities, events, places to visit, traveling, adventure travel, travel partner" />
+    <meta name="keywords" content="RealTravo, travel booking, trips, hotels, accommodation, sleeping places, campsites, adventure places, hidden gems, travel experiences, activities, events, places to visit, traveling, adventure travel, travel partner" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <meta name="theme-color" content="#008080" />
@@ -35,6 +35,26 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="RealTravo - Book Trips, Hotels, Adventures & Hidden Gems" />
     <meta property="og:locale" content="en_US" />
+
+    <!-- Per-Page SEO: Hotels -->
+    <meta name="page:hotels:title" content="Hotels | RealTravo - Find & Book the Best Hotels Worldwide" />
+    <meta name="page:hotels:description" content="Browse and book top-rated hotels worldwide on RealTravo. Find the perfect hotel for your trip." />
+
+    <!-- Per-Page SEO: Campsites & Adventures -->
+    <meta name="page:campsite:title" content="Adventure Places & Campsites | RealTravo - Explore the Wild" />
+    <meta name="page:campsite:description" content="Discover the best campsites, adventure places, and hidden gems on RealTravo. Book your next outdoor adventure today." />
+
+    <!-- Per-Page SEO: Trips -->
+    <meta name="page:trips:title" content="Trips & Tours | RealTravo - Book Amazing Travel Experiences" />
+    <meta name="page:trips:description" content="Browse and book incredible trips and guided tours on RealTravo. Find the perfect travel experience for you." />
+
+    <!-- Per-Page SEO: Events -->
+    <meta name="page:events:title" content="Events & Sports | RealTravo - Book Tickets for Top Events" />
+    <meta name="page:events:description" content="Discover and book tickets for events, sports, concerts, and experiences near you on RealTravo." />
+
+    <!-- Per-Page SEO: Accommodation (sleep only) -->
+    <meta name="page:accommodation:title" content="Accommodation | RealTravo - Find Places to Sleep & Stay" />
+    <meta name="page:accommodation:description" content="Find and book the best places to sleep and stay on RealTravo. Browse apartments, guesthouses, lodges, and more accommodation options worldwide." />
 
     <!-- Per-Page SEO: BecomeHost -->
     <meta name="page:become-host:title" content="Become a Host on RealTravo | Start Earning by Hosting Trips, Hotels & Experiences" />
@@ -110,10 +130,105 @@
       "description": "Book trips, hotels, accommodations, events, experiences, activities, campsites, adventures, and hidden gems with RealTravo.",
       "priceRange": "$$",
       "serviceType": [
-        "Trip Booking", "Hotel Booking", "Accommodation Booking",
+        "Trip Booking", "Hotel Booking", "Accommodation & Sleeping Places",
         "Event Booking", "Experience Booking", "Activity Booking",
         "Campsite Booking", "Adventure Travel", "Hidden Gems Discovery"
       ]
+    }
+    </script>
+
+    <!-- Structured Data: Hotels Category Page -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Hotels | RealTravo",
+      "url": "https://www.realtravo.com/category/hotels",
+      "description": "Browse and book top-rated hotels worldwide on RealTravo. Find the perfect hotel for your trip.",
+      "isPartOf": { "@type": "WebSite", "url": "https://www.realtravo.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.realtravo.com" },
+          { "@type": "ListItem", "position": 2, "name": "Hotels", "item": "https://www.realtravo.com/category/hotels" }
+        ]
+      }
+    }
+    </script>
+
+    <!-- Structured Data: Campsites & Adventure Places Category Page -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Adventure Places & Campsites | RealTravo",
+      "url": "https://www.realtravo.com/category/campsite",
+      "description": "Discover the best campsites, adventure places, and hidden gems on RealTravo. Book your next outdoor adventure today.",
+      "isPartOf": { "@type": "WebSite", "url": "https://www.realtravo.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.realtravo.com" },
+          { "@type": "ListItem", "position": 2, "name": "Adventure Places & Campsites", "item": "https://www.realtravo.com/category/campsite" }
+        ]
+      }
+    }
+    </script>
+
+    <!-- Structured Data: Trips Category Page -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Trips & Tours | RealTravo",
+      "url": "https://www.realtravo.com/category/trips",
+      "description": "Browse and book incredible trips and guided tours on RealTravo. Find the perfect travel experience for you.",
+      "isPartOf": { "@type": "WebSite", "url": "https://www.realtravo.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.realtravo.com" },
+          { "@type": "ListItem", "position": 2, "name": "Trips & Tours", "item": "https://www.realtravo.com/category/trips" }
+        ]
+      }
+    }
+    </script>
+
+    <!-- Structured Data: Events Category Page -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Events & Sports | RealTravo",
+      "url": "https://www.realtravo.com/category/events",
+      "description": "Discover and book tickets for events, sports, concerts, and experiences near you on RealTravo.",
+      "isPartOf": { "@type": "WebSite", "url": "https://www.realtravo.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.realtravo.com" },
+          { "@type": "ListItem", "position": 2, "name": "Events & Sports", "item": "https://www.realtravo.com/category/events" }
+        ]
+      }
+    }
+    </script>
+
+    <!-- Structured Data: Accommodation Category Page (sleep only) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Accommodation | Places to Sleep & Stay - RealTravo",
+      "url": "https://www.realtravo.com/category/accommodation",
+      "description": "Find and book the best places to sleep and stay on RealTravo. Browse apartments, guesthouses, lodges, Airbnb-style stays, and more accommodation options worldwide.",
+      "isPartOf": { "@type": "WebSite", "url": "https://www.realtravo.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.realtravo.com" },
+          { "@type": "ListItem", "position": 2, "name": "Accommodation", "item": "https://www.realtravo.com/category/accommodation" }
+        ]
+      }
     }
     </script>
 
