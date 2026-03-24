@@ -138,9 +138,9 @@ export const usePaystackPopup = (options: PaystackPopupOptions = {}) => {
       setPaymentStatus('error');
       setErrorMessage(error.message);
       setIsLoading(false);
-      options.onError?.(error.message);
+      optionsRef.current.onError?.(error.message);
     }
-  }, [options]);
+  }, []);
 
   const resetPayment = useCallback(() => {
     setPaymentStatus('idle');
