@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Bell, CheckCircle2, Trash2, Clock, ChevronRight, X } from "lucide-react";
+import { Bell, CheckCircle2, Trash2, Clock, ChevronRight } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -26,6 +26,12 @@ interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+const COLORS = {
+  TEAL: "#008080",
+  CORAL: "#FF7F50",
+  RED: "#FF0000",
+};
 
 const NOTIFICATION_SOUND_URL = "/audio/notification.mp3";
 
@@ -60,13 +66,13 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
 
   const isIndexPage = location.pathname === '/';
 
-  // Matches the circular/squircle icon wrapping in the drawer
+  // Keeping original icon styles as requested
   const headerIconStyles = `
-    h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-200 
+    h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
     active:scale-90 relative group overflow-visible
     ${forceDark 
       ? 'bg-transparent text-foreground' 
-      : `bg-white/10 text-white hover:bg-white/20 md:border md:border-white/10 shadow-sm`}
+      : `bg-transparent text-white md:shadow-sm md:border md:border-slate-200 ${isIndexPage ? 'md:text-slate-800 md:bg-white/90 md:hover:bg-white' : 'md:text-slate-700 md:bg-slate-50 md:hover:bg-slate-100'}`}
   `;
 
   const getNotificationDeepLink = useCallback((notification: Notification): string | null => {
@@ -112,10 +118,6 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
     }
   }, []);
 
-  const showInAppNotification = useCallback((notification: Notification) => {
-    toast({ title: notification.title, description: notification.message });
-  }, []);
-
   const fetchNotifications = async () => {
     if (!user) return;
     const { data, error } = await supabase
@@ -137,14 +139,13 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, 
         (payload) => {
           playNotificationSound();
-          if (payload.new) showInAppNotification(payload.new as Notification);
           fetchNotifications();
         }
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, fetchNotifications)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, playNotificationSound, showInAppNotification]);
+  }, [user, playNotificationSound]);
 
   const markAsRead = async (notificationId: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
@@ -167,10 +168,11 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <button className={headerIconStyles} aria-label="Notifications">
-            <Bell className="h-5 w-5 stroke-[2.5px]" />
+            <Bell className="h-5 w-5 stroke-[2.5px] transition-transform group-hover:rotate-12" />
             {unreadCount > 0 && (
               <Badge
-                className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-primary bg-accent text-[10px] font-black z-[50] text-accent-foreground"
+                className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white text-[10px] font-black z-[50]"
+                style={{ backgroundColor: COLORS.RED, boxShadow: '0 2px 4px rgba(0,0,0,0.2)', pointerEvents: 'none' }}
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Badge>
@@ -178,88 +180,90 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
           </button>
         </SheetTrigger>
         
-        <SheetContent className="w-full sm:max-w-md p-0 border-none bg-background [&>button]:hidden flex flex-col h-full overflow-hidden">
-          {/* Header styled like Navigation Drawer Header */}
+        <SheetContent className="brand-shell w-full sm:max-w-md p-0 flex flex-col border-none bg-background [&>button]:hidden">
+          {/* Header Styled like Navigation Drawer */}
           <div className="px-5 pt-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80 mb-0.5">Alerts</p>
-              <SheetTitle className="text-xl font-black uppercase tracking-tighter text-white">
-                Inbox
-              </SheetTitle>
+            <div className="flex flex-col">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Notifications</p>
+                <SheetTitle className="text-xl font-black uppercase tracking-tighter text-white">Inbox</SheetTitle>
             </div>
-            <button onClick={() => setIsOpen(false)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-3">
+               {unreadCount > 0 && (
+                  <button 
+                    onClick={markAllAsRead}
+                    className="text-[10px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 py-1 px-3 rounded-lg transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+                <button onClick={() => setIsOpen(false)} className="text-xs font-bold hover:opacity-70 transition-opacity">
+                  Cancel
+                </button>
+            </div>
           </div>
 
-          <ScrollArea className="flex-1 px-2 py-4 [&::-webkit-scrollbar]:hidden">
-            {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="bg-muted p-6 rounded-[24px] mb-4">
-                  <Bell className="h-10 w-10 text-muted-foreground/30" />
+          <ScrollArea className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="p-4 space-y-6">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="brand-panel p-6 rounded-[28px] mb-4">
+                    <Bell className="h-10 w-10 text-muted-foreground/20" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">All caught up!</p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">All caught up!</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {categorizedNotifications.map(group => (
-                  <div key={group.title} className="space-y-2">
-                    <p className="px-4 text-[10px] font-black text-primary uppercase tracking-[0.22em]">
-                      {group.title}
-                    </p>
-                    
-                    {/* Brand Panel Container like drawer */}
-                    <div className="brand-panel rounded-2xl overflow-hidden mx-2 divide-y divide-border/50 border border-border/40">
-                      {group.notifications.map((notification) => {
-                        const hasDeepLink = !!getNotificationDeepLink(notification);
-                        return (
-                          <button
-                            key={notification.id}
-                            onClick={() => handleNotificationClick(notification)}
-                            className={`w-full text-left p-4 transition-all duration-200 group relative flex items-start gap-3 hover:bg-accent/5 active:bg-accent/10 ${
-                              notification.is_read ? "opacity-70" : "bg-card/30"
-                            }`}
-                          >
-                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${notification.is_read ? 'bg-muted-foreground/30' : 'bg-accent shadow-[0_0_8px_rgba(255,127,80,0.5)]'}`} />
-                            
-                            <div className="flex-1 min-w-0 space-y-0.5">
-                              <div className="flex items-center justify-between gap-2">
-                                <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">
-                                  {notification.title}
-                                </h4>
-                                <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-tighter whitespace-nowrap">
-                                  {format(new Date(notification.created_at), 'h:mm a')}
-                                </span>
+              ) : (
+                <div className="space-y-6">
+                  {categorizedNotifications.map(group => (
+                    <div key={group.title} className="space-y-2">
+                      <p className="px-2 text-[10px] font-black text-primary uppercase tracking-[0.22em]">
+                        {group.title}
+                      </p>
+                      
+                      <div className="brand-panel rounded-xl overflow-hidden divide-y divide-border/70">
+                        {group.notifications.map((notification) => {
+                          const hasDeepLink = !!getNotificationDeepLink(notification);
+                          return (
+                            <button
+                              key={notification.id}
+                              onClick={() => handleNotificationClick(notification)}
+                              className={`w-full flex items-center justify-between px-4 py-4 hover:bg-accent/5 transition-all active:scale-[0.98] group relative ${
+                                !notification.is_read ? "bg-accent/[0.02]" : ""
+                              }`}
+                            >
+                              <div className="flex items-start gap-3 flex-1 min-w-0">
+                                {/* Dot indicator for unread */}
+                                {!notification.is_read && (
+                                    <div className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                                )}
+                                <div className="space-y-0.5 text-left flex-1 min-w-0">
+                                  <h4 className={`text-sm font-bold truncate ${notification.is_read ? 'text-foreground/70' : 'text-foreground'}`}>
+                                    {notification.title}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground line-clamp-2 leading-snug">
+                                    {notification.message}
+                                  </p>
+                                  <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-tighter pt-1">
+                                    {format(new Date(notification.created_at), 'h:mm a')}
+                                  </p>
+                                </div>
                               </div>
-                              <p className="text-xs font-medium text-muted-foreground leading-snug line-clamp-2">
-                                {notification.message}
-                              </p>
-                            </div>
-
-                            {hasDeepLink && (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground/40 mt-1 group-hover:text-primary transition-colors" />
-                            )}
-                          </button>
-                        );
-                      })}
+                              
+                              <div className="flex items-center gap-2 ml-4">
+                                {hasDeepLink && (
+                                  <div className="brand-icon-wrap p-1.5 rounded-lg group-hover:scale-110 transition-transform">
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {/* Clear All Button - matching drawer logout/action style */}
-                {unreadCount > 0 && (
-                  <div className="px-4 pt-2">
-                    <button 
-                      onClick={markAllAsRead}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-primary/10 text-primary hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest"
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      Mark all as read
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </ScrollArea>
         </SheetContent>
       </Sheet>
