@@ -5,9 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { SearchBarWithSuggestions } from "@/components/SearchBarWithSuggestions";
 import { useSearchFocus } from "@/components/PageLayout";
 import { ListingCard } from "@/components/ListingCard";
-import { Calendar, Hotel, Tent, Compass, MapPin, ChevronLeft, ChevronRight, Loader2, Navigation, Home, Heart, Ticket, Trophy, Star, Menu } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { NavigationDrawer } from "@/components/NavigationDrawer";
+import { Calendar, Hotel, Tent, Compass, MapPin, ChevronLeft, ChevronRight, Loader2, Navigation, Home, Heart, Ticket, Trophy, Star } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import {
   AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription,
