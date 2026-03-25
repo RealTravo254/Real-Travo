@@ -48,13 +48,14 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
   const shouldHideHeaderOnMobile = pathname === "/" || pathname.startsWith("/company");
   const hideHeaderForSearch = isSearchFocused;
   const useStaticDesktopHeader = isCategoryPage;
+  // Category pages: header is fixed on all screens
 
   const showFooterDesktopOnly = isPwa;
 
   const contentPadding = !shouldHideHeader && !hideHeaderForSearch
     ? [
         shouldHideHeaderOnMobile ? 'pt-0' : 'pt-[calc(3.5rem+env(safe-area-inset-top,0px))]',
-        useStaticDesktopHeader ? 'md:pt-0' : 'md:pt-14',
+        'md:pt-14',
       ].join(' ')
     : '';
 
@@ -64,7 +65,7 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
         <OfflineIndicator />
         {!shouldHideHeader && !hideHeaderForSearch && (
           <div className={shouldHideHeaderOnMobile ? "hidden md:block" : ""}>
-            <Header __fromLayout desktopStatic={useStaticDesktopHeader} />
+            <Header __fromLayout />
           </div>
         )}
         <div className={`flex-1 w-full pb-20 md:pb-0 ${contentPadding}`}>{children}</div>
