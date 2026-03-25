@@ -49,6 +49,7 @@ const categorizeNotifications = (notifications: Notification[]) => {
 
 export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
