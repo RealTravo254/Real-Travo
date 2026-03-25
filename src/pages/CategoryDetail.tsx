@@ -210,30 +210,34 @@ const CategoryDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-10">
 
-      <div ref={searchRef} className={cn("bg-white dark:bg-background border-b z-40", isSearchFocused && "z-[600]")}>
-        <div className="container px-4 py-3">
-          <SearchBarWithSuggestions 
-            value={searchQuery} 
-            onChange={setSearchQuery} 
-            onSubmit={() => setFilteredItems(applyFilters(sortedItems, searchQuery, activeFilters))} 
-            onFocus={() => setIsSearchFocused(true)} 
-            onBlur={() => setIsSearchFocused(false)} 
-            onBack={() => { setIsSearchFocused(false); setSearchQuery(""); }} 
-            showBackButton={isSearchFocused} 
-          />
-        </div>
-      </div>
-
-      {!isSearchFocused && (
-        <div className="bg-background/95 backdrop-blur-sm border-b relative z-40">
-          <div className="container px-4 py-2">
-            <FilterBar 
-              type={config?.filterType || "trips-events"} 
-              onApplyFilters={setActiveFilters}
+      <section
+        ref={searchRef}
+        className={cn(
+          "relative border-b border-border bg-background",
+          isSearchFocused && "z-[600]"
+        )}
+      >
+        <div className="container px-4 py-3 md:py-4">
+          <div className="mx-auto flex max-w-6xl flex-col gap-3">
+            <SearchBarWithSuggestions 
+              value={searchQuery} 
+              onChange={setSearchQuery} 
+              onSubmit={() => setFilteredItems(applyFilters(sortedItems, searchQuery, activeFilters))} 
+              onFocus={() => setIsSearchFocused(true)} 
+              onBlur={() => setIsSearchFocused(false)} 
+              onBack={() => { setIsSearchFocused(false); setSearchQuery(""); }} 
+              showBackButton={isSearchFocused} 
             />
+
+            {!isSearchFocused && (
+              <FilterBar 
+                type={config?.filterType || "trips-events"} 
+                onApplyFilters={setActiveFilters}
+              />
+            )}
           </div>
         </div>
-      )}
+      </section>
 
       <main className={cn("container px-4 py-6 transition-opacity duration-200", isSearchFocused && "pointer-events-none opacity-20")}>
         {/* FIXED GRID: 

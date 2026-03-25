@@ -4,7 +4,7 @@ import { Menu, Heart, Ticket, Home, User, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationDrawer } from "./NavigationDrawer";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { NotificationBell } from "./NotificationBell";
 import { AccountSheet } from "./AccountSheet";
 import { useOverlayClose } from "@/components/OverlayCloseContext";
@@ -15,6 +15,7 @@ export interface HeaderProps {
   className?: string;
   hideIcons?: boolean;
   __fromLayout?: boolean;
+  desktopStatic?: boolean;
 }
 
 const COLORS = {
@@ -22,8 +23,7 @@ const COLORS = {
   CORAL: "#FF7F50",
 };
 
-export const Header = ({ className, __fromLayout }: HeaderProps) => {
-  const navigate = useNavigate();
+export const Header = ({ className, __fromLayout, desktopStatic = false }: HeaderProps) => {
   const location = useLocation();
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -39,6 +39,9 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
   const isIndexPage = location.pathname === '/';
 
   const desktopHeaderClasses = "md:bg-white md:border-b md:border-slate-100 md:shadow-sm md:py-4";
+  const positionClasses = desktopStatic
+    ? "fixed top-0 left-0 right-0 md:static"
+    : "fixed top-0 left-0 right-0";
   
   // Mobile: solid bg for non-index, transparent for index
   const mobileHeaderBg = isIndexPage
@@ -62,7 +65,7 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
   `;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all flex items-center ${mobileHeaderBg} ${desktopHeaderClasses} ${className || ''}`}
+    <header className={`${positionClasses} z-[100] transition-all flex items-center ${mobileHeaderBg} ${desktopHeaderClasses} ${className || ''}`}
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16">
