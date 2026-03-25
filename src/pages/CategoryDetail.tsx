@@ -208,7 +208,7 @@ const CategoryDetail = () => {
   if (!config) return <div className="p-10 text-center">Category not found</div>;
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-10">
+    <div className="min-h-screen bg-background pb-20 md:pb-10 md:pt-10">
 
       <section
         ref={searchRef}
