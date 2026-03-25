@@ -51,9 +51,10 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
 
   const showFooterDesktopOnly = isPwa;
 
-  // Content top padding based on header visibility
   const contentPadding = !shouldHideHeader && !hideHeaderForSearch
-    ? (shouldHideHeaderOnMobile ? 'pt-0 md:pt-14' : 'pt-14')
+    ? (shouldHideHeaderOnMobile
+        ? 'pt-0 md:pt-14'
+        : 'pt-[calc(3.5rem+env(safe-area-inset-top,0px))] md:pt-14')
     : '';
 
   return (

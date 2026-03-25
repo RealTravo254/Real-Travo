@@ -93,6 +93,16 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
     fetchUserData();
   }, [user]);
 
+  const handleLogout = async () => {
+    setIsOpen(false);
+    await signOut();
+  };
+
+  const handleNavigate = (path: string) => {
+    setIsOpen(false);
+    navigate(path);
+  };
+
   const menuItems = [
     { section: "Creator Tools", items: [
       { icon: Briefcase, label: "Become a Host", path: hostAccessPath, show: true },
