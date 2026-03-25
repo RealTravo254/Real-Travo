@@ -43,10 +43,8 @@ export const Header = ({ className, __fromLayout, desktopStatic = false }: Heade
     ? "fixed top-0 left-0 right-0 md:static"
     : "fixed top-0 left-0 right-0";
   
-  // Mobile: solid bg for non-index, transparent for index
-  const mobileHeaderBg = isIndexPage
-    ? "bg-transparent"
-    : "bg-background border-b border-border";
+  // Mobile: always solid bg
+  const mobileHeaderBg = "bg-background border-b border-border";
 
   const menuIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-90 
