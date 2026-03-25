@@ -64,16 +64,6 @@ const CategoryDetail = () => {
     initializeData();
   }, [category]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (window.innerWidth >= 768) {
-        setShowSearchIcon(currentScrollY > 100);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const loadInitialData = async () => {
     setLoading(true);
