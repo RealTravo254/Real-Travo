@@ -68,7 +68,7 @@ export const Header = ({ className, __fromLayout, desktopStatic = false }: Heade
         
         {/* LEFT: MENU & LOGO */}
         <div className="flex items-center gap-3">
-          <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen} modal={false}>
             <SheetTrigger asChild>
               <button className={menuIconStyles} aria-label="Open Menu">
                 <Menu className="h-6 w-6 stroke-[2.5]" />

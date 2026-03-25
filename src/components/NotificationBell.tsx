@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { format, isToday, isYesterday } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useOverlayClose } from "@/components/OverlayCloseContext";
 
 interface Notification {
@@ -50,7 +50,6 @@ const categorizeNotifications = (notifications: Notification[]) => {
 export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -61,18 +60,12 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
     return subscribe(() => setIsOpen(false));
   }, [subscribe]);
 
-  const isIndexPage = location.pathname === '/';
-
   const headerIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
     active:scale-90 relative group overflow-visible
-    ${forceDark 
-      ? 'bg-transparent text-foreground' 
-      : `bg-transparent ${
-          isIndexPage ? 'text-white' : 'text-foreground'
-        } md:text-black md:shadow-sm md:border md:border-slate-200 ${
-          isIndexPage ? 'md:bg-white/90 md:hover:bg-white' : 'md:bg-slate-50 md:hover:bg-slate-100'
-        }`
+    ${forceDark
+      ? 'bg-transparent text-foreground'
+      : 'bg-transparent text-foreground md:text-black md:shadow-sm md:border md:border-slate-200 md:bg-slate-50 md:hover:bg-slate-100'
     }
   `;
 
@@ -166,7 +159,7 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
 
   return (
     <div className="relative overflow-visible z-20">
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <SheetTrigger asChild>
           <button className={headerIconStyles} aria-label="Notifications">
             <Bell className="h-5 w-5 stroke-[2.5px] transition-transform group-hover:rotate-12" />

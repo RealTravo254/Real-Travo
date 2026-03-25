@@ -123,7 +123,7 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
   ];
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <SheetTrigger asChild>
         {children}
       </SheetTrigger>
