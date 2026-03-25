@@ -468,25 +468,6 @@ const Index = () => {
         }}
       />
 
-      {/* Sticky mobile top bar on scroll */}
-      {showMobileTopBar && !isSearchFocused && (
-        <div className="md:hidden fixed top-0 left-0 right-0 z-[200] bg-background border-b border-border w-full m-0"
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className="flex items-center justify-between px-4 py-2">
-            <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-              <SheetTrigger asChild>
-                <button className="h-10 w-10 rounded-xl flex items-center justify-center text-foreground" aria-label="Open Menu">
-                  <Menu className="h-6 w-6 stroke-[2.5]" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-full sm:w-72 p-0 pb-24 h-screen border-none">
-                <NavigationDrawer onClose={() => setIsDrawerOpen(false)} />
-              </SheetContent>
-            </Sheet>
-            <NotificationBell forceDark />
-          </div>
-        </div>
-      )}
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       {!isSearchFocused && (
