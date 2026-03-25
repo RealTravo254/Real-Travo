@@ -132,7 +132,7 @@ const PaymentVerify = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="bg-white rounded-[32px] shadow-xl border border-slate-100 p-8 max-w-md w-full text-center">
         {status === 'loading' && (
           <>

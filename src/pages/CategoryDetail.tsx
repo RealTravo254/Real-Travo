@@ -227,7 +227,7 @@ const CategoryDetail = () => {
         }
       />
 
-      <div ref={searchRef} className={cn("bg-white dark:bg-background border-b z-50 sticky top-0", isSearchFocused && "z-[600]")}>
+      <div ref={searchRef} className={cn("bg-white dark:bg-background border-b z-50 sticky top-14 md:top-14", isSearchFocused && "z-[600]")}>
         <div className="container px-4 py-3">
           <SearchBarWithSuggestions 
             value={searchQuery} 

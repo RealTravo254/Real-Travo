@@ -140,7 +140,7 @@ const BecomeHost = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#F8F9FA] animate-pulse" />;
+  if (loading) return <div className="min-h-screen bg-background" />;
 
   // Host type selection screen
   if (!hostType) {

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu, Heart, Ticket, Home, User, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationDrawer } from "./NavigationDrawer";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -18,11 +17,9 @@ export interface HeaderProps {
   __fromLayout?: boolean;
 }
 
-// Internal Color Constants to match your Brand exactly
 const COLORS = {
   TEAL: "#008080",
   CORAL: "#FF7F50",
-  SLATE_LIGHT: "#F8F9FA",
 };
 
 export const Header = ({ className, __fromLayout }: HeaderProps) => {
@@ -39,19 +36,23 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
 
   if (!__fromLayout) return null;
 
-  // --- STYLING MACROS ---
-  
-  // Big Screen Header: Clean white with subtle brand border
+  const isIndexPage = location.pathname === '/';
+
   const desktopHeaderClasses = "md:bg-white md:border-b md:border-slate-100 md:shadow-sm md:py-4";
   
-  // Menu Button: Matches the Notification Bell "HeaderIconStyles"
+  // Mobile: solid bg for non-index, transparent for index
+  const mobileHeaderBg = isIndexPage
+    ? "bg-transparent"
+    : "bg-background border-b border-border";
+
   const menuIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-90 
-    text-white bg-black/20 hover:bg-white/20
+    ${isIndexPage
+      ? 'text-white bg-black/20 hover:bg-white/20'
+      : 'text-foreground hover:bg-muted'}
     md:text-black md:bg-white md:border md:border-slate-200 md:shadow-sm md:hover:bg-slate-50
   `;
 
-  // Nav Items: Matches the Drawer "NavItem" typography and active Teal state
   const navItemClasses = (path: string) => `
     flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300
     text-[10px] font-black uppercase tracking-[0.2em]
@@ -61,7 +62,9 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
   `;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all flex items-center bg-transparent ${desktopHeaderClasses} ${className || ''}`}>
+    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all flex items-center ${mobileHeaderBg} ${desktopHeaderClasses} ${className || ''}`}
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
       <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16">
         
         {/* LEFT: MENU & LOGO */}
@@ -102,7 +105,6 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
 
         {/* RIGHT: ACTIONS */}
         <div className="flex items-center gap-2">
-          {/* NotificationBell handles its own styling internally to match menuIconStyles */}
           <NotificationBell />
 
           <div className="h-8 w-[1px] bg-slate-100 hidden md:block mx-1" />
@@ -118,14 +120,15 @@ export const Header = ({ className, __fromLayout }: HeaderProps) => {
               </button>
             </AccountSheet>
           ) : (
-            <button 
-              onClick={() => navigate('/auth')} 
-              className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
-              style={{ backgroundColor: COLORS.CORAL, boxShadow: `0 4px 12px ${COLORS.CORAL}33` }}
-            >
-              <LogIn className="h-4 w-4" />
-              <span>{t('nav.login')}</span>
-            </button>
+            <AccountSheet>
+              <button 
+                className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
+                style={{ backgroundColor: COLORS.CORAL, boxShadow: `0 4px 12px ${COLORS.CORAL}33` }}
+              >
+                <LogIn className="h-4 w-4" />
+                <span>{t('nav.login')}</span>
+              </button>
+            </AccountSheet>
           )}
         </div>
       </div>

@@ -98,7 +98,7 @@ const CompanyBrowse = () => {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-primary-light transition-colors active:scale-95">
           <ArrowLeft className="h-5 w-5 text-primary-foreground" />
         </button>
-        <h1 className="text-base font-bold text-primary-foreground">Companies</h1>
+        <h1 className="text-base font-bold text-primary-foreground">Travel Partners</h1>
       </div>
 
       <div className="px-4 pt-4 max-w-5xl mx-auto">
@@ -108,7 +108,7 @@ const CompanyBrowse = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search companies..."
+                placeholder="Search travel partners..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true); }}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -144,7 +144,7 @@ const CompanyBrowse = () => {
         ) : companies.length === 0 ? (
           <div className="text-center py-16">
             <Building2 className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground">No companies found</p>
+            <p className="text-muted-foreground">No travel partners found</p>
           </div>
         ) : (
           <>
