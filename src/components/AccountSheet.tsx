@@ -12,10 +12,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ChevronRight, User, Briefcase, CreditCard, Shield,
-  LogOut, UserCog,
+  LogOut, UserCog, LogIn,
   CalendarCheck, Settings, LayoutDashboard 
 } from "lucide-react";
 import { useOverlayClose } from "@/components/OverlayCloseContext";
+import { Button } from "@/components/ui/button";
 
 interface AccountSheetProps {
   children: React.ReactNode;
@@ -35,9 +36,11 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
     return subscribe(() => setIsOpen(false));
   }, [subscribe]);
 
-  // IMMEDIATE DATA LOADING - Fetch as soon as user is available, not just when sheet opens
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     const fetchUserData = async () => {
       setLoading(true);
@@ -63,7 +66,7 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
       }
     };
     fetchUserData();
-  }, [user]); // Removed isOpen dependency - loads immediately when user exists
+  }, [user]);
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -100,8 +103,10 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
         {children}
       </SheetTrigger>
       
-       <SheetContent className="brand-shell w-full sm:max-w-md p-0 pb-24 border-none bg-background flex flex-col [&>button]:hidden">
-        <div className="px-6 pt-5 pb-4 bg-primary text-primary-foreground border-b border-border/60 flex-shrink-0">
+      <SheetContent className="brand-shell w-full sm:max-w-md p-0 pb-24 border-none bg-background flex flex-col [&>button]:hidden">
+        <div className="px-6 pt-5 pb-4 bg-primary text-primary-foreground border-b border-border/60 flex-shrink-0"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
+        >
           <SheetHeader>
             <div className="flex items-center justify-between">
               <SheetTitle className="text-xl font-black uppercase tracking-tighter text-primary-foreground">
@@ -113,7 +118,7 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
             </div>
           </SheetHeader>
           
-          {!loading && userName && (
+          {user && !loading && userName && (
             <div className="flex items-center gap-3 mt-4 p-3 rounded-2xl border border-primary-foreground/10 bg-primary-light/70">
               <div className="h-12 w-12 rounded-full brand-icon-wrap flex items-center justify-center border border-primary-foreground/10 overflow-hidden">
                 {userAvatar ? (
@@ -134,9 +139,28 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
           )}
         </div>
 
-        {/* MAIN CONTENT - No ScrollArea, compact spacing */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {loading ? (
+          {!user ? (
+            /* Not logged in - show login prompt */
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="p-6 rounded-[28px] bg-muted/50 mb-6">
+                <User className="h-12 w-12 text-muted-foreground/40" />
+              </div>
+              <h3 className="text-lg font-black uppercase tracking-tight text-foreground mb-2">
+                Welcome to RealTravo
+              </h3>
+              <p className="text-sm text-muted-foreground mb-8 max-w-xs">
+                Sign in to access your bookings, saved items, and host tools.
+              </p>
+              <Button
+                onClick={() => handleNavigate('/auth')}
+                className="w-full max-w-xs h-12 rounded-2xl font-black uppercase tracking-widest text-sm gap-2"
+              >
+                <LogIn className="h-4 w-4" />
+                Login / Sign Up
+              </Button>
+            </div>
+          ) : loading ? (
             <div className="space-y-3">
               <Skeleton className="h-24 w-full rounded-[20px]" />
               <Skeleton className="h-20 w-full rounded-[20px]" />

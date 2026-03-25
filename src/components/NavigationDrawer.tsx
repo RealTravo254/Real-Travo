@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { 
   Phone, Info, LogIn, LogOut, User, 
-  FileText, Shield, ChevronRight, Building2, Globe, Languages, Coins
+  FileText, Shield, ChevronRight, Building2, Languages, Coins
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Button } from "@/components/ui/button";
 
 interface NavigationDrawerProps {
   onClose: () => void;
@@ -78,11 +77,13 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
 
   return (
     <div className="brand-shell flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground">
-        <Link to="/" onClick={onClose} className="flex items-center gap-2">
-          <img src="/fulllogo.png" alt="Realtravo" className="h-7" />
-        </Link>
+      {/* Header - with safe area */}
+      <div className="px-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
+      >
+        <span className="text-xl font-black uppercase tracking-tighter text-primary-foreground">
+          RealTravo
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-6">
@@ -113,11 +114,11 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           )}
         </div>
 
-        {/* Companies */}
+        {/* Travel Partners */}
         <div className="px-2">
-          <p className="px-4 pt-2 pb-1 text-[10px] font-black text-primary uppercase tracking-[0.22em]">Companies</p>
+          <p className="px-4 pt-2 pb-1 text-[10px] font-black text-primary uppercase tracking-[0.22em]">Travel Partner</p>
           <div className="brand-panel rounded-xl overflow-hidden mx-2">
-            <NavItem icon={Building2} label="Browse Companies" path="/company" />
+            <NavItem icon={Building2} label="Browse Travel Partners" path="/company" />
           </div>
         </div>
 

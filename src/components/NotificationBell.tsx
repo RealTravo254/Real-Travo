@@ -63,17 +63,14 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
 
   const isIndexPage = location.pathname === '/';
 
-  /**
-   * STYLING LOGIC:
-   * Mobile: text-white (to pop against mobile nav)
-   * Big Screen (md): md:text-black
-   */
   const headerIconStyles = `
     h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-200 
     active:scale-90 relative group overflow-visible
     ${forceDark 
       ? 'bg-transparent text-foreground' 
-      : `bg-transparent text-white md:text-black md:shadow-sm md:border md:border-slate-200 ${
+      : `bg-transparent ${
+          isIndexPage ? 'text-white' : 'text-foreground'
+        } md:text-black md:shadow-sm md:border md:border-slate-200 ${
           isIndexPage ? 'md:bg-white/90 md:hover:bg-white' : 'md:bg-slate-50 md:hover:bg-slate-100'
         }`
     }
@@ -185,8 +182,10 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
         </SheetTrigger>
         
         <SheetContent className="brand-shell w-full sm:max-w-md p-0 flex flex-col border-none bg-background [&>button]:hidden">
-          {/* Header Styled like Navigation Drawer */}
-          <div className="px-5 pt-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground">
+          {/* Header with safe area */}
+          <div className="px-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
+          >
             <div className="flex flex-col">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Notifications</p>
                 <SheetTitle className="text-xl font-black uppercase tracking-tighter text-white">Inbox</SheetTitle>

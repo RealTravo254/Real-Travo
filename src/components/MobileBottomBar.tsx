@@ -16,7 +16,7 @@ export const MobileBottomBar = () => {
     { icon: Home, label: t('nav.home'), path: "/" },
     { icon: Ticket, label: t('nav.bookings'), path: "/bookings" },
     { icon: Heart, label: t('nav.saved'), path: "/saved" },
-    { icon: User, label: t('nav.profile'), path: user ? "/profile" : "/auth", opensSheet: !!user },
+    { icon: User, label: t('nav.profile'), path: user ? "/profile" : "/auth", opensSheet: true },
   ];
 
   return (

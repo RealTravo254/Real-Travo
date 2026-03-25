@@ -144,7 +144,7 @@ const CompanyBrowse = () => {
         ) : companies.length === 0 ? (
           <div className="text-center py-16">
             <Building2 className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground">No companies found</p>
+            <p className="text-muted-foreground">No travel partners found</p>
           </div>
         ) : (
           <>
