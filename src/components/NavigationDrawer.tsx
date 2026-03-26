@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Phone, Info, LogIn, LogOut, User, 
-  FileText, Shield, ChevronRight, Building2, Languages, Coins
+  FileText, Shield, ChevronRight, Building2, Languages, Coins, Heart, Ticket
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
