@@ -183,7 +183,7 @@ const Saved = () => {
   };
 
   return (
-    <div className={isEmbeddedInSheet ? "min-h-full bg-background" : "brand-grid-bg min-h-screen pb-24 font-sans"}>
+    <div className={isEmbeddedInSheet ? "min-h-full bg-background" : "min-h-screen bg-background pb-24 font-sans"}>
       {!isEmbeddedInSheet && <Header />}
 
       <div className={

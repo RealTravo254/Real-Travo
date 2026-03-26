@@ -128,7 +128,7 @@ export const AccountSheet = ({ children }: AccountSheetProps) => {
         {children}
       </SheetTrigger>
       
-      <SheetContent className="brand-shell w-full sm:max-w-md p-0 pb-24 border-none bg-background flex flex-col [&>button]:hidden">
+      <SheetContent side="bottom" className="brand-shell w-full h-[85vh] rounded-t-3xl p-0 pb-24 border-none bg-background flex flex-col [&>button]:hidden">
         <div className="px-6 pt-5 pb-4 bg-primary text-primary-foreground border-b border-border/60 flex-shrink-0"
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
         >

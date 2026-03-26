@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu, Heart, Ticket, Home, User, LogIn, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationDrawer } from "./NavigationDrawer";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { NotificationBell } from "./NotificationBell";
 import { AccountSheet } from "./AccountSheet";
 import { useOverlayClose } from "@/components/OverlayCloseContext";
@@ -25,9 +25,12 @@ const COLORS = {
 
 export const Header = ({ className, __fromLayout, desktopStatic = false }: HeaderProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showHostPopup, setShowHostPopup] = useState(false);
+  const hostBtnRef = useRef<HTMLButtonElement>(null);
   const { subscribe } = useOverlayClose();
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export const Header = ({ className, __fromLayout, desktopStatic = false }: Heade
                 <Menu className="h-6 w-6 stroke-[2.5]" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-80 p-0 border-none shadow-2xl">
+            <SheetContent side="bottom" className="w-full h-[85vh] rounded-t-3xl p-0 border-none shadow-2xl">
               <NavigationDrawer onClose={() => setIsDrawerOpen(false)} />
             </SheetContent>
           </Sheet>
@@ -100,9 +103,40 @@ export const Header = ({ className, __fromLayout, desktopStatic = false }: Heade
           <Link to="/company" className={navItemClasses('/company')}>
             <Building2 className="h-3.5 w-3.5" /> <span>Travel Partner</span>
           </Link>
-          <Link to="/become-host" className={navItemClasses('/become-host')}>
-            <Home className="h-3.5 w-3.5" /> <span>Become a Host</span>
-          </Link>
+          <div className="relative">
+            <button
+              ref={hostBtnRef}
+              onClick={() => {
+                if (user) {
+                  navigate('/become-host');
+                } else {
+                  setShowHostPopup(prev => !prev);
+                }
+              }}
+              className={navItemClasses('/become-host')}
+            >
+              <Home className="h-3.5 w-3.5" /> <span>Become a Host</span>
+            </button>
+            {showHostPopup && !user && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-card border border-border rounded-2xl shadow-xl p-4 z-[200] animate-in fade-in slide-in-from-top-2 duration-200">
+                <p className="text-xs font-semibold text-foreground mb-3 text-center">Sign in to become a host</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => { setShowHostPopup(false); navigate('/auth'); }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:brightness-110 transition-all"
+                  >
+                    <LogIn className="h-3.5 w-3.5" /> Login
+                  </button>
+                  <button
+                    onClick={() => { setShowHostPopup(false); navigate('/auth?tab=signup'); }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted transition-all"
+                  >
+                    <User className="h-3.5 w-3.5" /> Sign Up
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* RIGHT: ACTIONS */}

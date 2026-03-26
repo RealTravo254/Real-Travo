@@ -173,7 +173,7 @@ const EventDetail = () => {
   const allImages = [event?.image_url, ...(event?.gallery_images || []), ...(event?.images || [])].filter((v, i, a) => Boolean(v) && a.indexOf(v) === i);
 
   return (
-    <div className="brand-grid-bg min-h-screen pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <DetailNavBar
         scrolled={scrolled}
         itemName={event.name}

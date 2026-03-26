@@ -174,7 +174,7 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
           </button>
         </SheetTrigger>
         
-        <SheetContent className="brand-shell w-full sm:max-w-md p-0 flex flex-col border-none bg-background [&>button]:hidden">
+        <SheetContent side="bottom" className="brand-shell w-full h-[85vh] rounded-t-3xl p-0 flex flex-col border-none bg-background [&>button]:hidden">
           {/* Header with safe area */}
           <div className="px-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground"
             style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}

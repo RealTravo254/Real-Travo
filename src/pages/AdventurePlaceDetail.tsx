@@ -228,7 +228,7 @@ const AdventurePlaceDetail = () => {
   );
 
   return (
-    <div className="brand-grid-bg min-h-screen pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <DetailNavBar
         scrolled={scrolled}
         itemName={place.name}
