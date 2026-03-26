@@ -97,14 +97,13 @@ const CompanyBrowse = () => {
     setSearch(q);
     setPage(0);
     setShowSuggestions(false);
-    // Refetch with the search value
-    setTimeout(() => fetchCompanies(0, true), 0);
+    setTimeout(() => fetchCompanies(true), 0);
   };
 
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchCompanies(nextPage * PAGE_SIZE);
+    fetchCompanies(false);
   };
 
   // Suggestions filtered
