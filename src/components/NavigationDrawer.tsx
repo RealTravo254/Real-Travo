@@ -78,9 +78,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
   return (
     <div className="brand-shell flex flex-col h-full overflow-hidden">
       {/* Header - with safe area */}
-      <div className="px-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
-      >
+      <div className="px-5 py-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground">
         <span className="text-xl font-black uppercase tracking-tighter text-primary-foreground">
           RealTravo
         </span>
