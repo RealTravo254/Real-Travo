@@ -118,7 +118,7 @@ export const NavigationDrawer = ({ onClose }: NavigationDrawerProps) => {
           <div className="brand-panel rounded-xl overflow-hidden mx-2 divide-y divide-border/70">
             <NavItem icon={Heart} label="Saved" path="/saved" />
             <NavItem icon={Ticket} label="Bookings" path="/bookings" />
-            <NavItem icon={Building2} label="Browse Travel Partners" path="/company" />
+            <NavItem icon={Building2} label="Your Travel Partner" path="/company" />
           </div>
         </div>
 

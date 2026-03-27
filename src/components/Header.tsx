@@ -101,7 +101,7 @@ export const Header = ({ className, __fromLayout, desktopStatic = false }: Heade
             <Ticket className="h-3.5 w-3.5" /> <span>{t('nav.bookings')}</span>
           </Link>
           <Link to="/company" className={navItemClasses('/company')}>
-            <Building2 className="h-3.5 w-3.5" /> <span>Travel Partner</span>
+            <Building2 className="h-3.5 w-3.5" /> <span>Your Travel Partner</span>
           </Link>
           <div className="relative">
             <button
