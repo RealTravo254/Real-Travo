@@ -302,7 +302,7 @@ const HotelDetail = () => {
                 </div>
                 {allImages[1] && (
                   <div className="col-span-2 rounded-3xl overflow-hidden relative group">
-                    <img src={allImages[1]} alt={`${hotel.name} - 2`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={allImages[1]} alt={`${hotel.name} - 2`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                   </div>
                 )}
                 <div className="col-span-2 grid grid-cols-3 gap-2">
