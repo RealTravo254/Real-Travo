@@ -221,12 +221,7 @@ const BookingPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F9FA]">
-        <Loader2 className="h-10 w-10 animate-spin text-[#008080] mb-4" />
-        <p className="text-sm font-black uppercase tracking-tighter animate-pulse">Loading...</p>
-      </div>
-    );
+    return <TealLoader text="Loading booking..." />;
   }
 
   if (!item) return null;

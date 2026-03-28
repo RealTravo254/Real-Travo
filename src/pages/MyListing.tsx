@@ -234,16 +234,7 @@ const MyListing = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
-        <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2" style={{ borderColor: COLORS.TEAL }}></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-2 w-2 rounded-full bg-[#FF7F50] animate-pulse"></div>
-            </div>
-        </div>
-      </div>
-    );
+    return <TealLoader text="Loading your listings..." />;
   }
 
   return (

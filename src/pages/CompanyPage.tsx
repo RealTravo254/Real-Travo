@@ -254,20 +254,7 @@ const CompanyDetail = ({ companyName }: { companyName: string }) => {
   };
 
   if (loading) {
-    return (
-      <div className="brand-grid-bg min-h-screen pb-24">
-        <div className="sticky top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted"><ArrowLeft className="h-5 w-5" /></button>
-          <Skeleton className="h-5 w-32" />
-        </div>
-        <div className="px-4 pt-6 space-y-4 max-w-5xl mx-auto">
-          <Skeleton className="h-32 rounded-2xl" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => <ListingSkeleton key={i} />)}
-          </div>
-        </div>
-      </div>
-    );
+    return <TealLoader text="Loading company..." />;
   }
 
   if (!company) {

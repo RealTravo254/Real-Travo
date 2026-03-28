@@ -162,7 +162,7 @@ const TripDetail = () => {
 
   const { remainingSlots, isSoldOut } = useRealtimeItemAvailability(id || undefined, event?.available_tickets || 0);
 
-  if (loading) return <DetailPageSkeleton />;
+  if (loading) return <TealLoader text="Loading details..." />;
   if (!event) return null;
 
   const today = new Date();

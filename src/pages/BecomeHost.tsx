@@ -122,14 +122,7 @@ const BecomeHost = () => {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-[60vh] bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm font-semibold text-muted-foreground">Loading your host account...</p>
-      </div>
-    </div>
-  );
+  if (loading) return <TealLoader text="Loading your host account..." />;
 
   // Host type selection screen
   if (!hostType) {

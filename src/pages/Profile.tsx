@@ -132,18 +132,7 @@ const Profile = () => {
   };
 
   if (fetchingProfile) {
-    return (
-      <div className="brand-shell min-h-screen pb-24">
-        <div className="px-4 pt-6 space-y-6 max-w-lg mx-auto">
-          <Skeleton className="h-8 w-32" />
-          <div className="flex flex-col items-center gap-4">
-            <Skeleton className="h-24 w-24 rounded-full" />
-            <Skeleton className="h-5 w-40" />
-          </div>
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
-        </div>
-      </div>
-    );
+    return <TealLoader text="Loading profile..." />;
   }
 
   return (

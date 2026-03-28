@@ -131,7 +131,7 @@ const HostItemDetail = () => {
     );
   };
 
-  if (loading) return <div className="min-h-screen bg-[#F8F9FA] animate-pulse" />;
+  if (loading) return <TealLoader text="Loading item details..." />;
   if (!item) return null;
 
   return (

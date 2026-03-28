@@ -183,7 +183,7 @@ const AdventurePlaceDetail = () => {
     }
   };
 
-  if (loading) return <DetailPageSkeleton />;
+  if (loading) return <TealLoader text="Loading place details..." />;
   if (!place) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
       <AlertCircle className="h-12 w-12 text-red-400" />

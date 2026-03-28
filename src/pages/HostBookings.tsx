@@ -50,7 +50,7 @@ const HostBookings = () => {
   };
 
   const total = hostedItems.reduce((s, i) => s + i.paidBookingsCount, 0);
-  if (loading) return <div className="min-h-screen bg-background animate-pulse" />;
+  if (loading) return <TealLoader text="Loading host bookings..." />;
 
   return (
     <div className="min-h-screen bg-background">
