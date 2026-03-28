@@ -243,10 +243,10 @@ const HotelDetail = () => {
           {/* No floating buttons on mobile - nav bar handles back/save */}
           <Carousel plugins={[Autoplay({ delay: 3500 })]} className="w-full h-full">
             <CarouselContent className="h-full ml-0">
-              {allImages.map((img, idx) => (
+              {allImages.slice(0, 5).map((img, idx) => (
                 <CarouselItem key={idx} className="h-full pl-0 basis-full">
                   <div className="relative h-full w-full">
-                    <img src={img} alt={`${hotel.name} - ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`${hotel.name} - ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10" />
                   </div>
                 </CarouselItem>
@@ -281,7 +281,7 @@ const HotelDetail = () => {
             {allImages.length > 0 ? (
               <>
                 <div className="col-span-2 row-span-2 rounded-3xl overflow-hidden relative group">
-                  <img src={allImages[0]} alt={hotel.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img src={allImages[0]} alt={hotel.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6 z-20 space-y-3">
                     <div className="flex flex-wrap gap-2">
@@ -302,13 +302,13 @@ const HotelDetail = () => {
                 </div>
                 {allImages[1] && (
                   <div className="col-span-2 rounded-3xl overflow-hidden relative group">
-                    <img src={allImages[1]} alt={`${hotel.name} - 2`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={allImages[1]} alt={`${hotel.name} - 2`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                   </div>
                 )}
                 <div className="col-span-2 grid grid-cols-3 gap-2">
                   {allImages.slice(2, 5).map((img, idx) => (
                     <div key={idx} className="rounded-2xl overflow-hidden relative group">
-                      <img src={img} alt={`${hotel.name} - ${idx + 3}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <img src={img} alt={`${hotel.name} - ${idx + 3}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
                   ))}
                 </div>

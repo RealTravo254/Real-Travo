@@ -187,10 +187,10 @@ const EventDetail = () => {
           {/* No floating buttons on mobile - nav bar handles back/save */}
           <Carousel plugins={[Autoplay({ delay: 4000 })]} className="w-full h-full">
             <CarouselContent className="h-full ml-0">
-              {allImages.map((img, idx) => (
+              {allImages.slice(0, 5).map((img, idx) => (
                 <CarouselItem key={idx} className="h-full pl-0 basis-full">
                   <div className="relative h-full w-full">
-                    <img src={img} alt={`${event.name} - ${idx + 1}`} className="w-full h-full object-cover object-center" />
+                    <img src={img} alt={`${event.name} - ${idx + 1}`} className="w-full h-full object-cover object-center" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
                   </div>
                 </CarouselItem>

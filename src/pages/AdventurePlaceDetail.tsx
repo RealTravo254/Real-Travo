@@ -243,10 +243,10 @@ const AdventurePlaceDetail = () => {
           {/* No floating buttons on mobile - nav bar handles back/save */}
           <Carousel plugins={[Autoplay({ delay: 3500 })]} className="w-full h-full">
             <CarouselContent className="h-full ml-0">
-              {allImages.length > 0 ? allImages.map((img, idx) => (
+              {allImages.length > 0 ? allImages.slice(0, 5).map((img, idx) => (
                 <CarouselItem key={idx} className="h-full pl-0 basis-full">
                   <div className="relative h-full w-full">
-                    <img src={img} alt={`${place.name} - ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`${place.name} - ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10" />
                   </div>
                 </CarouselItem>
