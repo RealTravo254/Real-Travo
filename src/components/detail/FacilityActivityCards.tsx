@@ -58,7 +58,7 @@ export const FacilityImageCard = ({
         <div className="flex">
           <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 relative bg-muted">
             {mainImage ? (
-              <img src={mainImage} alt={facility.name} className="w-full h-full object-cover" />
+              <img src={mainImage} alt={facility.name} className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <span className="text-[10px] text-muted-foreground font-bold">No Image</span>
