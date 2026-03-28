@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { TealLoader } from "@/components/ui/teal-loader";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "@/components/ListingCard";

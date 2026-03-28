@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { TealLoader } from "@/components/ui/teal-loader";
 import { Header } from "@/components/Header";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { supabase } from "@/integrations/supabase/client";

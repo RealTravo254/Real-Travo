@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TealLoader } from "@/components/ui/teal-loader";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";

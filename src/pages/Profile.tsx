@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { TealLoader } from "@/components/ui/teal-loader";
 import { useNavigate } from "react-router-dom";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { Button } from "@/components/ui/button";

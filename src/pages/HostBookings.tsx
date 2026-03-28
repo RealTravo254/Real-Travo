@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TealLoader } from "@/components/ui/teal-loader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Building, Plane, Tent, Bell, ChevronRight, ArrowLeft, Calendar, QrCode, TrendingUp } from "lucide-react";

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TealLoader } from "@/components/ui/teal-loader";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/useSafeBack";
 import { supabase } from "@/integrations/supabase/client";
