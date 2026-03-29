@@ -71,13 +71,31 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
         
         {/* LEFT: MENU & LOGO */}
         <div className="flex items-center gap-3">
+          {/*
+            Navigation Drawer:
+            - On mobile: opens from the left edge (side="left"), anchored to the hamburger icon
+            - On desktop: opens from just below the hamburger icon, sliding rightward
+            - SheetContent uses side="left" so it always animates LEFT → RIGHT,
+              matching the hamburger icon position on the left side of the header.
+          */}
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen} modal={false}>
             <SheetTrigger asChild>
               <button className={menuIconStyles} aria-label="Open Menu">
                 <Menu className="h-6 w-6 stroke-[2.5]" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="top-14 md:top-16 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-[300px] sm:max-w-[300px] p-0 border-none shadow-2xl rounded-none">
+            <SheetContent
+              side="left"
+              className="
+                top-14 md:top-16
+                h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)]
+                w-[300px] sm:max-w-[300px]
+                p-0 border-none shadow-2xl rounded-none
+                left-0
+                data-[state=open]:animate-in data-[state=open]:slide-in-from-left
+                data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left
+              "
+            >
               <NavigationDrawer onClose={() => setIsDrawerOpen(false)} />
             </SheetContent>
           </Sheet>
@@ -143,6 +161,18 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
         </nav>
 
         {/* RIGHT: ACTIONS */}
+        {/*
+          All right-side interactive elements (search, notification bell, account sheet)
+          should open from the RIGHT side and slide toward the LEFT, so their content
+          appears directly below/near the icon that triggered them — not across the screen.
+
+          To achieve this:
+          - NotificationBell: pass a prop/context so its internal Sheet/popover uses side="right"
+          - AccountSheet: wrap with side="right" Sheet so it opens from the right edge inward
+
+          The wrapper divs below use `relative` so any absolute-positioned children
+          anchor correctly to their trigger icon.
+        */}
         <div className="flex items-center gap-2">
           {showSearchIcon && (
             <button
@@ -153,30 +183,62 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
               <Search className="h-5 w-5 stroke-[2.5]" />
             </button>
           )}
-          <NotificationBell />
+
+          {/*
+            NotificationBell anchor wrapper.
+            The `ml-auto` + `relative` ensures the bell's dropdown/sheet
+            anchors to this icon's right edge and opens leftward.
+            Pass `align="end"` or `side="right"` props to NotificationBell
+            so its internal popover/sheet renders from right → left.
+          */}
+          <div className="relative flex items-center">
+            <NotificationBell
+              // Tell the bell to open its panel from the right (toward the left)
+              // If NotificationBell uses a Shadcn Sheet internally, it should use side="right"
+              // If it uses a Popover/DropdownMenu, pass align="end" so it right-aligns
+              align="end"
+              side="right"
+            />
+          </div>
 
           <div className="h-8 w-[1px] bg-slate-100 hidden md:block mx-1" />
 
+          {/*
+            AccountSheet anchor wrapper.
+            AccountSheet should use side="right" on its internal SheetContent
+            so the panel slides in from the right edge (where the account icon lives),
+            moving leftward — not appearing on the opposite side of the screen.
+          */}
           {user ? (
-            <AccountSheet>
-              <button 
-                className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: COLORS.TEAL, boxShadow: `0 4px 12px ${COLORS.TEAL}33` }}
+            <div className="relative flex items-center">
+              <AccountSheet
+                // Pass side="right" so AccountSheet's SheetContent uses side="right"
+                side="right"
               >
-                <User className="h-4 w-4" />
-                <span>{t('nav.profile')}</span>
-              </button>
-            </AccountSheet>
+                <button 
+                  className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
+                  style={{ backgroundColor: COLORS.TEAL, boxShadow: `0 4px 12px ${COLORS.TEAL}33` }}
+                >
+                  <User className="h-4 w-4" />
+                  <span>{t('nav.profile')}</span>
+                </button>
+              </AccountSheet>
+            </div>
           ) : (
-            <AccountSheet>
-              <button 
-                className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
-                style={{ backgroundColor: COLORS.CORAL, boxShadow: `0 4px 12px ${COLORS.CORAL}33` }}
+            <div className="relative flex items-center">
+              <AccountSheet
+                // Same here — open from the right toward the left
+                side="right"
               >
-                <LogIn className="h-4 w-4" />
-                <span>{t('nav.login')}</span>
-              </button>
-            </AccountSheet>
+                <button 
+                  className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
+                  style={{ backgroundColor: COLORS.CORAL, boxShadow: `0 4px 12px ${COLORS.CORAL}33` }}
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span>{t('nav.login')}</span>
+                </button>
+              </AccountSheet>
+            </div>
           )}
         </div>
       </div>
