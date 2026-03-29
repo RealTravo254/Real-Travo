@@ -40,7 +40,6 @@ const categorizeNotifications = (notifications: Notification[]) => {
     if (isToday(date)) category = 'Today';
     else if (isYesterday(date)) category = 'Yesterday';
     else category = format(date, 'MMMM dd, yyyy');
-
     if (!groups[category]) groups[category] = [];
     groups[category].push(notification);
   });
@@ -130,11 +129,8 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
     if (!user) return;
     fetchNotifications();
     const channel = supabase.channel('notifications-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, 
-        (payload) => {
-          playNotificationSound();
-          fetchNotifications();
-        }
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => { playNotificationSound(); fetchNotifications(); }
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, fetchNotifications)
       .subscribe();
@@ -173,28 +169,44 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
             )}
           </button>
         </SheetTrigger>
-        
-        <SheetContent side="right" className="brand-shell top-14 md:top-16 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-[320px] sm:max-w-[320px] rounded-none p-0 flex flex-col border-none bg-background [&>button]:hidden">
-          {/* Header with safe area */}
-          <div className="px-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground"
-            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
+
+        {/*
+          side="right"  → panel slides in from the RIGHT edge, moving LEFTWARD.
+                          This anchors it to the bell icon on the right side. ✓
+          inline style  → top/height offset by header height so it starts BELOW
+                          the header bar and never overlaps it. ✓
+          z-[90]        → sits UNDER the header (z-[100]) so header stays on top. ✓
+          [&>button]:hidden → hides the default shadcn close button (we have our own). ✓
+        */}
+        <SheetContent
+          side="right"
+          style={{
+            top: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
+            height: 'calc(100dvh - 3.5rem - env(safe-area-inset-top, 0px))',
+          }}
+          className="brand-shell z-[90] w-[320px] sm:max-w-[320px] rounded-none p-0 flex flex-col border-none bg-background [&>button]:hidden"
+        >
+          {/* Panel Header */}
+          <div
+            className="px-5 pb-4 border-b border-border/80 flex items-center justify-between flex-shrink-0 bg-primary text-primary-foreground"
+            style={{ paddingTop: '1.25rem' }}
           >
             <div className="flex flex-col">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Notifications</p>
-                <SheetTitle className="text-xl font-black uppercase tracking-tighter text-white">Inbox</SheetTitle>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Notifications</p>
+              <SheetTitle className="text-xl font-black uppercase tracking-tighter text-white">Inbox</SheetTitle>
             </div>
             <div className="flex items-center gap-3">
-               {unreadCount > 0 && (
-                  <button 
-                    onClick={markAllAsRead}
-                    className="text-[10px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 py-1 px-3 rounded-lg transition-colors"
-                  >
-                    Clear All
-                  </button>
-                )}
-                <button onClick={() => setIsOpen(false)} className="text-xs font-bold hover:opacity-70 transition-opacity">
-                  Cancel
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-[10px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 py-1 px-3 rounded-lg transition-colors"
+                >
+                  Clear All
                 </button>
+              )}
+              <button onClick={() => setIsOpen(false)} className="text-xs font-bold hover:opacity-70 transition-opacity">
+                Cancel
+              </button>
             </div>
           </div>
 
@@ -214,7 +226,6 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
                       <p className="px-2 text-[10px] font-black text-primary uppercase tracking-[0.22em]">
                         {group.title}
                       </p>
-                      
                       <div className="brand-panel rounded-xl overflow-hidden divide-y divide-border/70 shadow-sm border border-border/40">
                         {group.notifications.map((notification) => {
                           const hasDeepLink = !!getNotificationDeepLink(notification);
@@ -228,7 +239,7 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
                             >
                               <div className="flex items-start gap-3 flex-1 min-w-0">
                                 {!notification.is_read && (
-                                    <div className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                                  <div className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                                 )}
                                 <div className="space-y-0.5 text-left flex-1 min-w-0">
                                   <h4 className={`text-sm font-bold truncate ${notification.is_read ? 'text-foreground/70' : 'text-foreground'}`}>
@@ -242,7 +253,6 @@ export const NotificationBell = ({ forceDark = false }: { forceDark?: boolean })
                                   </p>
                                 </div>
                               </div>
-                              
                               <div className="flex items-center gap-2 ml-4">
                                 {hasDeepLink && (
                                   <div className="brand-icon-wrap p-1.5 rounded-lg group-hover:scale-110 transition-transform bg-accent/5">

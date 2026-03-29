@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, Heart, Ticket, Home, User, LogIn, Building2, Search } from "lucide-react";
+import { Menu, Ticket, Home, User, LogIn, Building2, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationDrawer } from "./NavigationDrawer";
@@ -23,7 +23,13 @@ const COLORS = {
   CORAL: "#FF7F50",
 };
 
-export const Header = ({ className, __fromLayout, desktopStatic = false, onSearchClick, showSearchIcon = false }: HeaderProps) => {
+export const Header = ({
+  className,
+  __fromLayout,
+  desktopStatic = false,
+  onSearchClick,
+  showSearchIcon = false,
+}: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -39,14 +45,11 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
 
   if (!__fromLayout) return null;
 
-  const isIndexPage = location.pathname === '/';
-
-  const desktopHeaderClasses = "md:bg-white md:border-b md:border-slate-100 md:shadow-sm md:py-4";
+  const desktopHeaderClasses =
+    "md:bg-white md:border-b md:border-slate-100 md:shadow-sm md:py-4";
   const positionClasses = desktopStatic
     ? "fixed top-0 left-0 right-0 md:static"
     : "fixed top-0 left-0 right-0";
-  
-  // Mobile: always solid bg
   const mobileHeaderBg = "bg-background border-b border-border";
 
   const menuIconStyles = `
@@ -58,25 +61,29 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
   const navItemClasses = (path: string) => `
     flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300
     text-[10px] font-black uppercase tracking-[0.2em]
-    ${location.pathname === path 
-      ? 'text-[#008080] bg-[#008080]/5' 
-      : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}
+    ${location.pathname === path
+      ? "text-[#008080] bg-[#008080]/5"
+      : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
+    }
   `;
 
   return (
-    <header className={`${positionClasses} z-[100] transition-all flex items-center ${mobileHeaderBg} ${desktopHeaderClasses} ${className || ''}`}
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    <header
+      className={`${positionClasses} z-[100] transition-all flex items-center ${mobileHeaderBg} ${desktopHeaderClasses} ${className || ""}`}
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16">
-        
-        {/* LEFT: MENU & LOGO */}
+
+        {/* ── LEFT: HAMBURGER + LOGO ── */}
         <div className="flex items-center gap-3">
           {/*
-            Navigation Drawer:
-            - On mobile: opens from the left edge (side="left"), anchored to the hamburger icon
-            - On desktop: opens from just below the hamburger icon, sliding rightward
-            - SheetContent uses side="left" so it always animates LEFT → RIGHT,
-              matching the hamburger icon position on the left side of the header.
+            NAVIGATION DRAWER
+            side="left"   → slides in from the LEFT edge, moving RIGHTWARD.
+                            Anchors to the hamburger icon on the left. ✓
+            inline style  → top/height offset so it starts BELOW the header.
+                            Never covers or goes behind the header bar. ✓
+            z-[90]        → sits UNDER the header (z-[100]). Header stays on top. ✓
+            modal={false} → no dark overlay; header remains fully interactive. ✓
           */}
           <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen} modal={false}>
             <SheetTrigger asChild>
@@ -86,22 +93,18 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="
-                top-14 md:top-16
-                h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)]
-                w-[300px] sm:max-w-[300px]
-                p-0 border-none shadow-2xl rounded-none
-                left-0
-                data-[state=open]:animate-in data-[state=open]:slide-in-from-left
-                data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left
-              "
+              style={{
+                top: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
+                height: 'calc(100dvh - 3.5rem - env(safe-area-inset-top, 0px))',
+              }}
+              className="z-[90] w-[300px] sm:max-w-[300px] p-0 border-none shadow-2xl rounded-none [&>button]:hidden"
             >
               <NavigationDrawer onClose={() => setIsDrawerOpen(false)} />
             </SheetContent>
           </Sheet>
-          
+
           <Link to="/" className="flex items-center gap-2 group">
-            <span 
+            <span
               className="text-xl font-black uppercase tracking-tighter transition-colors"
               style={{ color: COLORS.TEAL }}
             >
@@ -110,28 +113,25 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
           </Link>
         </div>
 
-        {/* CENTER: NAV (Big Screen Only) */}
+        {/* ── CENTER: DESKTOP NAV ── */}
         <nav className="hidden lg:flex items-center gap-1 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100/50">
-          <Link to="/" className={navItemClasses('/')}>
-            <Home className="h-3.5 w-3.5" /> <span>{t('nav.home')}</span>
+          <Link to="/" className={navItemClasses("/")}>
+            <Home className="h-3.5 w-3.5" /> <span>{t("nav.home")}</span>
           </Link>
-          <Link to="/bookings" className={navItemClasses('/bookings')}>
-            <Ticket className="h-3.5 w-3.5" /> <span>{t('nav.bookings')}</span>
+          <Link to="/bookings" className={navItemClasses("/bookings")}>
+            <Ticket className="h-3.5 w-3.5" /> <span>{t("nav.bookings")}</span>
           </Link>
-          <Link to="/company" className={navItemClasses('/company')}>
+          <Link to="/company" className={navItemClasses("/company")}>
             <Building2 className="h-3.5 w-3.5" /> <span>Your Travel Partner</span>
           </Link>
           <div className="relative">
             <button
               ref={hostBtnRef}
               onClick={() => {
-                if (user) {
-                  navigate('/become-host');
-                } else {
-                  setShowHostPopup(prev => !prev);
-                }
+                if (user) navigate("/become-host");
+                else setShowHostPopup((prev) => !prev);
               }}
-              className={navItemClasses('/become-host')}
+              className={navItemClasses("/become-host")}
             >
               <Home className="h-3.5 w-3.5" /> <span>Become a Host</span>
             </button>
@@ -139,16 +139,18 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
               <>
                 <div className="fixed inset-0 z-[199]" onClick={() => setShowHostPopup(false)} />
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-card border border-border rounded-2xl shadow-xl p-4 z-[200] animate-in fade-in slide-in-from-top-2 duration-200">
-                  <p className="text-xs font-semibold text-foreground mb-3 text-center">Sign in to become a host</p>
+                  <p className="text-xs font-semibold text-foreground mb-3 text-center">
+                    Sign in to become a host
+                  </p>
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => { setShowHostPopup(false); navigate('/auth'); }}
+                      onClick={() => { setShowHostPopup(false); navigate("/auth"); }}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:brightness-110 transition-all"
                     >
                       <LogIn className="h-3.5 w-3.5" /> Login
                     </button>
                     <button
-                      onClick={() => { setShowHostPopup(false); navigate('/auth?tab=signup'); }}
+                      onClick={() => { setShowHostPopup(false); navigate("/auth?tab=signup"); }}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted transition-all"
                     >
                       <User className="h-3.5 w-3.5" /> Sign Up
@@ -160,85 +162,39 @@ export const Header = ({ className, __fromLayout, desktopStatic = false, onSearc
           </div>
         </nav>
 
-        {/* RIGHT: ACTIONS */}
-        {/*
-          All right-side interactive elements (search, notification bell, account sheet)
-          should open from the RIGHT side and slide toward the LEFT, so their content
-          appears directly below/near the icon that triggered them — not across the screen.
-
-          To achieve this:
-          - NotificationBell: pass a prop/context so its internal Sheet/popover uses side="right"
-          - AccountSheet: wrap with side="right" Sheet so it opens from the right edge inward
-
-          The wrapper divs below use `relative` so any absolute-positioned children
-          anchor correctly to their trigger icon.
-        */}
+        {/* ── RIGHT: ACTIONS ── */}
+        {/* NotificationBell and AccountSheet handle their own side="right" sheets internally */}
         <div className="flex items-center gap-2">
           {showSearchIcon && (
-            <button
-              onClick={onSearchClick}
-              className={menuIconStyles}
-              aria-label="Search"
-            >
+            <button onClick={onSearchClick} className={menuIconStyles} aria-label="Search">
               <Search className="h-5 w-5 stroke-[2.5]" />
             </button>
           )}
 
-          {/*
-            NotificationBell anchor wrapper.
-            The `ml-auto` + `relative` ensures the bell's dropdown/sheet
-            anchors to this icon's right edge and opens leftward.
-            Pass `align="end"` or `side="right"` props to NotificationBell
-            so its internal popover/sheet renders from right → left.
-          */}
-          <div className="relative flex items-center">
-            <NotificationBell
-              // Tell the bell to open its panel from the right (toward the left)
-              // If NotificationBell uses a Shadcn Sheet internally, it should use side="right"
-              // If it uses a Popover/DropdownMenu, pass align="end" so it right-aligns
-              align="end"
-              side="right"
-            />
-          </div>
+          <NotificationBell />
 
           <div className="h-8 w-[1px] bg-slate-100 hidden md:block mx-1" />
 
-          {/*
-            AccountSheet anchor wrapper.
-            AccountSheet should use side="right" on its internal SheetContent
-            so the panel slides in from the right edge (where the account icon lives),
-            moving leftward — not appearing on the opposite side of the screen.
-          */}
           {user ? (
-            <div className="relative flex items-center">
-              <AccountSheet
-                // Pass side="right" so AccountSheet's SheetContent uses side="right"
-                side="right"
+            <AccountSheet>
+              <button
+                className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
+                style={{ backgroundColor: COLORS.TEAL, boxShadow: `0 4px 12px ${COLORS.TEAL}33` }}
               >
-                <button 
-                  className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
-                  style={{ backgroundColor: COLORS.TEAL, boxShadow: `0 4px 12px ${COLORS.TEAL}33` }}
-                >
-                  <User className="h-4 w-4" />
-                  <span>{t('nav.profile')}</span>
-                </button>
-              </AccountSheet>
-            </div>
+                <User className="h-4 w-4" />
+                <span>{t("nav.profile")}</span>
+              </button>
+            </AccountSheet>
           ) : (
-            <div className="relative flex items-center">
-              <AccountSheet
-                // Same here — open from the right toward the left
-                side="right"
+            <AccountSheet>
+              <button
+                className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
+                style={{ backgroundColor: COLORS.CORAL, boxShadow: `0 4px 12px ${COLORS.CORAL}33` }}
               >
-                <button 
-                  className="hidden md:flex h-11 px-6 rounded-2xl items-center gap-2 transition-all font-black text-[10px] uppercase tracking-[0.2em] text-white shadow-md hover:brightness-110 active:scale-95"
-                  style={{ backgroundColor: COLORS.CORAL, boxShadow: `0 4px 12px ${COLORS.CORAL}33` }}
-                >
-                  <LogIn className="h-4 w-4" />
-                  <span>{t('nav.login')}</span>
-                </button>
-              </AccountSheet>
-            </div>
+                <LogIn className="h-4 w-4" />
+                <span>{t("nav.login")}</span>
+              </button>
+            </AccountSheet>
           )}
         </div>
       </div>
