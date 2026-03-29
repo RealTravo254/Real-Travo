@@ -312,7 +312,7 @@ const Index = () => {
         ? "id,name,location,place,country,image_url,activities,latitude,longitude,created_at,description"
         : "id,name,location,place,country,image_url,entry_fee,activities,latitude,longitude,created_at,description")
         .eq("approval_status", "approved").eq("is_hidden", false);
-      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},country.ilike.${p}`); }
+      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},place.ilike.${p},country.ilike.${p}`); }
       dbQuery = dbQuery.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
       const { data } = await dbQuery;
       return (data || []).map((item: any) => ({ ...item, type }));
