@@ -144,12 +144,25 @@ const Index = () => {
   const [loadingScrollable, setLoadingScrollable] = useState(true);
   const [loadingNearby, setLoadingNearby] = useState(true);
   const [isSearchFocused, setIsSearchFocusedLocal] = useState(false);
-  const { setSearchFocused } = useSearchFocus();
+  const { setSearchFocused, setShowHeaderSearch, setOnHeaderSearchClick } = useSearchFocus();
 
   const setIsSearchFocused = useCallback((v: boolean) => {
     setIsSearchFocusedLocal(v);
     setSearchFocused(v);
   }, [setSearchFocused]);
+
+  // Show search icon in header when hero search is scrolled away
+  useEffect(() => {
+    setShowHeaderSearch(!isSearchVisible && !isSearchFocused);
+  }, [isSearchVisible, isSearchFocused, setShowHeaderSearch]);
+
+  useEffect(() => {
+    setOnHeaderSearchClick(() => () => {
+      setIsSearchFocused(true);
+      setSearchQuery("");
+    });
+    return () => setOnHeaderSearchClick(null);
+  }, [setOnHeaderSearchClick, setIsSearchFocused]);
 
   // Collect all item IDs for ratings
   const allItemIds = useMemo(() => {
