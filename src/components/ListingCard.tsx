@@ -203,13 +203,8 @@ const ListingCardComponent = ({
       {/* ── Content ── */}
       <div className="flex flex-1 flex-col justify-between p-3 sm:p-4 min-w-0 gap-1.5">
 
-        {/* Top row: category (mobile only) + urgency badge */}
+        {/* Top row: urgency badge */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* On mobile (flex-row card) the badge lives here inline */}
-          {/* On md+ it's absolutely positioned over the image above, so hidden here */}
-          <div className="md:hidden">
-            {categoryBadge}
-          </div>
           {urgencyBadge && (
             <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border", urgencyBadge.color)}>
               {urgencyBadge.text}
