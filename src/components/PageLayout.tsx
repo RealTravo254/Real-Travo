@@ -9,11 +9,19 @@ import { useIsPwa } from "@/hooks/useIsPwa";
 interface SearchFocusContextType {
   isSearchFocused: boolean;
   setSearchFocused: (v: boolean) => void;
+  showHeaderSearch: boolean;
+  setShowHeaderSearch: (v: boolean) => void;
+  onHeaderSearchClick: (() => void) | null;
+  setOnHeaderSearchClick: (fn: (() => void) | null) => void;
 }
 
 const SearchFocusContext = createContext<SearchFocusContextType>({
   isSearchFocused: false,
   setSearchFocused: () => {},
+  showHeaderSearch: false,
+  setShowHeaderSearch: () => {},
+  onHeaderSearchClick: null,
+  setOnHeaderSearchClick: () => {},
 });
 
 export const useSearchFocus = () => useContext(SearchFocusContext);
@@ -26,6 +34,8 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
   const location = useLocation();
   const pathname = location.pathname;
   const [isSearchFocused, setSearchFocused] = useState(false);
+  const [showHeaderSearch, setShowHeaderSearch] = useState(false);
+  const [onHeaderSearchClick, setOnHeaderSearchClick] = useState<(() => void) | null>(null);
   const isPwa = useIsPwa();
   const isCategoryPage = pathname.startsWith("/category/");
 
@@ -53,11 +63,11 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
     : '';
 
   return (
-    <SearchFocusContext.Provider value={{ isSearchFocused, setSearchFocused }}>
+    <SearchFocusContext.Provider value={{ isSearchFocused, setSearchFocused, showHeaderSearch, setShowHeaderSearch, onHeaderSearchClick, setOnHeaderSearchClick }}>
       <div className="w-full min-h-screen flex flex-col">
         <OfflineIndicator />
         {!shouldHideHeader && !hideHeaderForSearch && (
-          <Header __fromLayout />
+          <Header __fromLayout showSearchIcon={showHeaderSearch} onSearchClick={onHeaderSearchClick ?? undefined} />
         )}
         <div className={`flex-1 w-full pb-20 md:pb-0 ${contentPadding}`}>{children}</div>
         {shouldShowFooter && (

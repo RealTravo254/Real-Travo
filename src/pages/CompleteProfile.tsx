@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { PasswordStrength } from "@/components/ui/password-strength";
-import { PhoneInput } from "@/components/profile/PhoneInput";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function CompleteProfile() {
   const { user, loading: authLoading } = useAuth();
@@ -17,7 +17,7 @@ export default function CompleteProfile() {
   const { toast } = useToast();
 
   const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +57,7 @@ export default function CompleteProfile() {
   }, [user, authLoading, navigate]);
 
   const validatePassword = (pwd: string) => {
-    if (!pwd) return { valid: true }; // Optional
+    if (!pwd) return { valid: false, message: "Password is required" };
     if (pwd.length < 8) return { valid: false, message: "Password must be at least 8 characters" };
     if (!/[A-Z]/.test(pwd)) return { valid: false, message: "Must contain uppercase letter" };
     if (!/[a-z]/.test(pwd)) return { valid: false, message: "Must contain lowercase letter" };
@@ -74,37 +74,37 @@ export default function CompleteProfile() {
       return;
     }
 
-    // Validate password only if provided
-    if (password) {
-      const pv = validatePassword(password);
-      if (!pv.valid) {
-        setErrors({ password: pv.message! });
-        return;
-      }
-      if (password !== confirmPassword) {
-        setErrors({ confirmPassword: "Passwords don't match" });
-        return;
-      }
+    if (!gender) {
+      setErrors({ gender: "Please select your gender" });
+      return;
+    }
+
+    const pv = validatePassword(password);
+    if (!pv.valid) {
+      setErrors({ password: pv.message! });
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrors({ confirmPassword: "Passwords don't match" });
+      return;
     }
 
     setLoading(true);
     try {
-      // Update password only if provided
-      if (password) {
-        const { error: pwError } = await supabase.auth.updateUser({ password });
-        if (pwError) throw pwError;
-      }
+      // Set password for the account
+      const { error: pwError } = await supabase.auth.updateUser({ password });
+      if (pwError) throw pwError;
 
       // Update profile
-      const updateData: Record<string, any> = {
+      const googleAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+      
+      await supabase.from('profiles').update({
         name: name.trim(),
+        gender: gender as any,
+        email: user!.email,
         profile_completed: true,
-      };
-      if (phoneNumber.trim()) {
-        updateData.phone_number = phoneNumber.trim();
-      }
-
-      await supabase.from('profiles').update(updateData).eq('id', user!.id);
+        profile_picture_url: googleAvatar,
+      }).eq('id', user!.id);
 
       toast({ title: "Profile completed!", description: "Welcome to Realtravo!" });
       navigate('/');
@@ -113,16 +113,6 @@ export default function CompleteProfile() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSkip = async () => {
-    // Just mark as complete with whatever name we have
-    const updateName = name.trim() || user?.user_metadata?.full_name || user?.user_metadata?.name || 'User';
-    await supabase.from('profiles').update({ 
-      profile_completed: true,
-      name: updateName 
-    }).eq('id', user!.id);
-    navigate('/');
   };
 
   if (authLoading || checkingProfile) {
@@ -135,7 +125,7 @@ export default function CompleteProfile() {
         <CardHeader className="text-center">
           <img src="/fulllogo.png" alt="Realtravo" className="h-12 mx-auto mb-4" />
           <CardTitle>Complete Your Profile</CardTitle>
-          <CardDescription>Just confirm your name to get started</CardDescription>
+          <CardDescription>Enter your details and set a password to secure your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleProfileSubmit} className="space-y-4">
@@ -150,22 +140,31 @@ export default function CompleteProfile() {
               {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
             </div>
 
-            <PhoneInput 
-              value={phoneNumber} 
-              onChange={setPhoneNumber} 
-              country="Kenya" 
-              label="Phone Number (optional)" 
-            />
+            <div className="space-y-2">
+              <Label>Gender <span className="text-destructive">*</span></Label>
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger className={errors.gender ? "border-destructive" : ""}>
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.gender && <p className="text-sm text-destructive">{errors.gender}</p>}
+            </div>
 
             <div className="space-y-2">
-              <Label>Set Password (optional - for email login)</Label>
+              <Label>Password <span className="text-destructive">*</span></Label>
               <div className="relative">
                 <Input 
                   type={showPassword ? "text" : "password"} 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   className={errors.password ? "border-destructive" : ""}
-                  placeholder="Leave empty to use Google only"
+                  placeholder="Set your password"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -175,27 +174,21 @@ export default function CompleteProfile() {
               {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
 
-            {password && (
-              <div className="space-y-2">
-                <Label>Confirm Password</Label>
-                <Input 
-                  type="password" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)} 
-                  className={errors.confirmPassword ? "border-destructive" : ""} 
-                />
-                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
-              </div>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={handleSkip} className="flex-1">
-                Skip for now
-              </Button>
-              <Button type="submit" className="flex-1" disabled={loading}>
-                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : "Complete"}
-              </Button>
+            <div className="space-y-2">
+              <Label>Confirm Password <span className="text-destructive">*</span></Label>
+              <Input 
+                type="password" 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                className={errors.confirmPassword ? "border-destructive" : ""} 
+                placeholder="Confirm your password"
+              />
+              {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
             </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Account...</> : "Create Account"}
+            </Button>
           </form>
         </CardContent>
       </Card>

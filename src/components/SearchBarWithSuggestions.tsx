@@ -42,6 +42,13 @@ interface SearchResult {
   matchedActivity?: string;
 }
 
+interface PlaceSuggestion {
+  place: string;
+  location: string;
+  country: string;
+  key: string;
+}
+
 const SEARCH_HISTORY_KEY = "search_history";
 const MAX_HISTORY_ITEMS = 10;
 
@@ -59,6 +66,7 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
   const [hasSearched, setHasSearched] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [trendingSearches, setTrendingSearches] = useState<TrendingSearch[]>([]);
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
   const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -161,6 +169,23 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
       }
       combined.sort((a, b) => a.name.localeCompare(b.name));
       setSuggestions(combined.slice(0, 10));
+
+      // Extract unique place/location/country suggestions
+      const placeMap = new Map<string, PlaceSuggestion>();
+      combined.forEach(item => {
+        if (item.place || item.location) {
+          const key = `${(item.place || '').toLowerCase()}-${(item.location || '').toLowerCase()}-${(item.country || '').toLowerCase()}`;
+          if (!placeMap.has(key)) {
+            placeMap.set(key, {
+              place: item.place || '',
+              location: item.location || '',
+              country: item.country || '',
+              key,
+            });
+          }
+        }
+      });
+      setPlaceSuggestions(Array.from(placeMap.values()).slice(0, 5));
     } catch (error) {
       console.error("Error fetching suggestions:", error);
     } finally {
@@ -209,6 +234,14 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
   };
 
   const clearHistory = () => { setSearchHistory([]); localStorage.removeItem(SEARCH_HISTORY_KEY); };
+
+  const handlePlaceSuggestionClick = (place: PlaceSuggestion) => {
+    const searchTerm = [place.place, place.location].filter(Boolean).join(', ');
+    setShowSuggestions(false);
+    saveToHistory(searchTerm);
+    onChange(searchTerm);
+    onSuggestionSearch?.(searchTerm);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") { setShowSuggestions(false); saveToHistory(value); onSubmit(); }
@@ -346,6 +379,30 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
                     <div className="p-10 flex flex-col items-center justify-center gap-3">
                       <Loader2 className="h-6 w-6 animate-spin text-[#008080]" />
                       <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Searching...</span>
+                    </div>
+                  )}
+
+                  {/* Place / Location Suggestions */}
+                  {!isSearching && placeSuggestions.length > 0 && (
+                    <div className="mb-2">
+                      <p className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Places & Locations</p>
+                      {placeSuggestions.map((ps) => (
+                        <button
+                          key={ps.key}
+                          onClick={() => handlePlaceSuggestionClick(ps)}
+                          className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-all text-left rounded-[24px]"
+                        >
+                          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-foreground text-sm truncate capitalize">
+                              {[ps.place, ps.location].filter(Boolean).join(', ')}
+                            </h4>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">{ps.country}</span>
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   )}
 

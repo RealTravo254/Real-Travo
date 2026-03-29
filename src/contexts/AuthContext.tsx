@@ -54,11 +54,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // Auto-complete profile for Google OAuth users - skip CompleteProfile page entirely
+        // For Google OAuth users, redirect to CompleteProfile
         if (event === 'SIGNED_IN' && session?.user) {
           const isOAuth = session.user.app_metadata?.provider === 'google';
           if (isOAuth) {
-            // Defer profile update to avoid deadlock
             setTimeout(async () => {
               const { data: profile } = await supabase
                 .from('profiles')
@@ -66,23 +65,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .eq('id', session.user.id)
                 .single();
               
-              // Auto-complete profile with Google data - no password or name input required
               if (profile && !profile.profile_completed) {
-                const googleName = session.user.user_metadata?.full_name || 
-                                   session.user.user_metadata?.name || 
-                                   session.user.email?.split('@')[0] || 'User';
-                const googleAvatar = session.user.user_metadata?.avatar_url || 
-                                     session.user.user_metadata?.picture || null;
-                
-                await supabase
-                  .from('profiles')
-                  .update({
-                    name: googleName,
-                    email: session.user.email,
-                    profile_completed: true,
-                    profile_picture_url: googleAvatar,
-                  })
-                  .eq('id', session.user.id);
+                navigate('/complete-profile');
               }
             }, 100);
           }

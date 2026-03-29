@@ -144,12 +144,25 @@ const Index = () => {
   const [loadingScrollable, setLoadingScrollable] = useState(true);
   const [loadingNearby, setLoadingNearby] = useState(true);
   const [isSearchFocused, setIsSearchFocusedLocal] = useState(false);
-  const { setSearchFocused } = useSearchFocus();
+  const { setSearchFocused, setShowHeaderSearch, setOnHeaderSearchClick } = useSearchFocus();
 
   const setIsSearchFocused = useCallback((v: boolean) => {
     setIsSearchFocusedLocal(v);
     setSearchFocused(v);
   }, [setSearchFocused]);
+
+  // Show search icon in header when hero search is scrolled away
+  useEffect(() => {
+    setShowHeaderSearch(!isSearchVisible && !isSearchFocused);
+  }, [isSearchVisible, isSearchFocused, setShowHeaderSearch]);
+
+  useEffect(() => {
+    setOnHeaderSearchClick(() => () => {
+      setIsSearchFocused(true);
+      setSearchQuery("");
+    });
+    return () => setOnHeaderSearchClick(null);
+  }, [setOnHeaderSearchClick, setIsSearchFocused]);
 
   // Collect all item IDs for ratings
   const allItemIds = useMemo(() => {
@@ -283,13 +296,13 @@ const Index = () => {
     if (nearby.length > 0) setLoadingNearby(false);
   }, [position]);
 
-  const fetchAllData = useCallback(async (query?: string, offset: number = 0, limit: number = 15) => {
+  const fetchAllData = useCallback(async (query?: string, offset: number = 0, limit: number = 20) => {
     setLoading(true);
     const today = new Date().toISOString().split('T')[0];
     const fetchEvents = async () => {
       let dbQuery = supabase.from("trips").select("id,name,location,place,country,image_url,date,is_custom_date,is_flexible_date,available_tickets,activities,type,created_at,price,price_child,description")
         .eq("approval_status", "approved").eq("is_hidden", false).eq("type", "event").or(`date.gte.${today},is_flexible_date.eq.true`);
-      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},country.ilike.${p}`); }
+      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},place.ilike.${p},country.ilike.${p}`); }
       dbQuery = dbQuery.order('date', { ascending: true }).range(offset, offset + limit - 1);
       const { data } = await dbQuery;
       return (data || []).map((item: any) => ({ ...item, type: "EVENT" }));
@@ -299,7 +312,7 @@ const Index = () => {
         ? "id,name,location,place,country,image_url,activities,latitude,longitude,created_at,description"
         : "id,name,location,place,country,image_url,entry_fee,activities,latitude,longitude,created_at,description")
         .eq("approval_status", "approved").eq("is_hidden", false);
-      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},country.ilike.${p}`); }
+      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},place.ilike.${p},country.ilike.${p}`); }
       dbQuery = dbQuery.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
       const { data } = await dbQuery;
       return (data || []).map((item: any) => ({ ...item, type }));
@@ -307,7 +320,7 @@ const Index = () => {
     const fetchTrips = async () => {
       let dbQuery = supabase.from("trips").select("id,name,location,place,country,image_url,date,is_custom_date,is_flexible_date,available_tickets,activities,type,created_at,price,price_child,description")
         .eq("approval_status", "approved").eq("is_hidden", false).eq("type", "trip");
-      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},country.ilike.${p}`); }
+      if (query) { const p = `%${query}%`; dbQuery = dbQuery.or(`name.ilike.${p},location.ilike.${p},place.ilike.${p},country.ilike.${p}`); }
       dbQuery = dbQuery.order('date', { ascending: true }).range(offset, offset + limit - 1);
       const { data } = await dbQuery;
       return (data || []).map((item: any) => ({ ...item, type: "TRIP" }));
@@ -380,9 +393,13 @@ const Index = () => {
   // ─── Keep search hero expanded only at the top ───────────────────────────
   useEffect(() => {
     const ctrl = () => {
-      setIsSearchVisible(window.scrollY === 0);
+      if (!searchRef.current) return;
+      const rect = searchRef.current.getBoundingClientRect();
+      // Search is "scrolled away" when its bottom is at or above the header height
+      setIsSearchVisible(rect.bottom > 56);
     };
     window.addEventListener("scroll", ctrl, { passive: true });
+    ctrl();
     return () => window.removeEventListener("scroll", ctrl);
   }, []);
 
@@ -469,59 +486,63 @@ const Index = () => {
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       {!isSearchFocused && (
-        <div ref={searchRef} className="relative w-full h-[52vh] md:h-[44vh] overflow-hidden">
-          <div className="absolute inset-0 bg-foreground/80" />
-          <picture>
-            <source srcSet="/images/hero-background.webp" type="image/webp" />
-            <img
-              src="/images/hero-background.webp"
-              alt="Travel destination"
-              fetchPriority="high" decoding="async" loading="eager"
-              width={1920} height={1080}
-              className="absolute inset-0 w-full h-full object-cover opacity-60"
-            />
-          </picture>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--accent)/0.22),transparent_26%),radial-gradient(circle_at_bottom_left,hsl(var(--popup-accent)/0.18),transparent_24%)]" />
+        <div ref={searchRef} className="relative w-full overflow-hidden">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="relative h-[52vh] md:h-[44vh] rounded-b-2xl md:rounded-2xl md:mt-2 overflow-hidden">
+              <div className="absolute inset-0 bg-foreground/80" />
+              <picture>
+                <source srcSet="/images/hero-background.webp" type="image/webp" />
+                <img
+                  src="/images/hero-background.webp"
+                  alt="Travel destination"
+                  fetchPriority="high" decoding="async" loading="eager"
+                  width={1920} height={1080}
+                  className="absolute inset-0 w-full h-full object-cover opacity-60"
+                />
+              </picture>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--accent)/0.22),transparent_26%),radial-gradient(circle_at_bottom_left,hsl(var(--popup-accent)/0.18),transparent_24%)]" />
 
-          {/* Content - centered text + search */}
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pb-20 md:pb-20 px-4">
-            <div className="container mx-auto px-4 md:px-6">
-              <p className="text-primary-foreground/70 text-xs md:text-sm font-semibold uppercase tracking-widest text-center mb-2">
-                {t('hero.tagline')}
-              </p>
-              <h1 className="text-primary-foreground text-3xl md:text-5xl font-extrabold text-center mb-5 md:mb-7 leading-tight tracking-tight">
-                {t('hero.title')}
-              </h1>
-              <SearchBarWithSuggestions
-                value={searchQuery} onChange={setSearchQuery}
-                onSubmit={() => { if (searchQuery.trim()) { fetchAllData(searchQuery); setIsSearchFocused(true); } }}
-                onSuggestionSearch={q => { setSearchQuery(q); fetchAllData(q); setIsSearchFocused(true); }}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => {}}
-                onBack={() => { setIsSearchFocused(false); setSearchQuery(""); fetchAllData(); }}
-                showBackButton={false}
-              />
-            </div>
-          </div>
+              {/* Content - centered text + search */}
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pb-20 md:pb-20 px-4">
+                <div className="w-full max-w-4xl mx-auto">
+                  <p className="text-primary-foreground/70 text-xs md:text-sm font-semibold uppercase tracking-widest text-center mb-2">
+                    {t('hero.tagline')}
+                  </p>
+                  <h1 className="text-primary-foreground text-3xl md:text-5xl font-extrabold text-center mb-5 md:mb-7 leading-tight tracking-tight">
+                    {t('hero.title')}
+                  </h1>
+                  <SearchBarWithSuggestions
+                    value={searchQuery} onChange={setSearchQuery}
+                    onSubmit={() => { if (searchQuery.trim()) { fetchAllData(searchQuery); setIsSearchFocused(true); } }}
+                    onSuggestionSearch={q => { setSearchQuery(q); fetchAllData(q); setIsSearchFocused(true); }}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => {}}
+                    onBack={() => { setIsSearchFocused(false); setSearchQuery(""); fetchAllData(); }}
+                    showBackButton={false}
+                  />
+                </div>
+              </div>
 
-          {/* Category pills */}
-          <div className="absolute bottom-3 left-0 right-0 z-10">
-            <div className="container mx-auto px-4 md:px-6">
-              <div className="grid grid-cols-5 gap-2 w-full">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.title}
-                    onClick={() => navigate(cat.path)}
-                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border border-white/20 transition-all hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm"
-                    style={{ backgroundColor: cat.color }}
-                  >
-                    <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center">
-                      <cat.icon className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-[10px] font-bold text-white leading-tight text-center">{cat.title}</span>
-                  </button>
-                ))}
+              {/* Category pills */}
+              <div className="absolute bottom-3 left-0 right-0 z-10">
+                <div className="w-full px-4">
+                  <div className="grid grid-cols-5 gap-2 w-full">
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.title}
+                        onClick={() => navigate(cat.path)}
+                        className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border border-white/20 transition-all hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm"
+                        style={{ backgroundColor: cat.color }}
+                      >
+                        <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center">
+                          <cat.icon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white leading-tight text-center">{cat.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

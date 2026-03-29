@@ -143,7 +143,7 @@ const ListingCardComponent = ({
     <Card
       onClick={handleCardClick}
       className={cn(
-        "brand-panel group relative flex flex-row md:flex-col overflow-hidden cursor-pointer transition-all duration-300",
+        "brand-panel group relative flex flex-col overflow-hidden cursor-pointer transition-all duration-300",
         "rounded-xl border border-border shadow-sm",
         "hover:shadow-md hover:border-accent/30",
         compact ? "h-auto" : "h-full",
@@ -153,7 +153,7 @@ const ListingCardComponent = ({
       {/* ── Image ── */}
       <div
         ref={imageContainerRef}
-        className="relative w-[100px] sm:w-[120px] md:w-full flex-shrink-0 overflow-hidden min-h-[120px] md:min-h-[180px] md:aspect-[16/9]"
+        className="relative w-full flex-shrink-0 overflow-hidden aspect-[16/9]"
       >
         {!imageLoaded && !imageError && (
           <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
@@ -172,8 +172,8 @@ const ListingCardComponent = ({
           />
         )}
 
-        {/* Category badge — on image, top-left, md+ only */}
-        <div className="hidden md:flex absolute top-2 left-2 z-20">
+        {/* Category badge — on image, top-left */}
+        <div className="flex absolute top-2 left-2 z-20">
           {categoryBadge}
         </div>
 
@@ -203,13 +203,8 @@ const ListingCardComponent = ({
       {/* ── Content ── */}
       <div className="flex flex-1 flex-col justify-between p-3 sm:p-4 min-w-0 gap-1.5">
 
-        {/* Top row: category (mobile only) + urgency badge */}
+        {/* Top row: urgency badge */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* On mobile (flex-row card) the badge lives here inline */}
-          {/* On md+ it's absolutely positioned over the image above, so hidden here */}
-          <div className="md:hidden">
-            {categoryBadge}
-          </div>
           {urgencyBadge && (
             <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border", urgencyBadge.color)}>
               {urgencyBadge.text}

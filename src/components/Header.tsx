@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, Heart, Ticket, Home, User, LogIn, Building2 } from "lucide-react";
+import { Menu, Heart, Ticket, Home, User, LogIn, Building2, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavigationDrawer } from "./NavigationDrawer";
@@ -23,7 +23,7 @@ const COLORS = {
   CORAL: "#FF7F50",
 };
 
-export const Header = ({ className, __fromLayout, desktopStatic = false }: HeaderProps) => {
+export const Header = ({ className, __fromLayout, desktopStatic = false, onSearchClick, showSearchIcon = false }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -144,6 +144,15 @@ export const Header = ({ className, __fromLayout, desktopStatic = false }: Heade
 
         {/* RIGHT: ACTIONS */}
         <div className="flex items-center gap-2">
+          {showSearchIcon && (
+            <button
+              onClick={onSearchClick}
+              className={menuIconStyles}
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5 stroke-[2.5]" />
+            </button>
+          )}
           <NotificationBell />
 
           <div className="h-8 w-[1px] bg-slate-100 hidden md:block mx-1" />
