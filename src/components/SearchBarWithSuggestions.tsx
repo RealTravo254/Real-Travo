@@ -235,6 +235,14 @@ export const SearchBarWithSuggestions = React.forwardRef<HTMLDivElement, SearchB
 
   const clearHistory = () => { setSearchHistory([]); localStorage.removeItem(SEARCH_HISTORY_KEY); };
 
+  const handlePlaceSuggestionClick = (place: PlaceSuggestion) => {
+    const searchTerm = [place.place, place.location].filter(Boolean).join(', ');
+    setShowSuggestions(false);
+    saveToHistory(searchTerm);
+    onChange(searchTerm);
+    onSuggestionSearch?.(searchTerm);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") { setShowSuggestions(false); saveToHistory(value); onSubmit(); }
   };
